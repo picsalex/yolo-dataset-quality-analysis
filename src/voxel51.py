@@ -12,7 +12,7 @@ def compute_visualizations(
     model: fo.core.models.Model,
     dataset: fo.core.collections.SampleCollection,
     batch_size: int,
-    patches_field: str = "ground_truth",
+    patches_field: str,
 ):
     """
     Compute visualizations for the dataset using the given model. Two visualizations are computed:
