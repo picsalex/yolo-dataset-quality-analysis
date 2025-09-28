@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""
+FiftyOne Analysis Script for YOLO Dataset with proper directory structure
+and thumbnail generation using transform_images
+"""
+
+import fiftyone.brain as fob
+import fiftyone as fo
+
+
+def compute_visualizations(
+    model: fo.core.models.Model,
+    dataset: fo.core.collections.SampleCollection,
+    batch_size: int,
+    patches_field: str = "ground_truth",
+):
+    """
+    Compute visualizations for the dataset using the given model. Two visualizations are computed:
+        - UMAP visualization of the image embeddings
+        - UMAP visualization of the patch embeddings (bounding boxes)
+
+    Args:
+        model: The model to use for computing the embeddings
+        dataset: The dataset to compute the visualizations for
+        batch_size: The batch size to use for processing
+        patches_field: The field in the dataset containing the patches
+    """
+    print("\n" + "=" * 60)
+    print("COMPUTING EMBEDDINGS")
+    print("=" * 60)
+
+    # Check if dataset has patches
+    has_patches = dataset.exists(patches_field)
+    print(f"Samples with detections: {len(has_patches)}")
+
+    # Compute patch embeddings for bounding boxes
+    if len(has_patches) > 0:
+        print("\n1. Computing patch embeddings (bounding boxes)...")
+        dataset.compute_patch_embeddings(
+            model=model,
+            patches_field=patches_field,
+            embeddings_field="clip_embeddings",
+            handle_missing="image",  # Use full image if no patches
+            batch_size=batch_size,
+        )
+        print("✓ Patch embeddings computed")
+    else:
+        print("⚠ No patches found in dataset")
+
+    # Compute visualization for full images
+    print("\n2. Computing image embeddings visualization...")
+    fob.compute_visualization(
+        dataset,
+        model=model,
+        method="umap",
+        brain_key="images_embeddings",
+        batch_size=batch_size,
+    )
+    print("✓ Image embeddings visualization computed")
+
+    # Compute visualization for patches if they exist
+    if len(has_patches) > 0:
+        print("\n3. Computing patch embeddings visualization...")
+
+        fob.compute_visualization(
+            dataset,
+            patches_field=patches_field,
+            method="umap",
+            brain_key="patches_embeddings",
+        )
+
+    print("\n" + "=" * 60)
+    print("EMBEDDINGS COMPLETE")
+    print("=" * 60)
