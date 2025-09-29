@@ -10,6 +10,7 @@ from src.config import get_box_field_from_task
 from src.enum import DatasetTask
 from src.images import get_image_dimensions
 
+dataset_split_options = ["train", "val", "valid", "test", "train2017", "val2017", "test2017"]
 
 def load_class_names(dataset_path: str) -> List[str]:
     """
@@ -72,39 +73,52 @@ def prepare_voxel_dataset(
 
     print(f"Creating new dataset '{dataset_name}'...")
 
-    # Load class names
-    class_names = load_class_names(dataset_path)
-    print(f"Found {len(class_names)} classes: {class_names}")
+    if dataset_task != DatasetTask.CLASSIFICATION:
+        # Load class names
+        class_names = load_class_names(dataset_path)
+        print(f"Found {len(class_names)} classes: {class_names}")
 
-    # Create empty dataset
-    dataset = fo.Dataset(name=dataset_name, persistent=True)
+        # Create empty dataset
+        dataset = fo.Dataset(name=dataset_name, persistent=True)
 
-    images_base = os.path.join(dataset_path, "images")
-    labels_base = os.path.join(dataset_path, "labels")
+        images_base = os.path.join(dataset_path, "images")
+        labels_base = os.path.join(dataset_path, "labels")
 
-    if os.path.exists(images_base):
-        # Structure 1: images/{split} and labels/{split}
-        print("Detected directory structure: images/{split}/")
-        for split in ["train", "val", "test"]:
-            images_dir = os.path.join(images_base, split)
-            labels_dir = os.path.join(labels_base, split)
+        if os.path.exists(images_base):
+            for split in dataset_split_options:
+                images_dir = os.path.join(images_base, split)
+                labels_dir = os.path.join(labels_base, split)
 
-            if os.path.exists(images_dir):
-                _process_split(
-                    dataset=dataset,
-                    images_dir=images_dir,
-                    labels_dir=labels_dir,
-                    split=split,
-                    class_names=class_names,
-                    dataset_task=dataset_task,
-                )
+                if os.path.exists(images_dir):
+                    _process_split(
+                        dataset=dataset,
+                        images_dir=images_dir,
+                        labels_dir=labels_dir,
+                        split=split,
+                        class_names=class_names,
+                        dataset_task=dataset_task,
+                    )
+
+        else:
+            raise FileNotFoundError(
+                f"Images directory '{images_base}' not found. Expected structure: images/{{split}}/"
+            )
+
     else:
-        raise FileNotFoundError(
-            f"Images directory '{images_base}' not found. Expected structure: images/{{split}}/"
-        )
+        # Classification dataset structure: {split}/{class_name}/
+        dataset = fo.Dataset(name=dataset_name, persistent=True)
+        
+        # Process classification dataset
+        for split in dataset_split_options:
+            split_dir = os.path.join(dataset_path, split)
+            if os.path.exists(split_dir):
+                _process_classification_split(
+                    dataset=dataset,
+                    split_dir=split_dir,
+                    split=split,
+                )
 
     print(f"\nDataset created with {len(dataset)} total samples")
-    print(f"Tags in dataset: {dataset.distinct('tags')}")
 
     return False, dataset
 
@@ -203,6 +217,85 @@ def _process_split(
             print(f"Error processing {img_file}: {e}")
             continue
 
+    # Add samples to dataset
+    if samples:
+        dataset.add_samples(samples)
+        print(f"Added {len(samples)} samples from {split} split")
+
+
+def _process_classification_split(
+    dataset: fo.Dataset,
+    split_dir: str,
+    split: str,
+) -> None:
+    """
+    Process a classification dataset split (train/val/test), where images are organized by class folders.
+    Nothing is returned since the dataset is modified in place.
+
+    Args:
+        dataset: The FiftyOne dataset to add samples to
+        split_dir: Directory containing class subdirectories for the split
+        split: The split name (train/val/test)
+    """
+    if not os.path.exists(split_dir):
+        print(f"Split directory '{split}' not found, skipping...")
+        return
+
+    print(f"\nProcessing {split} split...")
+
+    # Get all class directories
+    class_dirs = sorted([
+        d for d in os.listdir(split_dir)
+        if os.path.isdir(os.path.join(split_dir, d))
+    ])
+    
+    if not class_dirs:
+        print(f"No class directories found in {split_dir}, skipping...")
+        return
+    
+    print(f"Found {len(class_dirs)} classes in {split}: {class_dirs}")
+
+    samples = []
+    
+    for class_name in class_dirs:
+        class_dir = os.path.join(split_dir, class_name)
+        
+        # Get all image files in this class directory
+        image_files = sorted([
+            f for f in os.listdir(class_dir)
+            if f.lower().endswith((".jpg", ".jpeg", ".png"))
+        ])
+        
+        for img_file in tqdm(image_files, desc=f"Loading {split}/{class_name} images"):
+            image_path = os.path.join(class_dir, img_file)
+            
+            # Create sample with the image
+            sample = fo.Sample(filepath=image_path)
+            
+            try:
+                # Get image dimensions
+                width, height = get_image_dimensions(image_path)
+                
+                # Add metadata
+                sample.metadata = fo.ImageMetadata(width=width, height=height)
+
+                classification_field = get_box_field_from_task(task=DatasetTask.CLASSIFICATION)
+
+                # Add classification label
+                sample[classification_field] = fo.Classification(
+                    label=class_name,
+                    tags=[split]
+                )
+                
+                # Store additional metadata
+                sample["image_path"] = image_path
+
+                samples.append(sample)
+                
+            except Exception as e:
+                print(f"Error processing {image_path}: {e}")
+                continue
+    
     # Add samples to dataset
     if samples:
         dataset.add_samples(samples)
@@ -375,7 +468,6 @@ def _get_fiftyone_detection_label(
             ],
             tags=[split],
         )
-        detection["split"] = split
         detection["label_path"] = label_path
         detection["image_path"] = image_path
         return detection
@@ -473,7 +565,6 @@ def _get_fiftyone_keypoint_label(
         bounding_box=[x_top_left, y_top_left, bbox_width, bbox_height],
         tags=[split],
     )
-    keypoint["split"] = split
     keypoint["label_path"] = label_path
     keypoint["image_path"] = image_path
 
@@ -555,7 +646,6 @@ def _get_fiftyone_obb_label(
         )
         
         # Add metadata for tracking
-        obb["split"] = split
         obb["label_path"] = label_path
         obb["image_path"] = image_path
         obb["is_obb"] = True  # Flag to distinguish from regular polygons
@@ -641,7 +731,6 @@ def _get_fiftyone_polygon_label(
         filled=True,
         tags=[split],
     )
-    polygon["split"] = split
     polygon["label_path"] = label_path
     polygon["image_path"] = image_path
 

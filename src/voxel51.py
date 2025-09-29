@@ -7,10 +7,13 @@ and thumbnail generation using transform_images
 import fiftyone.brain as fob
 import fiftyone as fo
 
+from src.enum import DatasetTask
+
 
 def compute_visualizations(
-    model: fo.core.models.Model,
-    dataset: fo.core.collections.SampleCollection,
+    model: fo.Model,
+    dataset: fo.Dataset,
+    dataset_task: DatasetTask,
     batch_size: int,
     patches_field: str,
 ):
@@ -34,18 +37,21 @@ def compute_visualizations(
     print(f"Samples with detections: {len(has_patches)}")
 
     # Compute patch embeddings for bounding boxes
-    if len(has_patches) > 0:
-        print("\n1. Computing patch embeddings (bounding boxes)...")
-        dataset.compute_patch_embeddings(
-            model=model,
-            patches_field=patches_field,
-            embeddings_field="clip_embeddings",
-            handle_missing="image",  # Use full image if no patches
-            batch_size=batch_size,
-        )
-        print("✓ Patch embeddings computed")
+    if dataset_task != DatasetTask.CLASSIFICATION:
+        if len(has_patches) > 0:
+            print("\n1. Computing patch embeddings:")
+            dataset.compute_patch_embeddings(
+                model=model,
+                patches_field=patches_field,
+                embeddings_field="clip_embeddings",
+                handle_missing="image",  # Use full image if no patches
+                batch_size=batch_size,
+            )
+            print("Patch embeddings computed)")
+        else:
+            print("No patches found in dataset")
     else:
-        print("⚠ No patches found in dataset")
+        print("Skipping patch embeddings for classification task")
 
     # Compute visualization for full images
     print("\n2. Computing image embeddings visualization...")
@@ -59,7 +65,7 @@ def compute_visualizations(
     print("✓ Image embeddings visualization computed")
 
     # Compute visualization for patches if they exist
-    if len(has_patches) > 0:
+    if len(has_patches) > 0 and dataset_task != DatasetTask.CLASSIFICATION:
         print("\n3. Computing patch embeddings visualization...")
 
         fob.compute_visualization(

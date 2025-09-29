@@ -12,7 +12,7 @@ from src.voxel51 import compute_visualizations
 
 # Main configuration
 dataset_path = "/Users/alexis/Documents/Projects/ultralytics/datasets/dota10-obb"  # Change this to your YOLO dataset path
-dataset_name = "my_dataset_4"  # Change this to your desired FiftyOne dataset name, will impact thumbnail directory
+dataset_name = "obb_dataset"  # Change this to your desired FiftyOne dataset name, will impact thumbnail directory
 dataset_task = (
     DatasetTask.OBB
 )  # Choices are: CLASSIFICATION, DETECTION, SEGMENTATION, POSE and OBB
@@ -20,7 +20,7 @@ dataset_task = (
 # Analysis configuration
 batch_size = 16
 thumbnail_dir = os.path.join(os.getcwd(), "thumbnails", dataset_name)
-force_reload = False  # Set to True to force reloading the dataset
+force_reload = True  # Set to True to force reloading the dataset
 clip_model = "clip-vit-base32-torch"  # Available models: https://docs.voxel51.com/model_zoo/models.html
 
 
@@ -39,35 +39,27 @@ def main():
     )
 
     if not is_already_loaded:
-        if dataset_task in [
-            DatasetTask.DETECTION,
-            DatasetTask.POSE,
-            DatasetTask.SEGMENTATION,
-            DatasetTask.OBB,
-        ]:
-            patches_field = get_box_field_from_task(task=dataset_task)
 
-            # For pose estimation, we use bounding boxes to extract patches
-            if dataset_task == DatasetTask.POSE:
-                patches_field = get_box_field_from_task(task=DatasetTask.DETECTION)
+        patches_field = get_box_field_from_task(task=dataset_task)
 
-            # Step 2: Load CLIP model
-            print("\n🤖 Step 2: Loading CLIP model...")
-            embeddings_model = foz.load_zoo_model(clip_model)
-            print(f"✓ Loaded {clip_model}")
+        # For pose estimation, we use bounding boxes to extract patches
+        if dataset_task == DatasetTask.POSE:
+            patches_field = get_box_field_from_task(task=DatasetTask.DETECTION)
 
-            # Step 3: Compute visualizations
-            print("\n🧠 Step 3: Computing embeddings and visualizations...")
-            compute_visualizations(
-                dataset=dataset,
-                model=embeddings_model,
-                batch_size=batch_size,
-                patches_field=patches_field,
-            )
-        else:
-            print(
-                "\n⚠️ Skipping embeddings and visualizations for classification-only dataset..."
-            )
+        # Step 2: Load CLIP model
+        print("\n🤖 Step 2: Loading CLIP model...")
+        embeddings_model = foz.load_zoo_model(clip_model)
+        print(f"✓ Loaded {clip_model}")
+
+        # Step 3: Compute visualizations
+        print("\n🧠 Step 3: Computing embeddings and visualizations...")
+        compute_visualizations(
+            dataset=dataset,
+            model=embeddings_model,
+            batch_size=batch_size,
+            patches_field=patches_field,
+            dataset_task=dataset_task,
+        )
 
         # Step 4: Generate thumbnails (after embeddings, before launching app)
         print("\n🖼️ Step 4: Generating thumbnails for optimized UI...")
