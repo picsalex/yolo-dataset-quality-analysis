@@ -10,7 +10,16 @@ from src.config import get_box_field_from_task
 from src.enum import DatasetTask
 from src.images import get_image_dimensions
 
-dataset_split_options = ["train", "val", "valid", "test", "train2017", "val2017", "test2017"]
+dataset_split_options = [
+    "train",
+    "val",
+    "valid",
+    "test",
+    "train2017",
+    "val2017",
+    "test2017",
+]
+
 
 def load_class_names(dataset_path: str) -> List[str]:
     """
@@ -107,7 +116,7 @@ def prepare_voxel_dataset(
     else:
         # Classification dataset structure: {split}/{class_name}/
         dataset = fo.Dataset(name=dataset_name, persistent=True)
-        
+
         # Process classification dataset
         for split in dataset_split_options:
             split_dir = os.path.join(dataset_path, split)
@@ -196,7 +205,7 @@ def _process_split(
                 field = get_box_field_from_task(task=dataset_task)
                 sample[field] = labels
 
-                # For pose estimation, also add bounding boxes 
+                # For pose estimation, also add bounding boxes
                 if dataset_task == DatasetTask.POSE:
                     detection_labels = _get_fiftyone_labels(
                         label_path=label_path,
@@ -207,7 +216,9 @@ def _process_split(
                         split_name=split,
                         image_path=image_path,
                     )
-                    detection_field = get_box_field_from_task(task=DatasetTask.DETECTION)
+                    detection_field = get_box_field_from_task(
+                        task=DatasetTask.DETECTION
+                    )
                     sample[detection_field] = detection_labels
 
             sample.metadata = fo.ImageMetadata(width=width, height=height)
@@ -244,58 +255,61 @@ def _process_classification_split(
     print(f"\nProcessing {split} split...")
 
     # Get all class directories
-    class_dirs = sorted([
-        d for d in os.listdir(split_dir)
-        if os.path.isdir(os.path.join(split_dir, d))
-    ])
-    
+    class_dirs = sorted(
+        [d for d in os.listdir(split_dir) if os.path.isdir(os.path.join(split_dir, d))]
+    )
+
     if not class_dirs:
         print(f"No class directories found in {split_dir}, skipping...")
         return
-    
+
     print(f"Found {len(class_dirs)} classes in {split}: {class_dirs}")
 
     samples = []
-    
+
     for class_name in class_dirs:
         class_dir = os.path.join(split_dir, class_name)
-        
+
         # Get all image files in this class directory
-        image_files = sorted([
-            f for f in os.listdir(class_dir)
-            if f.lower().endswith((".jpg", ".jpeg", ".png"))
-        ])
-        
+        image_files = sorted(
+            [
+                f
+                for f in os.listdir(class_dir)
+                if f.lower().endswith((".jpg", ".jpeg", ".png"))
+            ]
+        )
+
         for img_file in tqdm(image_files, desc=f"Loading {split}/{class_name} images"):
             image_path = os.path.join(class_dir, img_file)
-            
+
             # Create sample with the image
             sample = fo.Sample(filepath=image_path)
-            
+
             try:
                 # Get image dimensions
                 width, height = get_image_dimensions(image_path)
-                
+
                 # Add metadata
                 sample.metadata = fo.ImageMetadata(width=width, height=height)
 
-                classification_field = get_box_field_from_task(task=DatasetTask.CLASSIFICATION)
+                classification_field = get_box_field_from_task(
+                    task=DatasetTask.CLASSIFICATION
+                )
 
                 # Add classification label
                 sample[classification_field] = fo.Classification(
-                    label=class_name,
-                    tags=[split]
+                    label=class_name, tags=[split]
                 )
-                
+
                 # Store additional metadata
                 sample["image_path"] = image_path
 
                 samples.append(sample)
-                
+
             except Exception as e:
                 print(f"Error processing {image_path}: {e}")
                 continue
-    
+
     # Add samples to dataset
     if samples:
         dataset.add_samples(samples)
@@ -333,16 +347,14 @@ def _get_fiftyone_labels(
         if dataset_task == DatasetTask.DETECTION:
             detections = []
             for line in f:
-                if (
-                    detection := _get_fiftyone_detection_label(
-                        line=line,
-                        class_names=class_names,
-                        image_width=image_width,
-                        image_height=image_height,
-                        split=split_name,
-                        label_path=label_path,
-                        image_path=image_path,
-                    )
+                if detection := _get_fiftyone_detection_label(
+                    line=line,
+                    class_names=class_names,
+                    image_width=image_width,
+                    image_height=image_height,
+                    split=split_name,
+                    label_path=label_path,
+                    image_path=image_path,
                 ):
                     detections.append(detection)
 
@@ -397,7 +409,7 @@ def _get_fiftyone_labels(
                     obbs.append(obb)
 
             return fo.Polylines(polylines=obbs) if obbs else None
-        
+
         else:
             return None
 
@@ -554,9 +566,7 @@ def _get_fiftyone_keypoint_label(
         return None
 
     label = (
-        class_names[class_id]
-        if class_id < len(class_names)
-        else f"class_{class_id}"
+        class_names[class_id] if class_id < len(class_names) else f"class_{class_id}"
     )
 
     keypoint = fo.Keypoint(
@@ -596,62 +606,64 @@ def _get_fiftyone_obb_label(
         A FiftyOne Polyline object representing the OBB or None if the line is invalid
     """
     parts = line.strip().split()
-    
+
     # YOLO OBB format: class_index x1 y1 x2 y2 x3 y3 x4 y4
     # Where the 4 points represent the corners of an oriented rectangle
     # Total: 1 class_index + 8 coordinates = 9 parts
     if len(parts) != 9:
         return None
-    
+
     try:
         class_id = int(parts[0])
-        
+
         # Extract the 4 corner points of the oriented bounding box
         # Points are in order: top-left, top-right, bottom-right, bottom-left (or any consistent order)
         points = []
         for i in range(1, 9, 2):
             x = float(parts[i])
             y = float(parts[i + 1])
-            
+
             # YOLO OBB coordinates are normalized (0-1)
             # Clamp to valid bounds [0, 1]
             x = max(0.0, min(1.0, x))
             y = max(0.0, min(1.0, y))
-            
+
             points.append([x, y])
-        
+
         # Should have exactly 4 points for a valid OBB
         if len(points) != 4:
             return None
-        
+
         # Close the polygon by adding the first point at the end
         # This creates a closed rectangle
         points.append(points[0])
-        
+
         # Get the label name
         label = (
             class_names[class_id]
             if class_id < len(class_names)
             else f"class_{class_id}"
         )
-        
+
         # Create a Polyline object to represent the oriented bounding box
         # Using Polyline with closed=True to form a rectangle
         obb = fo.Polyline(
             label=label,
-            points=[points],  # Polyline expects a list of point lists (for multiple polylines)
-            closed=True,      # Close the polyline to form a complete rectangle
-            filled=False,     # OBBs are typically rendered as outlines, not filled
+            points=[
+                points
+            ],  # Polyline expects a list of point lists (for multiple polylines)
+            closed=True,  # Close the polyline to form a complete rectangle
+            filled=False,  # OBBs are typically rendered as outlines, not filled
             tags=[split],
         )
-        
+
         # Add metadata for tracking
         obb["label_path"] = label_path
         obb["image_path"] = image_path
         obb["is_obb"] = True  # Flag to distinguish from regular polygons
-        
+
         return obb
-        
+
     except (ValueError, IndexError):
         # Handle invalid format or conversion errors
         return None
@@ -719,9 +731,7 @@ def _get_fiftyone_polygon_label(
         points.append(points[0])
 
     label = (
-        class_names[class_id]
-        if class_id < len(class_names)
-        else f"class_{class_id}"
+        class_names[class_id] if class_id < len(class_names) else f"class_{class_id}"
     )
 
     polygon = fo.Polyline(

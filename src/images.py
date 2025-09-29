@@ -37,7 +37,9 @@ def generate_thumbnails(dataset: fo.Dataset, thumbnail_dir_path: str) -> None:
     # Create thumbnail directory if it doesn't exist
     os.makedirs(thumbnail_dir_path, exist_ok=True)
 
-    common_base = os.path.commonpath([os.path.dirname(p) for p in dataset.values("filepath")])
+    common_base = os.path.commonpath(
+        [os.path.dirname(p) for p in dataset.values("filepath")]
+    )
 
     # Generate thumbnails preserving relative directory structure
     foui.transform_images(

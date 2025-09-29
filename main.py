@@ -11,16 +11,18 @@ from src.images import generate_thumbnails
 from src.voxel51 import compute_visualizations
 
 # Main configuration
-dataset_path = "/Users/alexis/Documents/Projects/ultralytics/datasets/dota10-obb"  # Change this to your YOLO dataset path
-dataset_name = "obb_dataset"  # Change this to your desired FiftyOne dataset name, will impact thumbnail directory
-dataset_task = (
-    DatasetTask.OBB
-)  # Choices are: CLASSIFICATION, DETECTION, SEGMENTATION, POSE and OBB
+dataset_path = "path/to/your/dataset"  # Change this to your YOLO dataset path
+dataset_name = "dataset_name"  # Change this to your desired FiftyOne dataset name, will impact thumbnail directory
 
-# Analysis configuration
+# Choose the right dataset task, choices are: CLASSIFICATION, DETECTION, SEGMENTATION, POSE and OBB
+dataset_task = DatasetTask.DETECTION
+
+# Set to True to force reload the dataset, useful if you need to reprocess the embeddings or if the dataset has changed
+force_reload = False
+
+# Advanced configuration
 batch_size = 16
 thumbnail_dir = os.path.join(os.getcwd(), "thumbnails", dataset_name)
-force_reload = True  # Set to True to force reloading the dataset
 clip_model = "clip-vit-base32-torch"  # Available models: https://docs.voxel51.com/model_zoo/models.html
 
 
@@ -39,7 +41,6 @@ def main():
     )
 
     if not is_already_loaded:
-
         patches_field = get_box_field_from_task(task=dataset_task)
 
         # For pose estimation, we use bounding boxes to extract patches
