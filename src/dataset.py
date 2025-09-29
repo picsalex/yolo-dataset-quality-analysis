@@ -6,7 +6,7 @@ import fiftyone as fo
 
 from tqdm import tqdm
 
-from src.config import bounding_boxes_field
+from src.config import get_box_field_from_task
 from src.enum import DatasetTask
 from src.images import get_image_dimensions
 
@@ -167,7 +167,7 @@ def _process_split(
             label_file = os.path.splitext(img_file)[0] + ".txt"
             label_path = os.path.join(labels_dir, label_file) if labels_dir else None
 
-            detections = _get_fiftyone_labels(
+            labels = _get_fiftyone_labels(
                 label_path=label_path,
                 dataset_task=dataset_task,
                 class_names=class_names,
@@ -178,8 +178,23 @@ def _process_split(
             )
 
             # Add detections to sample
-            if detections:
-                sample[bounding_boxes_field] = detections
+            if labels:
+                field = get_box_field_from_task(task=dataset_task)
+                sample[field] = labels
+
+                # For pose estimation, also add bounding boxes 
+                if dataset_task == DatasetTask.POSE:
+                    detection_labels = _get_fiftyone_labels(
+                        label_path=label_path,
+                        dataset_task=DatasetTask.DETECTION,
+                        class_names=class_names,
+                        image_width=width,
+                        image_height=height,
+                        split_name=split,
+                        image_path=image_path,
+                    )
+                    detection_field = get_box_field_from_task(task=DatasetTask.DETECTION)
+                    sample[detection_field] = detection_labels
 
             sample.metadata = fo.ImageMetadata(width=width, height=height)
             samples.append(sample)
@@ -274,6 +289,22 @@ def _get_fiftyone_labels(
 
             return fo.Polylines(polylines=polygons) if polygons else None
 
+        elif dataset_task == DatasetTask.OBB:
+            obbs = []
+            for line in f:
+                if obb := _get_fiftyone_obb_label(
+                    line=line,
+                    class_names=class_names,
+                    image_width=image_width,
+                    image_height=image_height,
+                    split=split_name,
+                    label_path=label_path,
+                    image_path=image_path,
+                ):
+                    obbs.append(obb)
+
+            return fo.Polylines(polylines=obbs) if obbs else None
+        
         else:
             return None
 
@@ -377,7 +408,163 @@ def _get_fiftyone_keypoint_label(
     Returns:
         A FiftyOne Keypoint object or None if the line is invalid
     """
-    # TODO
+    parts = line.strip().split()
+
+    # YOLO keypoint format: class_id x_center y_center width height x1 y1 v1 x2 y2 v2 ...
+    # where v is visibility (0=not labeled, 1=labeled but not visible, 2=labeled and visible)
+    if len(parts) < 5:
+        return None
+
+    class_id = int(parts[0])
+    x_center = float(parts[1])
+    y_center = float(parts[2])
+    bbox_width = float(parts[3])
+    bbox_height = float(parts[4])
+
+    # Handle zero dimensions
+    if bbox_width == 0:
+        bbox_width = 1 / image_width
+    if bbox_height == 0:
+        bbox_height = 1 / image_height
+
+    # Convert YOLO bbox to FiftyOne format (for the bounding box of the keypoints)
+    x_top_left = x_center - bbox_width / 2
+    y_top_left = y_center - bbox_height / 2
+
+    # Ensure bounds are valid
+    x_top_left = max(0, min(1, x_top_left))
+    y_top_left = max(0, min(1, y_top_left))
+    bbox_width = max(0, min(1 - x_top_left, bbox_width))
+    bbox_height = max(0, min(1 - y_top_left, bbox_height))
+
+    # Extract keypoints (remaining values after bbox)
+    keypoint_data = parts[5:]  # Skip class_id and bbox
+
+    # Parse keypoints - groups of 3 (x, y, visibility)
+    points = []
+    for i in range(0, len(keypoint_data), 3):
+        if i + 2 < len(keypoint_data):
+            kp_x = float(keypoint_data[i])
+            kp_y = float(keypoint_data[i + 1])
+            visibility = float(keypoint_data[i + 2])
+
+            # YOLO keypoints are already normalized (0-1)
+            # FiftyOne expects normalized coordinates
+            kp_x = max(0, min(1, kp_x))
+            kp_y = max(0, min(1, kp_y))
+
+            # Add point as [x, y] - visibility can be stored separately if needed
+            # For FiftyOne, we'll include all keypoints regardless of visibility
+            # but you could filter based on visibility if desired
+            points.append([kp_x, kp_y])
+
+    if not points:
+        return None
+
+    label = (
+        class_names[class_id]
+        if class_id < len(class_names)
+        else f"class_{class_id}"
+    )
+
+    keypoint = fo.Keypoint(
+        label=label,
+        points=points,
+        bounding_box=[x_top_left, y_top_left, bbox_width, bbox_height],
+        tags=[split],
+    )
+    keypoint["split"] = split
+    keypoint["label_path"] = label_path
+    keypoint["image_path"] = image_path
+
+    return keypoint
+
+
+def _get_fiftyone_obb_label(
+    line: str,
+    class_names: List,
+    image_width: int,
+    image_height: int,
+    split: str,
+    label_path: str,
+    image_path: str,
+) -> fo.Polyline:
+    """
+    Convert a single YOLO OBB (Oriented Bounding Box) annotation line to a FiftyOne Polygon object.
+
+    Args:
+        line: A single line from a YOLO OBB label file
+        class_names: List of class names
+        image_width: Width of the image
+        image_height: Height of the image
+        split: The dataset split (train/val/test)
+        label_path: Path to the label file
+        image_path: Path to the image file
+
+    Returns:
+        A FiftyOne Polyline object representing the OBB or None if the line is invalid
+    """
+    parts = line.strip().split()
+    
+    # YOLO OBB format: class_index x1 y1 x2 y2 x3 y3 x4 y4
+    # Where the 4 points represent the corners of an oriented rectangle
+    # Total: 1 class_index + 8 coordinates = 9 parts
+    if len(parts) != 9:
+        return None
+    
+    try:
+        class_id = int(parts[0])
+        
+        # Extract the 4 corner points of the oriented bounding box
+        # Points are in order: top-left, top-right, bottom-right, bottom-left (or any consistent order)
+        points = []
+        for i in range(1, 9, 2):
+            x = float(parts[i])
+            y = float(parts[i + 1])
+            
+            # YOLO OBB coordinates are normalized (0-1)
+            # Clamp to valid bounds [0, 1]
+            x = max(0.0, min(1.0, x))
+            y = max(0.0, min(1.0, y))
+            
+            points.append([x, y])
+        
+        # Should have exactly 4 points for a valid OBB
+        if len(points) != 4:
+            return None
+        
+        # Close the polygon by adding the first point at the end
+        # This creates a closed rectangle
+        points.append(points[0])
+        
+        # Get the label name
+        label = (
+            class_names[class_id]
+            if class_id < len(class_names)
+            else f"class_{class_id}"
+        )
+        
+        # Create a Polyline object to represent the oriented bounding box
+        # Using Polyline with closed=True to form a rectangle
+        obb = fo.Polyline(
+            label=label,
+            points=[points],  # Polyline expects a list of point lists (for multiple polylines)
+            closed=True,      # Close the polyline to form a complete rectangle
+            filled=False,     # OBBs are typically rendered as outlines, not filled
+            tags=[split],
+        )
+        
+        # Add metadata for tracking
+        obb["split"] = split
+        obb["label_path"] = label_path
+        obb["image_path"] = image_path
+        obb["is_obb"] = True  # Flag to distinguish from regular polygons
+        
+        return obb
+        
+    except (ValueError, IndexError):
+        # Handle invalid format or conversion errors
+        return None
 
 
 def _get_fiftyone_polygon_label(
@@ -404,4 +591,58 @@ def _get_fiftyone_polygon_label(
     Returns:
         A FiftyOne Polygon object or None if the line is invalid
     """
-    # TODO
+    parts = line.strip().split()
+
+    # YOLO segmentation format: class_id x1 y1 x2 y2 x3 y3 ...
+    # Minimum of 3 points (6 coordinates) + class_id = 7 parts minimum
+    if len(parts) < 7:
+        return None
+
+    class_id = int(parts[0])
+
+    # Extract polygon coordinates (remaining values after class_id)
+    coords = parts[1:]
+
+    # Must have even number of coordinates (x,y pairs)
+    if len(coords) % 2 != 0:
+        return None
+
+    # Parse polygon points - groups of 2 (x, y)
+    points = []
+    for i in range(0, len(coords), 2):
+        x = float(coords[i])
+        y = float(coords[i + 1])
+
+        # YOLO polygon coordinates are already normalized (0-1)
+        # Ensure coordinates are within valid bounds
+        x = max(0, min(1, x))
+        y = max(0, min(1, y))
+
+        points.append([x, y])
+
+    # Need at least 3 points for a valid polygon
+    if len(points) < 3:
+        return None
+
+    # Close the polygon if it's not already closed
+    if points[0] != points[-1]:
+        points.append(points[0])
+
+    label = (
+        class_names[class_id]
+        if class_id < len(class_names)
+        else f"class_{class_id}"
+    )
+
+    polygon = fo.Polyline(
+        label=label,
+        points=[points],
+        closed=True,
+        filled=True,
+        tags=[split],
+    )
+    polygon["split"] = split
+    polygon["label_path"] = label_path
+    polygon["image_path"] = image_path
+
+    return polygon

@@ -209,3 +209,6 @@ __marimo__/
 thumbnails/*
 
 .idea/
+
+# Any Pytorch model
+*.pt
