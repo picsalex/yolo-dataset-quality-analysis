@@ -20,7 +20,7 @@ Clone the repository and set up your environment in just a few steps:
 
 ```bash
 # Clone the repository
-git clone https://github.com/ultralytics/yolo-dataset-quality-analysis.git
+git clone https://github.com/picsalex/yolo-dataset-quality-analysis.git
 cd yolo-dataset-quality-analysis
 
 # Create a virtual environment
