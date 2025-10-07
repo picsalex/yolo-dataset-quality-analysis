@@ -12,7 +12,7 @@ dataset:
   # Name for the FiftyOne dataset
   # This will be used for the dataset in FiftyOne and for thumbnail directories
   # Can be overridden with --dataset-name argument
-  name: "yolo_dataset"
+  name: "default"
   
   # Dataset task type
   # Options: classification, detection, segmentation, pose, obb

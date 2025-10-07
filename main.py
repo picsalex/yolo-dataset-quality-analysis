@@ -182,12 +182,10 @@ def build_config(args: argparse.Namespace) -> Dict[str, Any]:
         print("❌ Error: dataset task is required (use --dataset-task or specify in config file)")
         sys.exit(1)
     
-    # Auto-generate dataset name if not provided
-    if not config['dataset'].get('name'):
+    # Auto-generate dataset name if not provided or if it's still set to "default"
+    if not config['dataset'].get('name') or config['dataset']['name'].strip() == "default":
         dataset_path = pathlib.Path(config['dataset']['path'])
-        dataset_name = dataset_path.name if dataset_path.is_dir() else dataset_path.parent.name
-        import re
-        config['dataset']['name'] = re.sub(r'[^a-zA-Z0-9_-]', '_', dataset_name)
+        config['dataset']['name'] = dataset_path.parent.name if not dataset_path.is_dir() else dataset_path.name
     
     return config
 
