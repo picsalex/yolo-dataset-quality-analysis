@@ -8,7 +8,13 @@ from tqdm import tqdm
 
 from src.config import get_box_field_from_task
 from src.enum import DatasetTask
-from src.images import get_image_dimensions
+from src.images import (
+    get_image_dimensions,
+    get_image_channel_count,
+    get_image_aspect_ratio,
+    get_image_size_bytes,
+    get_image_mime_type,
+)
 
 dataset_split_options = [
     "train",
@@ -89,6 +95,9 @@ def prepare_voxel_dataset(
 
         # Create empty dataset
         dataset = fo.Dataset(name=dataset_name, persistent=True)
+
+        dataset.add_sample_field("image_path", fo.StringField)
+        dataset.add_sample_field("label_path", fo.StringField)
 
         images_base = os.path.join(dataset_path, "images")
         labels_base = os.path.join(dataset_path, "labels")
@@ -182,9 +191,20 @@ def _process_split(
         try:
             # Get image dimensions
             width, height = get_image_dimensions(image_path)
+            channels = get_image_channel_count(image_path)
+            aspect_ratio = get_image_aspect_ratio(image_path)
+            size_bytes = get_image_size_bytes(image_path)
+            mime_type = get_image_mime_type(image_path)
 
             # Add metadata
-            sample.metadata = fo.ImageMetadata(width=width, height=height)
+            sample.metadata = fo.ImageMetadata(
+                width=width,
+                height=height,
+                num_channels=channels,
+                aspect_ratio=aspect_ratio,
+                size_bytes=size_bytes,
+                mime_type=mime_type,
+            )
 
             # Load YOLO annotations if they exist
             label_file = os.path.splitext(img_file)[0] + ".txt"
@@ -221,7 +241,9 @@ def _process_split(
                     )
                     sample[detection_field] = detection_labels
 
-            sample.metadata = fo.ImageMetadata(width=width, height=height)
+            sample["image_path"] = image_path
+            sample["label_path"] = label_path if label_path else None
+
             samples.append(sample)
 
         except Exception as e:
@@ -302,7 +324,7 @@ def _process_classification_split(
                 )
 
                 # Store additional metadata
-                sample["image_path"] = image_path
+                sample.image_path = image_path
 
                 samples.append(sample)
 
@@ -480,8 +502,9 @@ def _get_fiftyone_detection_label(
             ],
             tags=[split],
         )
+
         detection["label_path"] = label_path
-        detection["image_path"] = image_path
+
         return detection
 
     else:
@@ -576,7 +599,6 @@ def _get_fiftyone_keypoint_label(
         tags=[split],
     )
     keypoint["label_path"] = label_path
-    keypoint["image_path"] = image_path
 
     return keypoint
 
@@ -659,7 +681,7 @@ def _get_fiftyone_obb_label(
 
         # Add metadata for tracking
         obb["label_path"] = label_path
-        obb["image_path"] = image_path
+
         obb["is_obb"] = True  # Flag to distinguish from regular polygons
 
         return obb
@@ -741,7 +763,7 @@ def _get_fiftyone_polygon_label(
         filled=True,
         tags=[split],
     )
+
     polygon["label_path"] = label_path
-    polygon["image_path"] = image_path
 
     return polygon
