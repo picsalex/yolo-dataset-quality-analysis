@@ -102,27 +102,31 @@ python main.py --dataset-path /large/dataset --dataset-task segmentation --batch
 
 ## 📊 Supported Tasks & Metadata
 
+For each expected task format, the following metadata will be computed and available in FiftyOne:
+
 ### 🎯 Detection
 **Format:** `class_id x_center y_center width height`
 - `area`, `bbox_aspect_ratio`, `bbox_width`, `bbox_height`, `object_count`
 
 ### 🎨 Segmentation
 **Format:** `class_id x1 y1 x2 y2 x3 y3 ...`
-- `area` (Shapely), `num_points`, `object_count`
+- `area`, `num_points`, `object_count`
 
 ### 🏷️ Classification
 **Structure:** `dataset/{train,val,test}/{class_name}/`
-- Class labels and distribution
+- Class labels
 
 ### 📐 OBB
 **Format:** `class_id x1 y1 x2 y2 x3 y3 x4 y4`
 - `area`, `bbox_width`, `bbox_height`, `object_count`
 
 ### 🤸 Pose
-**Format:** `class_id x_center y_center width height x1 y1 v1 ...`
+**Format:** `class_id x_center y_center width height x1 y1 v1 x2 y2 v2 ...`
 - `area`, `num_keypoints`, `bbox_aspect_ratio`, `bbox_width`, `bbox_height`, `object_count`
 
 ## 📁 Dataset Structure
+
+The following YOLO dataset structure is expected for all tasks except classification:
 
 ```
 dataset/
@@ -137,26 +141,39 @@ dataset/
 └── data.yaml  # Class names
 ```
 
-## 🐛 Troubleshooting
-
-**Missing arguments:**
-```bash
-# If you see "dataset path is required", either:
-python main.py --dataset-path /path --dataset-task detection
-# OR use a config file with these values
-python main.py --config cfg/config.yaml
+For classification, the structure should be:
+```
+dataset/
+├── train/
+│   ├── class1/
+│   ├── class2/
+│   └── ...
+├── val/
+│   ├── class1/
+│   ├── class2/
+│   └── ...
+└── test/
+    ├── class1/
+    ├── class2/
+    └── ...
 ```
 
-**Memory issues:**
-```bash
-python main.py --config cfg/default.yaml --batch-size 8
-```
+## 🤝 Contributing
 
-**Quick preview:**
-```bash
-python main.py --dataset-path /path --dataset-task detection --skip-embeddings
-```
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📝 License
+## 📜 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with [FiftyOne](https://voxel51.com/fiftyone) by Voxel51
+- Inspired by [Ultralytics](https://ultralytics.com) YOLO ecosystem
+- CLIP models from [OpenAI](https://openai.com/research/clip)
+
+---
+
+<div align="center">
+  Made with ❤️ for the YOLO community
+</div>
