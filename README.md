@@ -32,36 +32,26 @@ pip install -r requirements.txt
 ### Basic Usage
 
 ```bash
-# Minimal usage - only 2 required arguments
-python main.py --dataset-path /path/to/your/dataset --dataset-task detection
+# Option 1: Command-line only (no config file)
+python main.py --dataset-path /path/to/dataset --dataset-task detection
+
+# Option 2: Config file only (if it contains path and task)
+python main.py --config cfg/my_config.yaml
+
+# Option 3: Config file + overrides
+python main.py --config cfg/default.yaml --dataset-path /path/to/new/dataset
 ```
 
-## ⚙️ Command-Line Arguments
+## ⚙️ Configuration
 
-| Argument | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `--dataset-path` | **Yes** | - | Path to YOLO dataset |
-| `--dataset-task` | **Yes** | - | Task type: `classification`, `detection`, `segmentation`, `pose`, `obb` |
-| `--dataset-name` | No | Auto from path | Name for FiftyOne dataset |
-| `--config` | No | None | Optional config YAML file |
-| `--reload` | No | False | Force reload dataset |
-| `--skip-embeddings` | No | False | Skip embedding computation |
-| `--batch-size` | No | 16 | Batch size for embeddings |
-| `--model` | No | clip-vit-base32-torch | CLIP model name |
-| `--thumbnail-dir` | No | thumbnails | Directory for thumbnails |
-| `--port` | No | 5151 | FiftyOne app port |
-| `--no-launch` | No | False | Don't launch FiftyOne app |
+### Using Config File (Recommended for repeated use)
 
-## 📝 Configuration (Optional)
-
-You can use a YAML config file for default values:
-
+Create a `cfg/my_config.yaml`:
 ```yaml
-# cfg/default.yaml
 dataset:
-  path: "/path/to/your/yolo/dataset"
-  name: "yolo_dataset"
-  task: "detection"
+  path: "/path/to/your/dataset"
+  task: "detection"  # detection, segmentation, classification, pose, obb
+  name: "my_analysis"  # optional, auto-generated if not set
   reload: false
 
 embeddings:
@@ -70,57 +60,25 @@ embeddings:
   batch_size: 16
 ```
 
-Usage with config:
+Then simply run:
 ```bash
-# Config file + required arguments
-python main.py --config cfg/default.yaml --dataset-path /path/to/dataset --dataset-task detection
-
-# Override config values with arguments
-python main.py --config cfg/default.yaml --dataset-path /path/to/dataset --dataset-task detection --batch-size 32
+python main.py --config cfg/my_config.yaml
 ```
 
-## 📊 Supported Tasks & Metadata
+### Command-Line Arguments
 
-### 🎯 Detection Task
-**Label Format:** `class_id x_center y_center width height`
-
-**Metadata:**
-- `area`: Bounding box area in pixels²
-- `bbox_aspect_ratio`: Width/height ratio
-- `bbox_width`, `bbox_height`: Dimensions in pixels
-- `object_count`: Objects per image
-
-### 🎨 Segmentation Task
-**Label Format:** `class_id x1 y1 x2 y2 x3 y3 ...`
-
-**Metadata:**
-- `area`: Polygon area in pixels² (Shapely)
-- `num_points`: Number of polygon vertices
-- `object_count`: Segments per image
-
-### 🏷️ Classification Task
-**Structure:** `dataset/{train,val,test}/{class_name}/images.jpg`
-
-**Metadata:**
-- Image classification labels
-- Class distribution statistics
-
-### 📐 OBB Task
-**Label Format:** `class_id x1 y1 x2 y2 x3 y3 x4 y4`
-
-**Metadata:**
-- `area`: OBB area in pixels²
-- `bbox_width`, `bbox_height`: OBB dimensions
-- `object_count`: OBBs per image
-
-### 🤸 Pose Task
-**Label Format:** `class_id x_center y_center width height x1 y1 v1 x2 y2 v2 ...`
-
-**Metadata:**
-- `area`: Bounding box area
-- `num_keypoints`: Detected keypoints per instance
-- `bbox_aspect_ratio`, `bbox_width`, `bbox_height`: Box dimensions
-- `object_count`: Pose instances per image
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `--dataset-path` | Yes* | Path to YOLO dataset (*not needed if in config) |
+| `--dataset-task` | Yes* | Task type: `classification`, `detection`, `segmentation`, `pose`, `obb` (*not needed if in config) |
+| `--config` | No | Path to config YAML file |
+| `--dataset-name` | No | Name for FiftyOne dataset (auto-generated from path if not set) |
+| `--reload` | No | Force reload dataset |
+| `--skip-embeddings` | No | Skip embedding computation |
+| `--batch-size` | No | Batch size for embeddings |
+| `--model` | No | CLIP model name |
+| `--port` | No | FiftyOne app port (default: 5151) |
+| `--no-launch` | No | Don't launch FiftyOne app |
 
 ## 💡 Examples
 
@@ -128,15 +86,41 @@ python main.py --config cfg/default.yaml --dataset-path /path/to/dataset --datas
 # Quick visualization without embeddings
 python main.py --dataset-path /datasets/coco --dataset-task detection --skip-embeddings
 
-# High-performance with larger batch
-python main.py --dataset-path /datasets/large --dataset-task segmentation --batch-size 64
+# Use config file for common settings
+python main.py --config cfg/coco_config.yaml
 
-# Process without launching app
-python main.py --dataset-path /datasets/test --dataset-task detection --no-launch
+# Override config with different dataset
+python main.py --config cfg/default.yaml --dataset-path /datasets/test --reload
 
-# Custom model
-python main.py --dataset-path /datasets/data --dataset-task pose --model clip-vit-large-336
+# Process multiple datasets with same config
+python main.py --config cfg/base.yaml --dataset-path /datasets/train --dataset-name train_analysis
+python main.py --config cfg/base.yaml --dataset-path /datasets/val --dataset-name val_analysis
+
+# High-performance processing
+python main.py --dataset-path /large/dataset --dataset-task segmentation --batch-size 64 --model clip-vit-large-336
 ```
+
+## 📊 Supported Tasks & Metadata
+
+### 🎯 Detection
+**Format:** `class_id x_center y_center width height`
+- `area`, `bbox_aspect_ratio`, `bbox_width`, `bbox_height`, `object_count`
+
+### 🎨 Segmentation
+**Format:** `class_id x1 y1 x2 y2 x3 y3 ...`
+- `area` (Shapely), `num_points`, `object_count`
+
+### 🏷️ Classification
+**Structure:** `dataset/{train,val,test}/{class_name}/`
+- Class labels and distribution
+
+### 📐 OBB
+**Format:** `class_id x1 y1 x2 y2 x3 y3 x4 y4`
+- `area`, `bbox_width`, `bbox_height`, `object_count`
+
+### 🤸 Pose
+**Format:** `class_id x_center y_center width height x1 y1 v1 ...`
+- `area`, `num_keypoints`, `bbox_aspect_ratio`, `bbox_width`, `bbox_height`, `object_count`
 
 ## 📁 Dataset Structure
 
@@ -155,21 +139,21 @@ dataset/
 
 ## 🐛 Troubleshooting
 
-**Dataset not found:**
+**Missing arguments:**
 ```bash
-# Check path exists and has correct structure
-ls -la /path/to/dataset/
+# If you see "dataset path is required", either:
+python main.py --dataset-path /path --dataset-task detection
+# OR use a config file with these values
+python main.py --config cfg/config.yaml
 ```
 
 **Memory issues:**
 ```bash
-# Reduce batch size
-python main.py --dataset-path /path --dataset-task detection --batch-size 8
+python main.py --config cfg/default.yaml --batch-size 8
 ```
 
 **Quick preview:**
 ```bash
-# Skip heavy processing
 python main.py --dataset-path /path --dataset-task detection --skip-embeddings
 ```
 

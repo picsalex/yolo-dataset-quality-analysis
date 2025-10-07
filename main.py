@@ -8,8 +8,10 @@ License: MIT
 """
 
 import os
+import sys
 import argparse
 import yaml
+import pathlib
 from typing import Dict, Any
 
 import fiftyone as fo
@@ -41,23 +43,23 @@ def parse_arguments() -> argparse.Namespace:
         "--config",
         type=str,
         default=None,
-        help="Path to configuration YAML file (optional)"
+        help="Path to configuration YAML file"
     )
     
-    # Required arguments
+    # Dataset arguments (conditionally required)
     parser.add_argument(
         "--dataset-path",
         type=str,
-        required=True,
-        help="Path to YOLO dataset (required)"
+        default=None,
+        help="Path to YOLO dataset (required if no config file)"
     )
     
     parser.add_argument(
         "--dataset-task",
         type=str,
-        required=True,
+        default=None,
         choices=["classification", "detection", "segmentation", "pose", "obb"],
-        help="Dataset task type (required)"
+        help="Dataset task type (required if no config file)"
     )
     
     # Optional arguments
@@ -85,28 +87,28 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=16,
+        default=None,
         help="Batch size for embedding computation"
     )
     
     parser.add_argument(
         "--model",
         type=str,
-        default="clip-vit-base32-torch",
+        default=None,
         help="CLIP model name for embeddings"
     )
     
     parser.add_argument(
         "--thumbnail-dir",
         type=str,
-        default="thumbnails",
+        default=None,
         help="Base directory for thumbnails"
     )
     
     parser.add_argument(
         "--port",
         type=int,
-        default=5151,
+        default=None,
         help="Port for FiftyOne app"
     )
     
@@ -117,66 +119,75 @@ def parse_arguments() -> argparse.Namespace:
         help="Don't launch FiftyOne app after processing"
     )
     
-    args = parser.parse_args()
-    
-    # Auto-generate dataset name if not provided
-    if args.dataset_name is None:
-        import pathlib
-
-        dataset_path = pathlib.Path(args.dataset_path)
-        args.dataset_name = (
-            dataset_path.parent.name if not dataset_path.is_dir() else dataset_path.name
-        )
-
-    return args
+    return parser.parse_args()
 
 
 def build_config(args: argparse.Namespace) -> Dict[str, Any]:
-    """Build configuration from arguments and optional config file"""
+    """Build configuration from default.yaml, optional config file, and arguments"""
     
-    # Start with default structure
-    config = {
-        'dataset': {
-            'path': args.dataset_path,
-            'name': args.dataset_name,
-            'task': args.dataset_task,
-            'reload': args.reload
-        },
-        'embeddings': {
-            'skip': args.skip_embeddings,
-            'model': args.model,
-            'batch_size': args.batch_size
-        },
-        'thumbnail_dir': args.thumbnail_dir,
-        'port': args.port,
-        'no_launch': args.no_launch
-    }
+    # Load default.yaml
+    default_config_path = 'cfg/default.yaml'
+    if not os.path.exists(default_config_path):
+        print(f"❌ Error: default configuration file not found: {default_config_path}")
+        sys.exit(1)
     
-    # If config file is provided, load it and override with args
-    if args.config and os.path.exists(args.config):
-        try:
-            file_config = load_config(args.config)
-            
-            # Merge file config with args (args take precedence)
-            if 'dataset' in file_config:
-                config['dataset']['path'] = args.dataset_path  # Always use args
-                config['dataset']['task'] = args.dataset_task  # Always use args
-                config['dataset']['name'] = args.dataset_name  # Always use args
-                config['dataset']['reload'] = args.reload or file_config['dataset'].get('reload', False)
-            
-            if 'embeddings' in file_config:
-                # Only override if args were explicitly set (not defaults)
-                if not args.skip_embeddings:
-                    config['embeddings']['skip'] = file_config['embeddings'].get('skip', False)
-                if args.batch_size == 16:  # Default value
-                    config['embeddings']['batch_size'] = file_config['embeddings'].get('batch_size', 16)
-                if args.model == "clip-vit-base32-torch":  # Default value
-                    config['embeddings']['model'] = file_config['embeddings'].get('model', "clip-vit-base32-torch")
+    config = load_config(default_config_path)
+    
+    # Load user-specified config file if provided
+    if args.config:
+        if not os.path.exists(args.config):
+            print(f"❌ Config file not found: {args.config}")
+            sys.exit(1)
+        
+        user_config = load_config(args.config)
+        
+        # Update with user config values
+        if 'dataset' in user_config:
+            config['dataset'].update(user_config['dataset'])
+        if 'embeddings' in user_config:
+            config['embeddings'].update(user_config['embeddings'])
+    
+    # Override with command-line arguments
+    if args.dataset_path is not None:
+        config['dataset']['path'] = args.dataset_path
+    
+    if args.dataset_task is not None:
+        config['dataset']['task'] = args.dataset_task
+    
+    if args.dataset_name is not None:
+        config['dataset']['name'] = args.dataset_name
+    
+    config['dataset']['reload'] = args.reload
+    config['embeddings']['skip'] = args.skip_embeddings
+    
+    if args.batch_size is not None:
+        config['embeddings']['batch_size'] = args.batch_size
+    
+    if args.model is not None:
+        config['embeddings']['model'] = args.model
+    
+    if args.thumbnail_dir is not None:
+        config['thumbnail_dir'] = args.thumbnail_dir
+    
+    if args.port is not None:
+        config['port'] = args.port
+    
+    config['no_launch'] = args.no_launch
+    
+    # Validate required fields
+    if not config['dataset'].get('path'):
+        print("❌ Error: dataset path is required (use --dataset-path or specify in config file)")
+        sys.exit(1)
+    
+    if not config['dataset'].get('task'):
+        print("❌ Error: dataset task is required (use --dataset-task or specify in config file)")
+        sys.exit(1)
+    
+    # Auto-generate dataset name if not provided
+    if not config['dataset'].get('name'):
+        dataset_path = pathlib.Path(config['dataset']['path'])
+        config['dataset']['name'] = dataset_path.parent.name if not dataset_path.is_dir() else dataset_path.name
 
-        except Exception as e:
-            print(f"⚠️  Warning: Could not load config file {args.config}: {e}")
-            print("Using command-line arguments only")
-    
     return config
 
 
@@ -189,10 +200,16 @@ def main():
     # Build configuration
     config = build_config(args)
     
-    # Validate dataset path
+    # Validate dataset path exists
     if not os.path.exists(config['dataset']['path']):
         print(f"❌ Dataset path does not exist: {config['dataset']['path']}")
-        return
+        sys.exit(1)
+    
+    # Validate task
+    valid_tasks = ["classification", "detection", "segmentation", "pose", "obb"]
+    if config['dataset']['task'] not in valid_tasks:
+        print(f"❌ Invalid task: {config['dataset']['task']}. Must be one of {valid_tasks}")
+        sys.exit(1)
     
     print("\n" + "=" * 60)
     print("FIFTYONE YOLO DATASET ANALYSIS")
@@ -249,7 +266,7 @@ def main():
         
         # Step 4: Generate thumbnails
         print("\n🖼️ Step 4: Generating thumbnails for optimized UI...")
-        thumbnail_dir = os.path.join(config['thumbnail_dir'], config['dataset']['name'])
+        thumbnail_dir = os.path.join(config.get('thumbnail_dir', 'thumbnails'), config['dataset']['name'])
         generate_thumbnails(
             dataset=dataset,
             thumbnail_dir_path=thumbnail_dir,
@@ -261,25 +278,23 @@ def main():
             print("✓ Skipping embeddings computation as requested")
     
     # Step 5: Launch app
-    if not config['no_launch']:
+    if not config.get('no_launch', False):
         print("\n🚀 Step 5: Launching FiftyOne app...")
         
         session = fo.launch_app(
             dataset,
-            port=config['port']
+            port=config.get('port', 5151)
         )
         
-        print(f"\n🌐 App running at: http://localhost:{config['port']}")
+        print(f"\n🌐 App running at: http://localhost:{config.get('port', 5151)}")
         print("📊 Dataset: " + config['dataset']['name'])
         print("🎯 Task: " + config['dataset']['task'])
         print("\nPress Ctrl+C to stop the app\n")
         
         try:
             session.wait()
-
         except KeyboardInterrupt:
             print("\n\nInterrupted by user")
-
         finally:
             print("\n✓ App closed successfully")
             print("=" * 60)
