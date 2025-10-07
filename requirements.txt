@@ -1,8 +1,34 @@
-torch
-torchvision
-fiftyone
-umap-learn>=0.5
-numpy==2.2.6
-Pillow
-tqdm
-shapely
+# Core dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+fiftyone>=0.23.0
+
+# Image processing and data handling
+numpy>=1.24.0,<2.3  # Compatible with numba for UMAP
+Pillow>=10.0.0
+opencv-python>=4.8.0
+
+# YAML configuration
+PyYAML>=6.0
+
+# Progress bars and utilities
+tqdm>=4.65.0
+
+# Geometry processing
+shapely>=2.0.0
+
+# Embeddings and visualization
+umap-learn>=0.5.3
+scikit-learn>=1.3.0
+matplotlib>=3.7.0
+
+# CLIP model support
+open-clip-torch>=2.20.0
+
+# Performance optimizations
+numba>=0.57.0
+joblib>=1.3.0
+
+# Optional but recommended
+pandas>=2.0.0
+plotly>=5.14.0

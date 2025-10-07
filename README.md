@@ -16,214 +16,163 @@
 
 ### Installation
 
-Clone the repository and set up your environment in just a few steps:
-
 ```bash
 # Clone the repository
 git clone https://github.com/picsalex/yolo-dataset-quality-analysis.git
 cd yolo-dataset-quality-analysis
 
-# Create a virtual environment
+# Create and activate virtual environment
 python -m venv .venv
-
-# Activate the virtual environment
-# On macOS/Linux:
-source .venv/bin/activate
-# On Windows:
-# .venv\Scripts\activate
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install requirements
 pip install -r requirements.txt
 ```
 
-### Run Analysis
+### Basic Usage
 
-Configure your dataset path and run the analysis:
-
-```python
-# Edit main.py to configure your dataset
-dataset_path = "/path/to/your/dataset"  # Your YOLO dataset path
-dataset_name = "my_dataset"             # Name for FiftyOne dataset
-dataset_task = DatasetTask.DETECTION    # Choose your task type
-
-# Run the analysis
-python main.py
+```bash
+# Minimal usage - only 2 required arguments
+python main.py --dataset-path /path/to/your/dataset --dataset-task detection
 ```
 
-## 📊 Supported Tasks
+## ⚙️ Command-Line Arguments
 
-This tool supports all major YOLO dataset formats:
+| Argument | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `--dataset-path` | **Yes** | - | Path to YOLO dataset |
+| `--dataset-task` | **Yes** | - | Task type: `classification`, `detection`, `segmentation`, `pose`, `obb` |
+| `--dataset-name` | No | Auto from path | Name for FiftyOne dataset |
+| `--config` | No | None | Optional config YAML file |
+| `--reload` | No | False | Force reload dataset |
+| `--skip-embeddings` | No | False | Skip embedding computation |
+| `--batch-size` | No | 16 | Batch size for embeddings |
+| `--model` | No | clip-vit-base32-torch | CLIP model name |
+| `--thumbnail-dir` | No | thumbnails | Directory for thumbnails |
+| `--port` | No | 5151 | FiftyOne app port |
+| `--no-launch` | No | False | Don't launch FiftyOne app |
 
-| Task | Enum Value | Description |
-|------|------------|-------------|
-| 🎯 **Detection** | `DatasetTask.DETECTION` | Object detection with bounding boxes |
-| 🎨 **Segmentation** | `DatasetTask.SEGMENTATION` | Instance segmentation with polygons |
-| 🏷️ **Classification** | `DatasetTask.CLASSIFICATION` | Image classification |
-| 📐 **OBB** | `DatasetTask.OBB` | Oriented bounding boxes |
-| 🤸 **Pose** | `DatasetTask.POSE` | Keypoint detection / Pose estimation |
+## 📝 Configuration (Optional)
 
-## 📁 Dataset Format
+You can use a YAML config file for default values:
 
-### Detection Format
+```yaml
+# cfg/default.yaml
+dataset:
+  path: "/path/to/your/yolo/dataset"
+  name: "yolo_dataset"
+  task: "detection"
+  reload: false
+
+embeddings:
+  skip: false
+  model: "clip-vit-base32-torch"
+  batch_size: 16
+```
+
+Usage with config:
+```bash
+# Config file + required arguments
+python main.py --config cfg/default.yaml --dataset-path /path/to/dataset --dataset-task detection
+
+# Override config values with arguments
+python main.py --config cfg/default.yaml --dataset-path /path/to/dataset --dataset-task detection --batch-size 32
+```
+
+## 📊 Supported Tasks & Metadata
+
+### 🎯 Detection Task
+**Label Format:** `class_id x_center y_center width height`
+
+**Metadata:**
+- `area`: Bounding box area in pixels²
+- `bbox_aspect_ratio`: Width/height ratio
+- `bbox_width`, `bbox_height`: Dimensions in pixels
+- `object_count`: Objects per image
+
+### 🎨 Segmentation Task
+**Label Format:** `class_id x1 y1 x2 y2 x3 y3 ...`
+
+**Metadata:**
+- `area`: Polygon area in pixels² (Shapely)
+- `num_points`: Number of polygon vertices
+- `object_count`: Segments per image
+
+### 🏷️ Classification Task
+**Structure:** `dataset/{train,val,test}/{class_name}/images.jpg`
+
+**Metadata:**
+- Image classification labels
+- Class distribution statistics
+
+### 📐 OBB Task
+**Label Format:** `class_id x1 y1 x2 y2 x3 y3 x4 y4`
+
+**Metadata:**
+- `area`: OBB area in pixels²
+- `bbox_width`, `bbox_height`: OBB dimensions
+- `object_count`: OBBs per image
+
+### 🤸 Pose Task
+**Label Format:** `class_id x_center y_center width height x1 y1 v1 x2 y2 v2 ...`
+
+**Metadata:**
+- `area`: Bounding box area
+- `num_keypoints`: Detected keypoints per instance
+- `bbox_aspect_ratio`, `bbox_width`, `bbox_height`: Box dimensions
+- `object_count`: Pose instances per image
+
+## 💡 Examples
+
+```bash
+# Quick visualization without embeddings
+python main.py --dataset-path /datasets/coco --dataset-task detection --skip-embeddings
+
+# High-performance with larger batch
+python main.py --dataset-path /datasets/large --dataset-task segmentation --batch-size 64
+
+# Process without launching app
+python main.py --dataset-path /datasets/test --dataset-task detection --no-launch
+
+# Custom model
+python main.py --dataset-path /datasets/data --dataset-task pose --model clip-vit-large-336
+```
+
+## 📁 Dataset Structure
+
 ```
 dataset/
 ├── images/
 │   ├── train/
-│   │   ├── image1.jpg
-│   │   └── image2.jpg
 │   ├── val/
 │   └── test/
 ├── labels/
 │   ├── train/
-│   │   ├── image1.txt
-│   │   └── image2.txt
 │   ├── val/
 │   └── test/
-└── data.yaml
+└── data.yaml  # Class names
 ```
 
-**Label format (`.txt` files):**
-```
-class_id x_center y_center width height
-```
-- All values are normalized [0, 1]
-- One object per line
+## 🐛 Troubleshooting
 
-### Segmentation Format
-Same directory structure as detection.
-
-**Label format (`.txt` files):**
-```
-class_id x1 y1 x2 y2 x3 y3 ...
-```
-- Polygon coordinates (minimum 3 points)
-- All values are normalized [0, 1]
-
-### Classification Format
-```
-dataset/
-├── train/
-│   ├── class1/
-│   │   ├── image1.jpg
-│   │   └── image2.jpg
-│   └── class2/
-│       ├── image3.jpg
-│       └── image4.jpg
-├── val/
-│   ├── class1/
-│   └── class2/
-└── test/
-    ├── class1/
-    └── class2/
-```
-- Images organized in class subdirectories
-- No separate label files needed
-
-### OBB (Oriented Bounding Box) Format
-Same directory structure as detection.
-
-**Label format (`.txt` files):**
-```
-class_id x1 y1 x2 y2 x3 y3 x4 y4
-```
-- Four corner points of the oriented rectangle
-- All values are normalized [0, 1]
-
-### Pose/Keypoint Format
-Same directory structure as detection.
-
-**Label format (`.txt` files):**
-```
-class_id x_center y_center width height x1 y1 v1 x2 y2 v2 ...
-```
-- Bounding box (first 4 values after class_id)
-- Keypoints in groups of 3: (x, y, visibility)
-- Visibility: 0=not labeled, 1=labeled but not visible, 2=labeled and visible
-- All coordinates are normalized [0, 1]
-
-## 📂 Supported Split Names
-
-The tool automatically recognizes the following split directory names:
-
-| Standard Splits | COCO-style Splits | Description |
-|----------------|-------------------|-------------|
-| `train` | `train2017` | Training data |
-| `val` | `val2017` | Validation data |
-| `valid` | - | Alternative validation naming |
-| `test` | `test2017` | Test data |
-
-## ⚙️ Configuration
-
-### data.yaml Format
-
-For all tasks except classification, include a `data.yaml` or `dataset.yaml` file:
-
-```yaml
-# Example data.yaml
-path: /path/to/dataset  # Optional: dataset root path
-train: images/train     # Optional: train images path
-val: images/val         # Optional: validation images path
-test: images/test       # Optional: test images path
-
-# Class names (required)
-names:
-  0: person
-  1: bicycle
-  2: car
-  3: motorcycle
-  # ... more classes
-
-# OR as a list
-names: ['person', 'bicycle', 'car', 'motorcycle']
-
-# Number of classes
-nc: 4  # Optional but recommended
+**Dataset not found:**
+```bash
+# Check path exists and has correct structure
+ls -la /path/to/dataset/
 ```
 
-## 🔧 Advanced Configuration
-
-Edit `main.py` to customize your analysis:
-
-```python
-# Analysis configuration
-batch_size = 16                              # Batch size for processing
-thumbnail_dir = "thumbnails/my_dataset"      # Thumbnail output directory
-force_reload = True                          # Force dataset reload, useful if the dataset has changed, otherwise the cached version will be used
-clip_model = "clip-vit-base32-torch"         # CLIP model for embeddings
+**Memory issues:**
+```bash
+# Reduce batch size
+python main.py --dataset-path /path --dataset-task detection --batch-size 8
 ```
 
-The available CLIP models are listed here: https://docs.voxel51.com/model_zoo/models.html.
+**Quick preview:**
+```bash
+# Skip heavy processing
+python main.py --dataset-path /path --dataset-task detection --skip-embeddings
+```
 
-## 📊 Output
+## 📝 License
 
-The analysis generates:
-
-1. **FiftyOne Dataset**: Interactive web-based dataset explorer
-2. **Thumbnails**: Optimized image thumbnails (1024px height)
-3. **Embeddings**: CLIP embeddings for similarity analysis
-4. **Visualizations**: UMAP projections for data distribution
-5. **Quality Metrics**: Dataset statistics and quality indicators
-
-### Viewing Results
-
-After running the analysis, the FiftyOne app will automatically open in your browser at `http://localhost:5151`.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Built with [FiftyOne](https://voxel51.com/fiftyone) by Voxel51
-- Inspired by [Ultralytics](https://ultralytics.com) YOLO ecosystem
-- CLIP models from [OpenAI](https://openai.com/research/clip)
-
----
-
-<div align="center">
-  Made with ❤️ for the YOLO community
-</div>
+MIT License - see [LICENSE](LICENSE) file for details.

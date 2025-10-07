@@ -1,0 +1,41 @@
+# YOLO Dataset Quality Analysis Configuration File
+# This file contains all default configuration parameters for the analysis
+
+# ===========================
+# DATASET CONFIGURATION
+# ===========================
+dataset:
+  # Path to your YOLO dataset
+  # Can be overridden with --dataset-path argument
+  path: "/path/to/your/yolo/dataset"
+  
+  # Name for the FiftyOne dataset
+  # This will be used for the dataset in FiftyOne and for thumbnail directories
+  # Can be overridden with --dataset-name argument
+  name: "yolo_dataset"
+  
+  # Dataset task type
+  # Options: classification, detection, segmentation, pose, obb
+  # Can be overridden with --dataset-task argument
+  task: "detection"
+  
+  # Force reload dataset even if it exists
+  # Set to true to reprocess everything from scratch
+  # Can be overridden with --reload argument
+  reload: false
+
+# ===========================
+# EMBEDDING CONFIGURATION
+# ===========================
+embeddings:
+  # Skip embedding computation (useful for quick visualization)
+  # Can be overridden with --skip-embeddings argument
+  skip: false
+
+  # CLIP model to use for embeddings
+  # Available models: https://docs.voxel51.com/model_zoo/models.html
+  model: "clip-vit-base32-torch"
+
+  # Batch size for embedding computation
+  batch_size: 16
+
