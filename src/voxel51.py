@@ -78,3 +78,32 @@ def compute_visualizations(
     print("\n" + "=" * 60)
     print("EMBEDDINGS COMPLETE")
     print("=" * 60)
+
+
+def get_object_count_from_labels(labels: fo.Label, dataset_task: DatasetTask) -> int:
+    """
+    Get the number of objects from the labels based on the dataset task
+
+    Args:
+        labels: The labels to count objects from
+        dataset_task: The dataset task (classification, detection, segmentation, pose, obb)
+
+    Returns:
+        The number of objects in the labels
+    """
+    if labels is None:
+        return 0
+
+    if dataset_task == DatasetTask.CLASSIFICATION:
+        return 1 if labels.label else 0
+
+    if dataset_task == DatasetTask.DETECTION:
+        return len(labels.detections) if labels.detections else 0
+
+    elif dataset_task == DatasetTask.SEGMENTATION or dataset_task == DatasetTask.OBB:
+        return len(labels.polylines) if labels.polylines else 0
+
+    elif dataset_task == DatasetTask.POSE:
+        return len(labels.keypoints) if labels.keypoints else 0
+
+    return 0

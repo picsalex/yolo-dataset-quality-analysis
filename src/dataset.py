@@ -3,6 +3,7 @@ from typing import List, Tuple, Optional
 
 import yaml
 import fiftyone as fo
+from shapely.geometry.polygon import Polygon
 
 from tqdm import tqdm
 
@@ -11,10 +12,10 @@ from src.enum import DatasetTask
 from src.images import (
     get_image_dimensions,
     get_image_channel_count,
-    get_image_aspect_ratio,
     get_image_size_bytes,
     get_image_mime_type,
 )
+from src.voxel51 import get_object_count_from_labels
 
 dataset_split_options = [
     "train",
@@ -98,6 +99,7 @@ def prepare_voxel_dataset(
 
         dataset.add_sample_field("image_path", fo.StringField)
         dataset.add_sample_field("label_path", fo.StringField)
+        dataset.add_sample_field("label_path", fo.StringField)
 
         images_base = os.path.join(dataset_path, "images")
         labels_base = os.path.join(dataset_path, "labels")
@@ -116,6 +118,8 @@ def prepare_voxel_dataset(
                         class_names=class_names,
                         dataset_task=dataset_task,
                     )
+
+            configure_dataset_additional_fields(dataset=dataset, dataset_task=dataset_task)
 
         else:
             raise FileNotFoundError(
@@ -139,6 +143,72 @@ def prepare_voxel_dataset(
     print(f"\nDataset created with {len(dataset)} total samples")
 
     return False, dataset
+
+
+def configure_dataset_additional_fields(dataset: fo.Dataset, dataset_task: DatasetTask) -> None:
+    """
+    Add additional fields to the dataset based on the dataset task.
+
+    Args:
+        dataset: The FiftyOne dataset to modify
+        dataset_task: The type of annotation task (e.g., DETECTION)
+    """
+    if dataset_task != DatasetTask.CLASSIFICATION:
+        dataset.add_sample_field("object_count", fo.IntField)
+
+        try:
+            if dataset_task == DatasetTask.DETECTION or dataset_task == DatasetTask.POSE:
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.area",
+                    fo.IntField,
+                )
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.bbox_aspect_ratio",
+                    fo.FloatField,
+                )
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.bbox_width",
+                    fo.FloatField,
+                )
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.bbox_height",
+                    fo.FloatField,
+                )
+
+                if dataset_task == DatasetTask.POSE:
+                    dataset.add_sample_field(
+                        f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.num_keypoints",
+                        fo.IntField,
+                    )
+
+            elif dataset_task == DatasetTask.SEGMENTATION:
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.SEGMENTATION)}.polylines.area",
+                    fo.IntField,
+                )
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.SEGMENTATION)}.polylines.num_points",
+                    fo.IntField,
+                )
+
+            elif dataset_task == DatasetTask.OBB:
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.OBB)}.polylines.area",
+                    fo.IntField,
+                )
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.OBB)}.polylines.bbox_width",
+                    fo.IntField,
+                )
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.OBB)}.polylines.bbox_height",
+                    fo.IntField,
+                )
+
+        except ValueError as e:
+            print(
+                f"Error adding the external field. Maybe the chosen dataset task `{str(dataset_task)}` is not the right one: {e} "
+            )
 
 
 def _process_split(
@@ -192,7 +262,6 @@ def _process_split(
             # Get image dimensions
             width, height = get_image_dimensions(image_path)
             channels = get_image_channel_count(image_path)
-            aspect_ratio = get_image_aspect_ratio(image_path)
             size_bytes = get_image_size_bytes(image_path)
             mime_type = get_image_mime_type(image_path)
 
@@ -201,7 +270,6 @@ def _process_split(
                 width=width,
                 height=height,
                 num_channels=channels,
-                aspect_ratio=aspect_ratio,
                 size_bytes=size_bytes,
                 mime_type=mime_type,
             )
@@ -235,15 +303,19 @@ def _process_split(
                         image_height=height,
                         split_name=split,
                         image_path=image_path,
+                        keypoint_labels=labels
                     )
                     detection_field = get_box_field_from_task(
                         task=DatasetTask.DETECTION
                     )
+
                     sample[detection_field] = detection_labels
 
             sample["image_path"] = image_path
             sample["label_path"] = label_path if label_path else None
-
+            sample["object_count"] = get_object_count_from_labels(
+                labels, dataset_task
+            )
             samples.append(sample)
 
         except Exception as e:
@@ -308,11 +380,19 @@ def _process_classification_split(
             sample = fo.Sample(filepath=image_path)
 
             try:
-                # Get image dimensions
                 width, height = get_image_dimensions(image_path)
+                channels = get_image_channel_count(image_path)
+                size_bytes = get_image_size_bytes(image_path)
+                mime_type = get_image_mime_type(image_path)
 
                 # Add metadata
-                sample.metadata = fo.ImageMetadata(width=width, height=height)
+                sample.metadata = fo.ImageMetadata(
+                    width=width,
+                    height=height,
+                    num_channels=channels,
+                    size_bytes=size_bytes,
+                    mime_type=mime_type,
+                )
 
                 classification_field = get_box_field_from_task(
                     task=DatasetTask.CLASSIFICATION
@@ -324,7 +404,7 @@ def _process_classification_split(
                 )
 
                 # Store additional metadata
-                sample.image_path = image_path
+                sample["image_path"] = image_path
 
                 samples.append(sample)
 
@@ -346,6 +426,7 @@ def _get_fiftyone_labels(
     image_height: int,
     split_name: str,
     image_path: str,
+    keypoint_labels: Optional[fo.Keypoint] = None,
 ) -> Optional[fo.Label]:
     """
     Convert YOLO label file to FiftyOne label object based on the dataset task.
@@ -358,6 +439,7 @@ def _get_fiftyone_labels(
         image_height: Height of the image
         split_name: The dataset split (train/val/test)
         image_path: Path to the image file
+        num_keypoints: Optional number of keypoints associated with the detection (for pose estimation)
 
     Returns:
         FiftyOne label object (Detection, Classifications, etc.) or None if no labels
@@ -368,16 +450,17 @@ def _get_fiftyone_labels(
     with open(label_path, "r") as f:
         if dataset_task == DatasetTask.DETECTION:
             detections = []
-            for line in f:
+            for index, line in enumerate(f):
                 if detection := _get_fiftyone_detection_label(
                     line=line,
                     class_names=class_names,
                     image_width=image_width,
                     image_height=image_height,
                     split=split_name,
-                    label_path=label_path,
-                    image_path=image_path,
+                    num_keypoints=keypoint_labels.keypoints[index]["num_keypoints"] if keypoint_labels else None,
                 ):
+                    detection["label_path"] = label_path
+                    detection["image_path"] = image_path
                     detections.append(detection)
 
             return fo.Detections(detections=detections) if detections else None
@@ -392,9 +475,9 @@ def _get_fiftyone_labels(
                     image_width=image_width,
                     image_height=image_height,
                     split=split_name,
-                    label_path=label_path,
-                    image_path=image_path,
                 ):
+                    keypoint["label_path"] = label_path
+                    keypoint["image_path"] = image_path
                     keypoints.append(keypoint)
 
             return fo.Keypoints(keypoints=keypoints) if keypoints else None
@@ -406,12 +489,12 @@ def _get_fiftyone_labels(
                 if polygon := _get_fiftyone_polygon_label(
                     line=line,
                     class_names=class_names,
+                    split=split_name,
                     image_width=image_width,
                     image_height=image_height,
-                    split=split_name,
-                    label_path=label_path,
-                    image_path=image_path,
                 ):
+                    polygon["label_path"] = label_path
+                    polygon["image_path"] = image_path
                     polygons.append(polygon)
 
             return fo.Polylines(polylines=polygons) if polygons else None
@@ -422,12 +505,12 @@ def _get_fiftyone_labels(
                 if obb := _get_fiftyone_obb_label(
                     line=line,
                     class_names=class_names,
+                    split=split_name,
                     image_width=image_width,
                     image_height=image_height,
-                    split=split_name,
-                    label_path=label_path,
-                    image_path=image_path,
                 ):
+                    obb["label_path"] = label_path
+                    obb["image_path"] = image_path
                     obbs.append(obb)
 
             return fo.Polylines(polylines=obbs) if obbs else None
@@ -442,9 +525,8 @@ def _get_fiftyone_detection_label(
     image_width: int,
     image_height: int,
     split: str,
-    label_path: str,
-    image_path: str,
-) -> fo.Detection:
+    num_keypoints: Optional[int] = None,
+) -> Optional[fo.Detection]:
     """
     Convert a single YOLO annotation line to a FiftyOne Detection object.
 
@@ -454,8 +536,7 @@ def _get_fiftyone_detection_label(
         image_width: Width of the image
         image_height: Height of the image
         split: The dataset split (train/val/test)
-        label_path: Path to the label file
-        img_path: Path to the image file
+        num_keypoints: Optional number of keypoints associated with the detection (for pose estimation)
 
     Returns:
         A FiftyOne Detection object or None if the line is invalid
@@ -503,7 +584,15 @@ def _get_fiftyone_detection_label(
             tags=[split],
         )
 
-        detection["label_path"] = label_path
+        detection["area"] = int(bbox_width * image_width * bbox_height * image_height)
+        detection["bbox_aspect_ratio"] = round(
+            (bbox_width / bbox_height if bbox_height != 0 else 0), 2
+        )
+        detection["bbox_width"] = int(bbox_width * image_width)
+        detection["bbox_height"] = int(bbox_height * image_height)
+
+        if num_keypoints is not None:
+            detection["num_keypoints"] = num_keypoints
 
         return detection
 
@@ -517,9 +606,7 @@ def _get_fiftyone_keypoint_label(
     image_width: int,
     image_height: int,
     split: str,
-    label_path: str,
-    image_path: str,
-) -> fo.Keypoint:
+) -> Optional[fo.Keypoint]:
     """
     Convert a single YOLO annotation line to a FiftyOne Keypoint object.
 
@@ -529,8 +616,6 @@ def _get_fiftyone_keypoint_label(
         image_width: Width of the image
         image_height: Height of the image
         split: The dataset split (train/val/test)
-        label_path: Path to the label file
-        image_path: Path to the image file
 
     Returns:
         A FiftyOne Keypoint object or None if the line is invalid
@@ -573,17 +658,13 @@ def _get_fiftyone_keypoint_label(
         if i + 2 < len(keypoint_data):
             kp_x = float(keypoint_data[i])
             kp_y = float(keypoint_data[i + 1])
-            visibility = float(keypoint_data[i + 2])
+            _ = float(keypoint_data[i + 2])  # visibility, not used here
 
-            # YOLO keypoints are already normalized (0-1)
-            # FiftyOne expects normalized coordinates
             kp_x = max(0, min(1, kp_x))
             kp_y = max(0, min(1, kp_y))
 
-            # Add point as [x, y] - visibility can be stored separately if needed
-            # For FiftyOne, we'll include all keypoints regardless of visibility
-            # but you could filter based on visibility if desired
-            points.append([kp_x, kp_y])
+            if kp_x != 0 and kp_y != 0:
+                points.append([kp_x, kp_y])
 
     if not points:
         return None
@@ -598,7 +679,9 @@ def _get_fiftyone_keypoint_label(
         bounding_box=[x_top_left, y_top_left, bbox_width, bbox_height],
         tags=[split],
     )
-    keypoint["label_path"] = label_path
+
+    keypoint["area"] = int(bbox_width * image_width * bbox_height * image_height)
+    keypoint["num_keypoints"] = len(points)
 
     return keypoint
 
@@ -606,23 +689,19 @@ def _get_fiftyone_keypoint_label(
 def _get_fiftyone_obb_label(
     line: str,
     class_names: List,
+    split: str,
     image_width: int,
     image_height: int,
-    split: str,
-    label_path: str,
-    image_path: str,
-) -> fo.Polyline:
+) -> Optional[fo.Polyline]:
     """
     Convert a single YOLO OBB (Oriented Bounding Box) annotation line to a FiftyOne Polygon object.
 
     Args:
         line: A single line from a YOLO OBB label file
         class_names: List of class names
+        split: The dataset split (train/val/test)
         image_width: Width of the image
         image_height: Height of the image
-        split: The dataset split (train/val/test)
-        label_path: Path to the label file
-        image_path: Path to the image file
 
     Returns:
         A FiftyOne Polyline object representing the OBB or None if the line is invalid
@@ -641,6 +720,8 @@ def _get_fiftyone_obb_label(
         # Extract the 4 corner points of the oriented bounding box
         # Points are in order: top-left, top-right, bottom-right, bottom-left (or any consistent order)
         points = []
+        points_pixels = []
+
         for i in range(1, 9, 2):
             x = float(parts[i])
             y = float(parts[i + 1])
@@ -651,6 +732,7 @@ def _get_fiftyone_obb_label(
             y = max(0.0, min(1.0, y))
 
             points.append([x, y])
+            points_pixels.append([x * image_width, y * image_height])
 
         # Should have exactly 4 points for a valid OBB
         if len(points) != 4:
@@ -679,10 +761,9 @@ def _get_fiftyone_obb_label(
             tags=[split],
         )
 
-        # Add metadata for tracking
-        obb["label_path"] = label_path
-
-        obb["is_obb"] = True  # Flag to distinguish from regular polygons
+        obb["area"] = int(Polygon(points_pixels[:-1] if points_pixels[0] == points_pixels[-1] else points_pixels).area)
+        obb["bbox_width"] = int(((points_pixels[1][0] - points_pixels[0][0]) ** 2 + (points_pixels[1][1] - points_pixels[0][1]) ** 2) ** 0.5)
+        obb["bbox_height"] = int(((points_pixels[2][0] - points_pixels[1][0]) ** 2 + (points_pixels[2][1] - points_pixels[1][1]) ** 2) ** 0.5)
 
         return obb
 
@@ -694,23 +775,19 @@ def _get_fiftyone_obb_label(
 def _get_fiftyone_polygon_label(
     line: str,
     class_names: List,
+    split: str,
     image_width: int,
     image_height: int,
-    split: str,
-    label_path: str,
-    image_path: str,
-) -> fo.Polyline:
+) -> Optional[fo.Polyline]:
     """
     Convert a single YOLO annotation line to a FiftyOne Polygon object.
 
     Args:
         line: A single line from a YOLO label file
         class_names: List of class names
+        split: The dataset split (train/val/test)
         image_width: Width of the image
         image_height: Height of the image
-        split: The dataset split (train/val/test)
-        label_path: Path to the label file
-        image_path: Path to the image file
 
     Returns:
         A FiftyOne Polygon object or None if the line is invalid
@@ -733,6 +810,8 @@ def _get_fiftyone_polygon_label(
 
     # Parse polygon points - groups of 2 (x, y)
     points = []
+    points_pixels = []
+
     for i in range(0, len(coords), 2):
         x = float(coords[i])
         y = float(coords[i + 1])
@@ -743,6 +822,7 @@ def _get_fiftyone_polygon_label(
         y = max(0, min(1, y))
 
         points.append([x, y])
+        points_pixels.append([x * image_width, y * image_height])
 
     # Need at least 3 points for a valid polygon
     if len(points) < 3:
@@ -764,6 +844,7 @@ def _get_fiftyone_polygon_label(
         tags=[split],
     )
 
-    polygon["label_path"] = label_path
+    polygon["area"] = int(Polygon(points_pixels[:-1] if points_pixels[0] == points_pixels[-1] else points_pixels).area)
+    polygon["num_points"] = len(points)
 
     return polygon

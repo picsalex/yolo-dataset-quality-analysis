@@ -5,3 +5,4 @@ umap-learn>=0.5
 numpy==2.2.6
 Pillow
 tqdm
+shapely

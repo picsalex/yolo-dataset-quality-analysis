@@ -31,7 +31,7 @@ def get_image_aspect_ratio(filepath: str) -> float:
         Aspect ratio (width / height)
     """
     width, height = get_image_dimensions(filepath)
-    return width / height
+    return round(width / height, 2)
 
 
 def get_image_channel_count(filepath: str) -> int:
