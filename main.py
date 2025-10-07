@@ -58,7 +58,7 @@ def parse_arguments() -> argparse.Namespace:
         "--dataset-task",
         type=str,
         default=None,
-        choices=["classification", "detection", "segmentation", "pose", "obb"],
+        choices=[task.value for task in DatasetTask],
         help="Dataset task type (required if no config file)"
     )
     
@@ -140,7 +140,6 @@ def build_config(args: argparse.Namespace) -> Dict[str, Any]:
             sys.exit(1)
         
         user_config = load_config(args.config)
-        
         # Update with user config values
         if 'dataset' in user_config:
             config['dataset'].update(user_config['dataset'])
@@ -186,18 +185,15 @@ def build_config(args: argparse.Namespace) -> Dict[str, Any]:
     # Auto-generate dataset name if not provided
     if not config['dataset'].get('name'):
         dataset_path = pathlib.Path(config['dataset']['path'])
-        config['dataset']['name'] = dataset_path.parent.name if not dataset_path.is_dir() else dataset_path.name
-
+        dataset_name = dataset_path.name if dataset_path.is_dir() else dataset_path.parent.name
+        import re
+        config['dataset']['name'] = re.sub(r'[^a-zA-Z0-9_-]', '_', dataset_name)
+    
     return config
 
 
 def main():
-    """Main execution function"""
-    
-    # Parse arguments
     args = parse_arguments()
-    
-    # Build configuration
     config = build_config(args)
     
     # Validate dataset path exists
@@ -205,11 +201,14 @@ def main():
         print(f"❌ Dataset path does not exist: {config['dataset']['path']}")
         sys.exit(1)
     
-    # Validate task
-    valid_tasks = ["classification", "detection", "segmentation", "pose", "obb"]
+    # Validate task and convert to enum
+    valid_tasks = [task.value for task in DatasetTask]
     if config['dataset']['task'] not in valid_tasks:
         print(f"❌ Invalid task: {config['dataset']['task']}. Must be one of {valid_tasks}")
         sys.exit(1)
+    
+    # Convert string to enum directly
+    dataset_task = DatasetTask(config['dataset']['task'])
     
     print("\n" + "=" * 60)
     print("FIFTYONE YOLO DATASET ANALYSIS")
@@ -222,16 +221,6 @@ def main():
     print(f"📦 Batch Size: {config['embeddings']['batch_size']}")
     print(f"🤖 CLIP Model: {config['embeddings']['model']}")
     print("=" * 60 + "\n")
-    
-    # Convert task string to enum
-    task_mapping = {
-        "classification": DatasetTask.CLASSIFICATION,
-        "detection": DatasetTask.DETECTION,
-        "segmentation": DatasetTask.SEGMENTATION,
-        "pose": DatasetTask.POSE,
-        "obb": DatasetTask.OBB
-    }
-    dataset_task = task_mapping[config['dataset']['task']]
     
     # Step 1: Prepare dataset
     print("📁 Step 1: Preparing dataset...")
