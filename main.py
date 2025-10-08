@@ -73,14 +73,14 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--reload",
         action="store_true",
-        default=False,
+        default=None,
         help="Force reload dataset even if it exists"
     )
     
     parser.add_argument(
         "--skip-embeddings",
         action="store_true",
-        default=False,
+        default=None,
         help="Skip embedding computation"
     )
     
@@ -155,9 +155,12 @@ def build_config(args: argparse.Namespace) -> Dict[str, Any]:
     
     if args.dataset_name is not None:
         config['dataset']['name'] = args.dataset_name
-    
-    config['dataset']['reload'] = args.reload
-    config['embeddings']['skip'] = args.skip_embeddings
+
+    if args.reload is not None:
+        config['dataset']['reload'] = args.reload
+
+    if args.skip_embeddings is not None:
+        config['embeddings']['skip'] = args.skip_embeddings
     
     if args.batch_size is not None:
         config['embeddings']['batch_size'] = args.batch_size
