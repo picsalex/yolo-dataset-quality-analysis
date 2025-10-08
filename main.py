@@ -280,14 +280,11 @@ def main():
         print("📊 Dataset: " + config['dataset']['name'])
         print("🎯 Task: " + config['dataset']['task'])
         print("\nPress Ctrl+C to stop the app\n")
-        
-        try:
-            session.wait()
-        except KeyboardInterrupt:
-            print("\n\nInterrupted by user")
-        finally:
-            print("\n✓ App closed successfully")
-            print("=" * 60)
+
+        input("\nPress Enter to stop the app...")
+        print("\n✓ App closed successfully")
+        print("=" * 60)
+
     else:
         print("\n✅ Processing complete. Dataset saved as:", config['dataset']['name'])
         print("To launch the app later, run:")
