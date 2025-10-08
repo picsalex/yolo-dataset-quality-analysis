@@ -7,7 +7,7 @@
 dataset:
   # Path to your YOLO dataset
   # Can be overridden with --dataset-path argument
-  path: "/path/to/your/yolo/dataset"
+  path: "/path/to/dataset"
   
   # Name for the FiftyOne dataset
   # This will be used for the dataset in FiftyOne and for thumbnail directories
@@ -15,9 +15,9 @@ dataset:
   name: "default"
   
   # Dataset task type
-  # Options: classification, detection, segmentation, pose, obb
+  # Options: classify, detect, segment, pose, obb
   # Can be overridden with --dataset-task argument
-  task: "detection"
+  task: "detect"
   
   # Force reload dataset even if it exists
   # Set to true to reprocess everything from scratch
