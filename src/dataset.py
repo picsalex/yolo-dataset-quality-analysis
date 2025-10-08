@@ -163,15 +163,15 @@ def configure_dataset_additional_fields(dataset: fo.Dataset, dataset_task: Datas
                     fo.IntField,
                 )
                 dataset.add_sample_field(
-                    f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.bbox_aspect_ratio",
+                    f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.aspect_ratio",
                     fo.FloatField,
                 )
                 dataset.add_sample_field(
-                    f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.bbox_width",
+                    f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.width",
                     fo.FloatField,
                 )
                 dataset.add_sample_field(
-                    f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.bbox_height",
+                    f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.height",
                     fo.FloatField,
                 )
 
@@ -190,6 +190,14 @@ def configure_dataset_additional_fields(dataset: fo.Dataset, dataset_task: Datas
                     f"{get_box_field_from_task(task=DatasetTask.SEGMENTATION)}.polylines.num_points",
                     fo.IntField,
                 )
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.SEGMENTATION)}.polylines.width",
+                    fo.IntField,
+                )
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.SEGMENTATION)}.polylines.height",
+                    fo.IntField,
+                )
 
             elif dataset_task == DatasetTask.OBB:
                 dataset.add_sample_field(
@@ -197,11 +205,11 @@ def configure_dataset_additional_fields(dataset: fo.Dataset, dataset_task: Datas
                     fo.IntField,
                 )
                 dataset.add_sample_field(
-                    f"{get_box_field_from_task(task=DatasetTask.OBB)}.polylines.bbox_width",
+                    f"{get_box_field_from_task(task=DatasetTask.OBB)}.polylines.width",
                     fo.IntField,
                 )
                 dataset.add_sample_field(
-                    f"{get_box_field_from_task(task=DatasetTask.OBB)}.polylines.bbox_height",
+                    f"{get_box_field_from_task(task=DatasetTask.OBB)}.polylines.height",
                     fo.IntField,
                 )
 
@@ -585,11 +593,11 @@ def _get_fiftyone_detection_label(
         )
 
         detection["area"] = int(bbox_width * image_width * bbox_height * image_height)
-        detection["bbox_aspect_ratio"] = round(
+        detection["aspect_ratio"] = round(
             (bbox_width / bbox_height if bbox_height != 0 else 0), 2
         )
-        detection["bbox_width"] = int(bbox_width * image_width)
-        detection["bbox_height"] = int(bbox_height * image_height)
+        detection["width"] = int(bbox_width * image_width)
+        detection["height"] = int(bbox_height * image_height)
 
         if num_keypoints is not None:
             detection["num_keypoints"] = num_keypoints
@@ -762,8 +770,8 @@ def _get_fiftyone_obb_label(
         )
 
         obb["area"] = int(Polygon(points_pixels[:-1] if points_pixels[0] == points_pixels[-1] else points_pixels).area)
-        obb["bbox_width"] = int(((points_pixels[1][0] - points_pixels[0][0]) ** 2 + (points_pixels[1][1] - points_pixels[0][1]) ** 2) ** 0.5)
-        obb["bbox_height"] = int(((points_pixels[2][0] - points_pixels[1][0]) ** 2 + (points_pixels[2][1] - points_pixels[1][1]) ** 2) ** 0.5)
+        obb["width"] = int(((points_pixels[1][0] - points_pixels[0][0]) ** 2 + (points_pixels[1][1] - points_pixels[0][1]) ** 2) ** 0.5)
+        obb["height"] = int(((points_pixels[2][0] - points_pixels[1][0]) ** 2 + (points_pixels[2][1] - points_pixels[1][1]) ** 2) ** 0.5)
 
         return obb
 
@@ -811,6 +819,8 @@ def _get_fiftyone_polygon_label(
     # Parse polygon points - groups of 2 (x, y)
     points = []
     points_pixels = []
+    min_x, min_y = 1.0, 1.0
+    max_x, max_y = 0.0, 0.0
 
     for i in range(0, len(coords), 2):
         x = float(coords[i])
@@ -823,6 +833,15 @@ def _get_fiftyone_polygon_label(
 
         points.append([x, y])
         points_pixels.append([x * image_width, y * image_height])
+
+        if x < min_x:
+            min_x = x
+        if y < min_y:
+            min_y = y
+        if x > max_x:
+            max_x = x
+        if y > max_y:
+            max_y = y
 
     # Need at least 3 points for a valid polygon
     if len(points) < 3:
@@ -846,5 +865,7 @@ def _get_fiftyone_polygon_label(
 
     polygon["area"] = int(Polygon(points_pixels[:-1] if points_pixels[0] == points_pixels[-1] else points_pixels).area)
     polygon["num_points"] = len(points)
+    polygon["width"] = int((max_x - min_x) * image_width)
+    polygon["height"] = int((max_y - min_y) * image_height)
 
     return polygon
