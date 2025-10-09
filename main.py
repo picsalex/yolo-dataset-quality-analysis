@@ -17,7 +17,7 @@ from typing import Dict, Any
 import fiftyone as fo
 import fiftyone.zoo as foz
 
-from src.config import get_box_field_from_task
+from src.config import get_box_field_from_task, images_embeddings_field
 from src.dataset import prepare_voxel_dataset
 from src.enum import DatasetTask
 from src.images import generate_thumbnails
@@ -234,7 +234,7 @@ def main():
     
     if not is_already_loaded and not config['embeddings']['skip']:
         patches_field = get_box_field_from_task(task=dataset_task)
-        
+
         # For pose estimation, we use bounding boxes to extract patches
         if dataset_task == DatasetTask.POSE:
             patches_field = get_box_field_from_task(task=DatasetTask.DETECTION)
@@ -249,9 +249,10 @@ def main():
         compute_visualizations(
             dataset=dataset,
             model=embeddings_model,
-            batch_size=config['embeddings']['batch_size'],
-            patches_field=patches_field,
             dataset_task=dataset_task,
+            batch_size=config["embeddings"]["batch_size"],
+            patches_embeddings_brain_key=patches_field,
+            images_embeddings_brain_key=images_embeddings_field,
         )
         
         # Step 4: Generate thumbnails

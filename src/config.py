@@ -10,13 +10,14 @@ classification_field = (
 )
 oriented_bounding_boxes_field = "obb_bounding_boxes"  # Field containing oriented bounding boxes in the dataset (if any)
 
+images_embeddings_field = "images_embeddings"
 
 def get_box_field_from_task(task: DatasetTask) -> str:
     """
     Get the appropriate field name based on the dataset task
 
     Args:
-        task: The dataset task (classification, detection, segmentation, pose, obb)
+        task: The dataset task (classify, detect, segment, pose, obb)
 
     Returns:
         The corresponding field name in the FiftyOne dataset
