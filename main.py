@@ -242,7 +242,7 @@ def main():
         # Step 2: Load CLIP model
         print("\n🤖 Step 2: Loading CLIP model...")
         embeddings_model = foz.load_zoo_model(config['embeddings']['model'])
-        print(f"✓ Loaded {config['embeddings']['model']}")
+        print(f"Loaded {config['embeddings']['model']}")
         
         # Step 3: Compute visualizations
         print("\n🧠 Step 3: Computing embeddings and visualizations...")
@@ -263,15 +263,15 @@ def main():
         )
     else:
         if is_already_loaded:
-            print("✓ Dataset already loaded, skipping processing...")
+            print("Dataset already loaded, skipping processing...")
         if config['embeddings']['skip']:
-            print("✓ Skipping embeddings computation as requested")
+            print("Skipping embeddings computation as requested")
     
     # Step 5: Launch app
     if not config.get('no_launch', False):
         print("\n🚀 Step 5: Launching FiftyOne app...")
         
-        session = fo.launch_app(
+        _ = fo.launch_app(
             dataset,
             port=config.get('port', 5151)
         )
@@ -279,10 +279,9 @@ def main():
         print(f"\n🌐 App running at: http://localhost:{config.get('port', 5151)}")
         print("📊 Dataset: " + config['dataset']['name'])
         print("🎯 Task: " + config['dataset']['task'])
-        print("\nPress Ctrl+C to stop the app\n")
 
         input("\nPress Enter to stop the app...")
-        print("\n✓ App closed successfully")
+        print("\nApp closed successfully")
         print("=" * 60)
 
     else:

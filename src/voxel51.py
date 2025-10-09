@@ -62,7 +62,7 @@ def compute_visualizations(
         brain_key="images_embeddings",
         batch_size=batch_size,
     )
-    print("✓ Image embeddings visualization computed")
+    print("Image embeddings visualization computed")
 
     # Compute visualization for patches if they exist
     if len(has_patches) > 0 and dataset_task != DatasetTask.CLASSIFICATION:
