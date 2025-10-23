@@ -103,9 +103,9 @@ def generate_thumbnails(
     foui.transform_images(
         dataset,
         size=(
-            -1,
             thumbnail_width,
-        ),  # Height of 512px, width auto-scaled for aspect ratio
+            -1,
+        ),
         output_dir=thumbnail_dir_path,
         rel_dir=common_base,
         output_field="thumbnail_path",
