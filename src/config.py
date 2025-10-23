@@ -12,6 +12,7 @@ oriented_bounding_boxes_field = "obb_bounding_boxes"  # Field containing oriente
 
 images_embeddings_field = "images_embeddings"
 
+
 def get_box_field_from_task(task: DatasetTask) -> str:
     """
     Get the appropriate field name based on the dataset task

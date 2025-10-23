@@ -71,7 +71,8 @@ def prepare_voxel_dataset(
         FileNotFoundError: If the expected images directory structure is not found
 
     Returns:
-        Dataset: The prepared FiftyOne dataset
+        A tuple (is_loaded, dataset) where is_loaded indicates if an existing dataset was loaded,
+        and dataset is the FiftyOne dataset object
     """
     if not os.path.isdir(dataset_path):
         raise NotADirectoryError(
@@ -119,7 +120,9 @@ def prepare_voxel_dataset(
                         dataset_task=dataset_task,
                     )
 
-            configure_dataset_additional_fields(dataset=dataset, dataset_task=dataset_task)
+            configure_dataset_additional_fields(
+                dataset=dataset, dataset_task=dataset_task
+            )
 
         else:
             raise FileNotFoundError(
@@ -140,12 +143,19 @@ def prepare_voxel_dataset(
                     split=split,
                 )
 
+    # Configure app to use thumbnails for better performance
+    dataset.app_config.media_fields = ["filepath", "thumbnail_path"]
+    dataset.app_config.grid_media_field = "thumbnail_path"
+    dataset.save()
+
     print(f"\nDataset created with {len(dataset)} total samples")
 
     return False, dataset
 
 
-def configure_dataset_additional_fields(dataset: fo.Dataset, dataset_task: DatasetTask) -> None:
+def configure_dataset_additional_fields(
+    dataset: fo.Dataset, dataset_task: DatasetTask
+) -> None:
     """
     Add additional fields to the dataset based on the dataset task.
 
@@ -157,7 +167,10 @@ def configure_dataset_additional_fields(dataset: fo.Dataset, dataset_task: Datas
         dataset.add_sample_field("object_count", fo.IntField)
 
         try:
-            if dataset_task == DatasetTask.DETECTION or dataset_task == DatasetTask.POSE:
+            if (
+                dataset_task == DatasetTask.DETECTION
+                or dataset_task == DatasetTask.POSE
+            ):
                 dataset.add_sample_field(
                     f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.area",
                     fo.IntField,
@@ -311,7 +324,7 @@ def _process_split(
                         image_height=height,
                         split_name=split,
                         image_path=image_path,
-                        keypoint_labels=labels
+                        keypoint_labels=labels,
                     )
                     detection_field = get_box_field_from_task(
                         task=DatasetTask.DETECTION
@@ -321,9 +334,7 @@ def _process_split(
 
             sample["image_path"] = image_path
             sample["label_path"] = label_path if label_path else None
-            sample["object_count"] = get_object_count_from_labels(
-                labels, dataset_task
-            )
+            sample["object_count"] = get_object_count_from_labels(labels, dataset_task)
             samples.append(sample)
 
         except Exception as e:
@@ -465,7 +476,9 @@ def _get_fiftyone_labels(
                     image_width=image_width,
                     image_height=image_height,
                     split=split_name,
-                    num_keypoints=keypoint_labels.keypoints[index]["num_keypoints"] if keypoint_labels else None,
+                    num_keypoints=keypoint_labels.keypoints[index]["num_keypoints"]
+                    if keypoint_labels
+                    else None,
                 ):
                     detection["label_path"] = label_path
                     detection["image_path"] = image_path
@@ -769,9 +782,27 @@ def _get_fiftyone_obb_label(
             tags=[split],
         )
 
-        obb["area"] = int(Polygon(points_pixels[:-1] if points_pixels[0] == points_pixels[-1] else points_pixels).area)
-        obb["width"] = int(((points_pixels[1][0] - points_pixels[0][0]) ** 2 + (points_pixels[1][1] - points_pixels[0][1]) ** 2) ** 0.5)
-        obb["height"] = int(((points_pixels[2][0] - points_pixels[1][0]) ** 2 + (points_pixels[2][1] - points_pixels[1][1]) ** 2) ** 0.5)
+        obb["area"] = int(
+            Polygon(
+                points_pixels[:-1]
+                if points_pixels[0] == points_pixels[-1]
+                else points_pixels
+            ).area
+        )
+        obb["width"] = int(
+            (
+                (points_pixels[1][0] - points_pixels[0][0]) ** 2
+                + (points_pixels[1][1] - points_pixels[0][1]) ** 2
+            )
+            ** 0.5
+        )
+        obb["height"] = int(
+            (
+                (points_pixels[2][0] - points_pixels[1][0]) ** 2
+                + (points_pixels[2][1] - points_pixels[1][1]) ** 2
+            )
+            ** 0.5
+        )
 
         return obb
 
@@ -863,7 +894,13 @@ def _get_fiftyone_polygon_label(
         tags=[split],
     )
 
-    polygon["area"] = int(Polygon(points_pixels[:-1] if points_pixels[0] == points_pixels[-1] else points_pixels).area)
+    polygon["area"] = int(
+        Polygon(
+            points_pixels[:-1]
+            if points_pixels[0] == points_pixels[-1]
+            else points_pixels
+        ).area
+    )
     polygon["num_points"] = len(points)
     polygon["width"] = int((max_x - min_x) * image_width)
     polygon["height"] = int((max_y - min_y) * image_height)

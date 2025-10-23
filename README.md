@@ -44,7 +44,10 @@ python main.py --dataset-path /path/to/dataset --dataset-task detection
 python main.py --config cfg/my_config.yaml
 
 # Option 3: Config file + overrides
-python main.py --config cfg/default.yaml --dataset-path /path/to/new/dataset
+python main.py --config cfg/default.yaml --batch_size 8
+
+# Option 4: Force reload of an existing dataset
+python main.py --dataset-path /path/to/dataset --dataset-task detection --reload
 ```
 
 If you want to use the configuration file option, you can either override the default config file located at `cfg/default.yaml` or create your own config file (e.g., `cfg/my_config.yaml`) with the following structure:
@@ -64,18 +67,20 @@ embeddings:
 
 ### Command-Line Arguments
 
-| Argument            | Type    | Default                   | Description                                                                                                                                                    |
-|---------------------|---------|---------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--dataset-path`    | `str`   | `None`                    | Path to your dataset. Required unless provided in config file and must follow the [YOLO format](https://docs.ultralytics.com/datasets/).                       |
-| `--dataset-task`    | `str`   | `"detect"`                | Task type: `classify`, `detect`, `segment`, `pose`, `obb`. Required unless in config. More info on the tasks [below](#-supported-tasks-and-image-metadata).    |
-| `--dataset-name`    | `str`   | `"default"`               | Name for the FiftyOne dataset. Auto-generated from path if not set.                                                                                            |
-| `--config`          | `str`   | `None`                    | Path to config YAML file. Overrides default settings.                                                                                                          |
-| `--reload`          | `bool`  | `false`                   | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                      |
-| `--skip-embeddings` | `bool`  | `false`                   | Skip CLIP embedding computation (useful for quick visualization).                                                                                              |
-| `--batch-size`      | `int`   | `16`                      | Batch size used during CLIP embedding computation.                                                                                                             |
-| `--model`           | `str`   | `"clip-vit-base32-torch"` | CLIP model name to use for embedding computation. The list of possible models can be found on [Voxel51's zoo](https://docs.voxel51.com/model_zoo/models.html). |
-| `--port`            | `int`   | `5151`                    | Port to launch the FiftyOne app on.                                                                                                                            |
-| `--no-launch`       | `bool`  | `false`                   | Prevents launching the FiftyOne app in the browser.                                                                                                            |
+| Argument            | Type   | Default                   | Description                                                                                                                                                              |
+|---------------------|--------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--dataset-path`    | `str`  | `None`                    | Path to your dataset. Required unless provided in config file and must follow the [YOLO format](https://docs.ultralytics.com/datasets/).                                 |
+| `--dataset-task`    | `str`  | `"detect"`                | Task type: `classify`, `detect`, `segment`, `pose`, `obb`. Required unless in config. More info on the tasks [below](#-supported-tasks-and-image-metadata).              |
+| `--dataset-name`    | `str`  | `"default"`               | Name for the FiftyOne dataset. Auto-generated from path if not set.                                                                                                      |
+| `--config`          | `str`  | `None`                    | Path to config YAML file. Overrides default settings.                                                                                                                    |
+| `--reload`          | `bool` | `false`                   | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                                |
+| `--skip-embeddings` | `bool` | `false`                   | Skip CLIP embedding computation (useful for quick visualization).                                                                                                        |
+| `--batch-size`      | `int`  | `16`                      | Batch size used during CLIP embedding computation.                                                                                                                       |
+| `--model`           | `str`  | `"clip-vit-base32-torch"` | CLIP model name to use for embedding computation. The list of possible models can be found on [Voxel51's zoo](https://docs.voxel51.com/model_zoo/models.html).           |
+| `--thumbnail-dir`   | `str`  | `./thumbnails`            | Path to the directory where the thumbnails are saved.                                                                                                                    |
+| `--thumbnail-width` | `int`  | `800`                     | Width (in pixels) of the generated image thumbnails in FiftyOne. The height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable thumbnail saving. |
+| `--port`            | `int`  | `5151`                    | Port to launch the FiftyOne app on.                                                                                                                                      |
+| `--no-launch`       | `bool` | `false`                   | Prevents launching the FiftyOne app in the browser.                                                                                                                      |
 
 ## 📊 Supported tasks and image metadata
 
@@ -91,13 +96,13 @@ For each expected task format, the following metadata will be computed and avail
 
 Also, for each image, the following metadata will be computed:
 
-| Image Metadata          | Description                                            |
-|-------------------------|--------------------------------------------------------|
-| `oject_count`           | Number of objects in the image                        |
-| `metadata.size_bytes`   | Size of the image file in bytes                        |
-| `metadata.width`        | Width of the image in pixels                           |
-| `metadata.height`       | Height of the image in pixels                          |
-| `metadata.mime_type`    | MIME type of the image (e.g., `image/jpeg`)          |
+| Image Metadata          | Description                                             |
+|-------------------------|---------------------------------------------------------|
+| `oject_count`           | Number of objects in the image                          |
+| `metadata.size_bytes`   | Size of the image file in bytes                         |
+| `metadata.width`        | Width of the image in pixels                            |
+| `metadata.height`       | Height of the image in pixels                           |
+| `metadata.mime_type`    | MIME type of the image (e.g., `image/jpeg`)             |
 | `metadata.num_channels` | Number of color channels (e.g., 3 for RGB)              |
 
 ## ⌨️ FiftyOne commands

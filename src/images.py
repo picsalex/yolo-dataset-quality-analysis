@@ -75,13 +75,16 @@ def get_image_mime_type(filepath: str) -> str:
         return img.get_format_mimetype()
 
 
-def generate_thumbnails(dataset: fo.Dataset, thumbnail_dir_path: str) -> None:
+def generate_thumbnails(
+    dataset: fo.Dataset, thumbnail_dir_path: str, thumbnail_width: int
+) -> None:
     """
     Generate optimized thumbnails using transform_images
 
     Args:
         dataset: The FiftyOne dataset to process
         thumbnail_dir_path: Directory to save thumbnails
+        thumbnail_width: Width of the generated thumbnails in pixels
     """
     print("\n" + "=" * 60)
     print("GENERATING THUMBNAILS")
@@ -99,7 +102,10 @@ def generate_thumbnails(dataset: fo.Dataset, thumbnail_dir_path: str) -> None:
     # Generate thumbnails preserving relative directory structure
     foui.transform_images(
         dataset,
-        size=(-1, 1024),  # Height of 1024, width auto-scaled
+        size=(
+            -1,
+            thumbnail_width,
+        ),  # Height of 512px, width auto-scaled for aspect ratio
         output_dir=thumbnail_dir_path,
         rel_dir=common_base,
         output_field="thumbnail_path",

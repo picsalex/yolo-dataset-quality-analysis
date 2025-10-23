@@ -42,3 +42,13 @@ embeddings:
     # Key to store image embeddings in FiftyOne samples
   images_embeddings_brain_key: "images_embeddings"
 
+# ===========================
+# THUMBNAIL CONFIGURATION
+# ===========================
+thumbnails:
+  # Directory to save thumbnails
+  # Will be created inside the FiftyOne dataset directory
+  dir: "thumbnails"
+
+  # Width of the thumbnails (in pixels), height is scaled proportionally
+  width: 800
