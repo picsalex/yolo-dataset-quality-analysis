@@ -40,18 +40,15 @@ pip install -r requirements.txt
 # Option 1: Command-line only (no config file)
 python main.py --dataset-path /path/to/dataset --dataset-task detection
 
-# Option 2: Config file only (if it contains path and task)
+# Option 2: Config file only (more details below)
 python main.py --config cfg/my_config.yaml
 
 # Option 3: Config file + overrides
 python main.py --config cfg/default.yaml --dataset-path /path/to/new/dataset
 ```
 
-## ⚙️ Configuration
+If you want to use the configuration file option, you can either override the default config file located at `cfg/default.yaml` or create your own config file (e.g., `cfg/my_config.yaml`) with the following structure:
 
-### Using Config File (Recommended for repeated use)
-
-Create a `cfg/my_config.yaml`:
 ```yaml
 dataset:
   path: "/path/to/your/dataset"
@@ -63,11 +60,6 @@ embeddings:
   skip: false
   model: "clip-vit-base32-torch"
   batch_size: 16
-```
-
-Then simply run:
-```bash
-python main.py --config cfg/my_config.yaml
 ```
 
 ### Command-Line Arguments
