@@ -100,6 +100,26 @@ Also, for each image, the following metadata will be computed:
 | `metadata.mime_type`    | MIME type of the image (e.g., `image/jpeg`)          |
 | `metadata.num_channels` | Number of color channels (e.g., 3 for RGB)              |
 
+## ⌨️ FiftyOne commands
+
+You can use the following commands bellow to interact with the FiftyOne datasets and application:
+
+```bash
+# List all the datasets
+fiftyone datasets list
+
+# Delete a specific dataset using its name
+fiftyone datasets delete <dataset_name>
+
+# Delete all datasets
+python -c "import fiftyone as fo; [fo.delete_dataset(name) for name in fo.list_datasets()]"
+
+# Launch the FiftyOne app
+fiftyone app launch 
+
+# Launch the FiftyOne app and pre-select a dataset using its name
+fiftyone app launch <dataset_name>
+```
 
 ## 🤝 Contributing
 

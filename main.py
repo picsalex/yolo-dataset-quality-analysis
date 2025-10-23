@@ -265,6 +265,7 @@ def main():
     else:
         if is_already_loaded:
             print("Dataset already loaded, skipping processing...")
+            
         if config['embeddings']['skip']:
             print("Skipping embeddings computation as requested")
     
@@ -280,10 +281,19 @@ def main():
         print(f"\n🌐 App running at: http://localhost:{config.get('port', 5151)}")
         print("📊 Dataset: " + config['dataset']['name'])
         print("🎯 Task: " + config['dataset']['task'])
+        print("\nTo exit, close the App or press ctrl + c")
 
-        input("\nPress Enter to stop the app...")
-        print("\nApp closed successfully")
-        print("=" * 60)
+        try:
+            while True:
+                import time
+                time.sleep(1)
+
+        except KeyboardInterrupt:
+            print("\n\nShutting down gracefully...")
+
+        finally:
+            print("App closed successfully")
+            print("=" * 60)
 
     else:
         print("\n✅ Processing complete. Dataset saved as:", config['dataset']['name'])
