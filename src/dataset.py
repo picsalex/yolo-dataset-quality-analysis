@@ -1,19 +1,18 @@
 import os
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
-import yaml
 import fiftyone as fo
+import yaml
 from shapely.geometry.polygon import Polygon
-
 from tqdm import tqdm
 
 from src.config import get_box_field_from_task
 from src.enum import DatasetTask
 from src.images import (
-    get_image_dimensions,
     get_image_channel_count,
-    get_image_size_bytes,
+    get_image_dimensions,
     get_image_mime_type,
+    get_image_size_bytes,
 )
 from src.voxel51 import get_object_count_from_labels
 
@@ -54,7 +53,11 @@ def load_class_names(dataset_path: str) -> List[str]:
 
 
 def prepare_voxel_dataset(
-    dataset_path: str, dataset_name: str, force_reload: bool, dataset_task: DatasetTask
+    dataset_path: str,
+    dataset_name: str,
+    force_reload: bool,
+    thumbnail_width: int,
+    dataset_task: DatasetTask,
 ) -> Tuple[bool, fo.Dataset]:
     """
     Prepare a FiftyOne dataset from YOLO format data
@@ -64,6 +67,7 @@ def prepare_voxel_dataset(
         dataset_path: Path to the YOLO dataset
         dataset_name: Name for the FiftyOne dataset
         force_reload: If True, reload the dataset even if it exists
+        thumbnail_width: Width of the generated thumbnails in pixels
         dataset_task: The type of annotation task (e.g., DETECTION)
 
     Raises:
@@ -97,6 +101,11 @@ def prepare_voxel_dataset(
 
         # Create empty dataset
         dataset = fo.Dataset(name=dataset_name, persistent=True)
+
+        dataset.info = {
+            "class_names": class_names,
+            "thumbnail_width": thumbnail_width,
+        }
 
         dataset.add_sample_field("image_path", fo.StringField)
         dataset.add_sample_field("label_path", fo.StringField)
@@ -146,6 +155,7 @@ def prepare_voxel_dataset(
     # Configure app to use thumbnails for better performance
     dataset.app_config.media_fields = ["filepath", "thumbnail_path"]
     dataset.app_config.grid_media_field = "thumbnail_path"
+
     dataset.save()
 
     print(f"\nDataset created with {len(dataset)} total samples")

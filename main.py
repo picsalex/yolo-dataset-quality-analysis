@@ -7,17 +7,21 @@ Author: Alexis Béduneau
 License: MIT
 """
 
+import argparse
 import os
 import sys
-import argparse
-import yaml
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 import fiftyone as fo
 import fiftyone.zoo as foz
+import yaml
 
-from src.config import get_box_field_from_task, images_embeddings_field
+from src.config import (
+    get_box_field_from_task,
+    get_color_palette,
+    images_embeddings_field,
+)
 from src.dataset import prepare_voxel_dataset
 from src.enum import DatasetTask
 from src.images import generate_thumbnails
@@ -205,33 +209,34 @@ def main():
     args = parse_arguments()
     config = build_config(args)
 
+    dataset_path = config["dataset"]["path"]
+    dataset_task = DatasetTask(config["dataset"]["task"])
+    thumbnail_width = config["thumbnails"]["width"]
+
     # Validate dataset path exists
-    if not os.path.exists(config["dataset"]["path"]):
-        print(f"❌ Dataset path does not exist: {config["dataset"]["path"]}")
+    if not os.path.exists(dataset_path):
+        print(f"❌ Dataset path does not exist: {dataset_path}")
         sys.exit(1)
 
     # Validate task and convert to enum
     valid_tasks = [task.value for task in DatasetTask]
     if config["dataset"]["task"] not in valid_tasks:
         print(
-            f"❌ Invalid task: {config["dataset"]["task"]}. Must be one of {valid_tasks}"
+            f"❌ Invalid task: {config['dataset']['task']}. Must be one of {valid_tasks}"
         )
         sys.exit(1)
-
-    # Convert string to enum directly
-    dataset_task = DatasetTask(config["dataset"]["task"])
 
     print("\n" + "=" * 60)
     print("FIFTYONE YOLO DATASET ANALYSIS")
     print("=" * 60)
-    print(f"📁 Dataset Path: {config["dataset"]["path"]}")
-    print(f"📊 Dataset Name: {config["dataset"]["name"]}")
-    print(f"🎯 Dataset Task: {config["dataset"]["task"]}")
-    print(f"🔄 Force Reload: {config["dataset"]["reload"]}")
-    print(f"🧠 Skip Embeddings: {config["embeddings"]["skip"]}")
-    print(f"📦 Batch Size: {config["embeddings"]["batch_size"]}")
-    print(f"🤖 CLIP Model: {config["embeddings"]["model"]}")
-    print(f"🖼️ Thumbnail size: (-1, {config["thumbnails"]["width"]})")
+    print(f"📁 Dataset Path: {config['dataset']['path']}")
+    print(f"📊 Dataset Name: {config['dataset']['name']}")
+    print(f"🎯 Dataset Task: {config['dataset']['task']}")
+    print(f"🔄 Force Reload: {config['dataset']['reload']}")
+    print(f"🧠 Skip Embeddings: {config['embeddings']['skip']}")
+    print(f"📦 Batch Size: {config['embeddings']['batch_size']}")
+    print(f"🤖 CLIP Model: {config['embeddings']['model']}")
+    print(f"🖼️ Thumbnail size: (-1, {config['thumbnails']['width']})")
     print("=" * 60 + "\n")
 
     # Step 1: Prepare dataset
@@ -240,6 +245,7 @@ def main():
         dataset_path=config["dataset"]["path"],
         dataset_name=config["dataset"]["name"],
         force_reload=config["dataset"]["reload"],
+        thumbnail_width=config["thumbnails"]["width"],
         dataset_task=dataset_task,
     )
 
@@ -253,7 +259,7 @@ def main():
         # Step 2: Load CLIP model
         print("\n🤖 Step 2: Loading CLIP model...")
         embeddings_model = foz.load_zoo_model(config["embeddings"]["model"])
-        print(f"Loaded {config["embeddings"]["model"]}")
+        print(f"Loaded {config['embeddings']['model']}")
 
         # Step 3: Compute visualizations
         print("\n🧠 Step 3: Computing embeddings and visualizations...")
@@ -274,18 +280,30 @@ def main():
             print("Skipping embeddings computation as requested")
 
     # Step 4: Generate thumbnails
-    if config["thumbnails"]["width"] > 0:
-        print("\n🖼️ Step 4: Generating thumbnails for optimized Fiftyone dashboard...")
-        thumbnail_dir = Path(
-            os.path.join(
-                config.get("thumbnail_dir", "thumbnails"), config["dataset"]["name"]
+    if thumbnail_width > 0:
+        if (
+            "thumbnail_width" in dataset.info
+            and dataset.info["thumbnail_width"] == thumbnail_width
+            and is_already_loaded
+        ):
+            print(
+                f"\n🖼️ Step 4: Thumbnails of size ({thumbnail_width}, -1) already exist, skipping generation..."
             )
-        ).resolve()
-        generate_thumbnails(
-            dataset=dataset,
-            thumbnail_dir_path=str(thumbnail_dir),
-            thumbnail_width=config["thumbnails"]["width"],
-        )
+
+        else:
+            print(
+                f"\n🖼️ Step 4: Generating thumbnails of size ({thumbnail_width}, -1) for optimized Fiftyone dashboard..."
+            )
+            thumbnail_dir = Path(
+                os.path.join(
+                    config.get("thumbnail_dir", "thumbnails"), config["dataset"]["name"]
+                )
+            ).resolve()
+            generate_thumbnails(
+                dataset=dataset,
+                thumbnail_dir_path=str(thumbnail_dir),
+                thumbnail_width=config["thumbnails"]["width"],
+            )
     else:
         print(
             "\n🖼️ Step 4: Skipping thumbnail generation as the provided width is not greater than 0"
@@ -295,12 +313,29 @@ def main():
     if not config.get("no_launch", False):
         print("\n🚀Launching FiftyOne app:")
 
+        if "class_names" not in dataset.info:
+            raise ValueError(
+                "Dataset class names not found in dataset info. Cannot launch app with color scheme. Please force reload the dataset."
+            )
+
+        color_palette = get_color_palette(labels=dataset.info["class_names"])
+        field_name = get_box_field_from_task(task=dataset_task)
+
         _ = fo.launch_app(
             dataset,
             port=config.get("port", 5151),
+            color_scheme=fo.ColorScheme(
+                color_by="value",
+                fields=[
+                    {
+                        "path": field_name,
+                        "valueColors": color_palette,
+                    }
+                ],
+            ),
         )
 
-        print(f"\n🌐 App running at: http://localhost:{config.get("port", 5151)}")
+        print(f"\n🌐 App running at: http://localhost:{config.get('port', 5151)}")
         print("📊 Dataset: " + config["dataset"]["name"])
         print("🎯 Task: " + config["dataset"]["task"])
         print("\nTo exit, close the App or press ctrl + c")
@@ -321,7 +356,7 @@ def main():
     else:
         print("\n✅ Processing complete. Dataset saved as:", config["dataset"]["name"])
         print("To launch the app later, run:")
-        print(f"    fiftyone app launch {config["dataset"]["name"]}")
+        print(f"    fiftyone app launch {config['dataset']['name']}")
         print("=" * 60)
 
 
