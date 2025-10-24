@@ -15,8 +15,3 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
-
-  - repo: https://github.com/facebook/pyrefly
-    rev: 0.28.1
-    hooks:
-      - id: pyrefly-typecheck

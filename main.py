@@ -236,7 +236,7 @@ def main():
     print(f"🧠 Skip Embeddings: {config['embeddings']['skip']}")
     print(f"📦 Batch Size: {config['embeddings']['batch_size']}")
     print(f"🤖 CLIP Model: {config['embeddings']['model']}")
-    print(f"🖼️ Thumbnail size: (-1, {config['thumbnails']['width']})")
+    print(f"🖼️ Thumbnail size: ({config['thumbnails']['width']}, -1)")
     print("=" * 60 + "\n")
 
     # Step 1: Prepare dataset
