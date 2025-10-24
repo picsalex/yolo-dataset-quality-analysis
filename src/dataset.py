@@ -27,28 +27,43 @@ dataset_split_options = [
 ]
 
 
-def load_class_names(dataset_path: str) -> List[str]:
+def load_class_names(dataset_path: str, dataset_task: DatasetTask) -> List[str]:
     """
     Load class names from data.yaml or dataset.yaml in the dataset path
 
     Args:
         dataset_path: Path to the dataset directory
+        dataset_task: The type of annotation task (e.g., DETECTION)
 
     Returns:
         The list of class names
     """
-    for yaml_name in ["data.yaml", "dataset.yaml"]:
-        yaml_path = os.path.join(dataset_path, yaml_name)
+    if dataset_task == DatasetTask.CLASSIFICATION:
+        # browse subdirectories in train/val/test for class names
+        class_names = set()
+        for split in dataset_split_options:
+            split_dir = os.path.join(dataset_path, split)
+            if os.path.exists(split_dir):
+                for class_name in os.listdir(split_dir):
+                    class_dir = os.path.join(split_dir, class_name)
+                    if os.path.isdir(class_dir):
+                        class_names.add(class_name)
 
-        if os.path.exists(yaml_path):
-            with open(yaml_path, "r") as f:
-                data = yaml.safe_load(f)
-                names = data.get("names", [])
+        return sorted(list(class_names))
 
-                if isinstance(names, dict):
-                    return [names[i] for i in sorted(names.keys())]
+    else:
+        for yaml_name in ["data.yaml", "dataset.yaml"]:
+            yaml_path = os.path.join(dataset_path, yaml_name)
 
-                return names
+            if os.path.exists(yaml_path):
+                with open(yaml_path, "r") as f:
+                    data = yaml.safe_load(f)
+                    names = data.get("names", [])
+
+                    if isinstance(names, dict):
+                        return [names[i] for i in sorted(names.keys())]
+
+                    return names
     return []
 
 
@@ -94,18 +109,12 @@ def prepare_voxel_dataset(
 
     print(f"Creating new dataset '{dataset_name}'...")
 
-    if dataset_task != DatasetTask.CLASSIFICATION:
-        # Load class names
-        class_names = load_class_names(dataset_path)
-        print(f"Found {len(class_names)} classes: {class_names}")
+    class_names = load_class_names(dataset_path=dataset_path, dataset_task=dataset_task)
+    print(f"Found {len(class_names)} classes: {class_names}")
 
+    if dataset_task != DatasetTask.CLASSIFICATION:
         # Create empty dataset
         dataset = fo.Dataset(name=dataset_name, persistent=True)
-
-        dataset.info = {
-            "class_names": class_names,
-            "thumbnail_width": thumbnail_width,
-        }
 
         dataset.add_sample_field("image_path", fo.StringField)
         dataset.add_sample_field("label_path", fo.StringField)
@@ -155,6 +164,11 @@ def prepare_voxel_dataset(
     # Configure app to use thumbnails for better performance
     dataset.app_config.media_fields = ["filepath", "thumbnail_path"]
     dataset.app_config.grid_media_field = "thumbnail_path"
+
+    dataset.info = {
+        "class_names": class_names,
+        "thumbnail_width": thumbnail_width,
+    }
 
     dataset.save()
 
