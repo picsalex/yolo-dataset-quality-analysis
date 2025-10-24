@@ -26,6 +26,7 @@ def compute_visualizations(
     Args:
         model: The model to use for computing the embeddings
         dataset: The dataset to compute the visualizations for
+        dataset_task: The dataset task (classify, detect, segment, pose, obb)
         batch_size: The batch size to use for processing
         patches_embeddings_brain_key: The field in the dataset containing the patches
         images_embeddings_brain_key: The field in the dataset containing the full image embeddings
@@ -97,15 +98,21 @@ def get_object_count_from_labels(labels: fo.Label, dataset_task: DatasetTask) ->
         return 0
 
     if dataset_task == DatasetTask.CLASSIFICATION:
-        return 1 if labels.label else 0
+        return 1 if labels.get_field("label") else 0
 
     if dataset_task == DatasetTask.DETECTION:
-        return len(labels.detections) if labels.detections else 0
+        return (
+            len(labels.get_field("detections")) if labels.get_field("detections") else 0
+        )
 
     elif dataset_task == DatasetTask.SEGMENTATION or dataset_task == DatasetTask.OBB:
-        return len(labels.polylines) if labels.polylines else 0
+        return (
+            len(labels.get_field("polylines")) if labels.get_field("polylines") else 0
+        )
 
     elif dataset_task == DatasetTask.POSE:
-        return len(labels.keypoints) if labels.keypoints else 0
+        return (
+            len(labels.get_field("keypoints")) if labels.get_field("keypoints") else 0
+        )
 
     return 0

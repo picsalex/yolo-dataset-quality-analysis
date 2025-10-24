@@ -593,10 +593,10 @@ def _get_fiftyone_detection_label(
         y_top_left = y_center - bbox_height / 2
 
         # Ensure bounds are valid
-        x_top_left = max(0, min(1, x_top_left))
-        y_top_left = max(0, min(1, y_top_left))
-        bbox_width = max(0, min(1 - x_top_left, bbox_width))
-        bbox_height = max(0, min(1 - y_top_left, bbox_height))
+        x_top_left = max(0.0, min(1.0, x_top_left))
+        y_top_left = max(0.0, min(1.0, y_top_left))
+        bbox_width = max(0.0, min(1.0 - x_top_left, bbox_width))
+        bbox_height = max(0.0, min(1.0 - y_top_left, bbox_height))
 
         label = (
             class_names[class_id]
@@ -675,10 +675,10 @@ def _get_fiftyone_keypoint_label(
     y_top_left = y_center - bbox_height / 2
 
     # Ensure bounds are valid
-    x_top_left = max(0, min(1, x_top_left))
-    y_top_left = max(0, min(1, y_top_left))
-    bbox_width = max(0, min(1 - x_top_left, bbox_width))
-    bbox_height = max(0, min(1 - y_top_left, bbox_height))
+    x_top_left = max(0.0, min(1.0, x_top_left))
+    y_top_left = max(0.0, min(1.0, y_top_left))
+    bbox_width = max(0.0, min(1.0 - x_top_left, bbox_width))
+    bbox_height = max(0.0, min(1.0 - y_top_left, bbox_height))
 
     # Extract keypoints (remaining values after bbox)
     keypoint_data = parts[5:]  # Skip class_id and bbox
@@ -691,8 +691,8 @@ def _get_fiftyone_keypoint_label(
             kp_y = float(keypoint_data[i + 1])
             _ = float(keypoint_data[i + 2])  # visibility, not used here
 
-            kp_x = max(0, min(1, kp_x))
-            kp_y = max(0, min(1, kp_y))
+            kp_x = max(0.0, min(1.0, kp_x))
+            kp_y = max(0.0, min(1.0, kp_y))
 
             if kp_x != 0 and kp_y != 0:
                 points.append([kp_x, kp_y])
@@ -869,8 +869,8 @@ def _get_fiftyone_polygon_label(
 
         # YOLO polygon coordinates are already normalized (0-1)
         # Ensure coordinates are within valid bounds
-        x = max(0, min(1, x))
-        y = max(0, min(1, y))
+        x = max(0.0, min(1.0, x))
+        y = max(0.0, min(1.0, y))
 
         points.append([x, y])
         points_pixels.append([x * image_width, y * image_height])
