@@ -249,7 +249,12 @@ def main():
         dataset_task=dataset_task,
     )
 
-    if not is_already_loaded and not config["embeddings"]["skip"]:
+    if is_already_loaded:
+        print(
+            f"Dataset '{config['dataset']['name']}' is already loaded, skipping preparation."
+        )
+
+    elif not config["embeddings"]["skip"]:
         patches_field = get_box_field_from_task(task=dataset_task)
 
         # For pose estimation, we use bounding boxes to extract patches
@@ -273,11 +278,7 @@ def main():
         )
 
     else:
-        if is_already_loaded:
-            print("Dataset already loaded, skipping processing...")
-
-        elif config["embeddings"]["skip"]:
-            print("Skipping embeddings computation as requested")
+        print("Skipping embeddings computation requested by user.")
 
     # Step 4: Generate thumbnails
     if thumbnail_width > 0:
