@@ -312,7 +312,7 @@ def main():
 
     # Launch FiftyOne app unless no_launch is specified
     if not config.get("no_launch", False):
-        print("\n🚀Launching FiftyOne app:")
+        print("\n🚀 Launching FiftyOne app:")
 
         if "class_names" not in dataset.info:
             raise ValueError(
@@ -321,6 +321,10 @@ def main():
 
         color_palette = get_color_palette(labels=dataset.info["class_names"])
         field_name = get_box_field_from_task(task=dataset_task)
+
+        # For pose estimation, we only color the bounding boxes, keypoints colors are picked randomly
+        if dataset_task == DatasetTask.POSE:
+            field_name = get_box_field_from_task(task=DatasetTask.DETECTION)
 
         _ = fo.launch_app(
             dataset,
@@ -333,6 +337,7 @@ def main():
                         "valueColors": color_palette,
                     }
                 ],
+                multicolor_keypoints=True,
             ),
         )
 

@@ -73,7 +73,7 @@ def get_color_palette(labels: List[str]) -> List[Dict[str, str]]:
         labels: A list of label names.
 
     Examples:
-        [{"value": "label_name", "color": "#ff000"},
+        Output will look like this: [{"value": "cat", "color": "#042AFF"}, {"value": "dog", "color": "#0BDBEB"}, ...]
 
     Returns:
         A list of hex color strings for each label.
@@ -84,6 +84,7 @@ def get_color_palette(labels: List[str]) -> List[Dict[str, str]]:
     for i in range(num_labels):
         if i < len(ultralytics_color_palette):
             color_hex = f"#{ultralytics_color_palette[i]}"
+
         else:
             # Generate additional colors using a colormap
             cmap = plt.get_cmap("hsv")
