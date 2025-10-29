@@ -123,6 +123,7 @@ def prepare_voxel_dataset(
         images_base = os.path.join(dataset_path, "images")
         labels_base = os.path.join(dataset_path, "labels")
 
+        # Structure 1: images/train, images/val, labels/train, labels/val
         if os.path.exists(images_base):
             for split in dataset_split_options:
                 images_dir = os.path.join(images_base, split)
@@ -142,9 +143,37 @@ def prepare_voxel_dataset(
                 dataset=dataset, dataset_task=dataset_task
             )
 
+        # Structure 2: train/images, train/labels, val/images, val/labels
+        elif any(
+            os.path.exists(os.path.join(dataset_path, split))
+            for split in dataset_split_options
+        ):
+            for split in dataset_split_options:
+                split_dir = os.path.join(dataset_path, split)
+
+                if os.path.exists(split_dir):
+                    images_dir = os.path.join(split_dir, "images")
+                    labels_dir = os.path.join(split_dir, "labels")
+
+                    if os.path.exists(images_dir):
+                        _process_split(
+                            dataset=dataset,
+                            images_dir=images_dir,
+                            labels_dir=labels_dir,
+                            split=split,
+                            class_names=class_names,
+                            dataset_task=dataset_task,
+                        )
+
+            configure_dataset_additional_fields(
+                dataset=dataset, dataset_task=dataset_task
+            )
+
         else:
             raise FileNotFoundError(
-                f"Images directory '{images_base}' not found. Expected structure: images/{{split}}/"
+                "Dataset directory structure not recognized. Expected either:\n"
+                "  - images/{{split}}/ and labels/{{split}}/, or\n"
+                "  - {{split}}/images/ and {{split}}/labels/"
             )
 
     else:

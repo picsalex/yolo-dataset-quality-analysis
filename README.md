@@ -2,9 +2,9 @@
 
 <div align="center">
   <img src="https://github.com/ultralytics/assets/raw/main/logo/Ultralytics-logomark-color.png" width="120" alt="Ultralytics Logo">
-  
+
   **A comprehensive tool for analyzing and visualizing YOLO dataset quality using FiftyOne**
-  
+
   [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
   [![FiftyOne](https://img.shields.io/badge/FiftyOne-Latest-orange.svg)](https://voxel51.com/fiftyone)
   [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -86,7 +86,7 @@ embeddings:
 
 For each expected task format, the following metadata will be computed and available in FiftyOne for each annotation:
 
-| Task                                                       | Available Parameters                                       |
+| Task                                                       | Available parameters when using the UI                     |
 |------------------------------------------------------------|------------------------------------------------------------|
 | [`classify`](https://docs.ultralytics.com/tasks/classify/) | `cls_label.label`                                          |
 | [`detect`](https://docs.ultralytics.com/tasks/detect/)     | `area`, `aspect_ratio`, `width`, `height`                  |
@@ -105,6 +105,64 @@ Also, for each image, the following metadata will be computed:
 | `metadata.mime_type`    | MIME type of the image (e.g., `image/jpeg`)             |
 | `metadata.num_channels` | Number of color channels (e.g., 3 for RGB)              |
 
+
+## ⚒️ Dataset Structure
+
+This tool supports two common YOLO dataset directory structures:
+
+### Format 1: Type-First Structure
+```
+dataset/
+├── images/
+│   ├── train/
+│   │   ├── image1.jpg
+│   │   ├── image2.jpg
+│   │   └── ...
+│   ├── val/
+│   │   ├── image1.jpg
+│   │   └── ...
+│   └── test/
+│       └── ...
+└── labels/
+    ├── train/
+    │   ├── image1.txt
+    │   ├── image2.txt
+    │   └── ...
+    ├── val/
+    │   ├── image1.txt
+    │   └── ...
+    └── test/
+        └── ...
+```
+
+In this format, images and labels are organized by type first, then by split.
+
+### Format 2: Split-First Structure
+```
+dataset/
+├── train/
+│   ├── images/
+│   │   ├── image1.jpg
+│   │   ├── image2.jpg
+│   │   └── ...
+│   └── labels/
+│       ├── image1.txt
+│       ├── image2.txt
+│       └── ...
+├── val/
+│   ├── images/
+│   │   └── ...
+│   └── labels/
+│       └── ...
+└── test/
+    ├── images/
+    │   └── ...
+    └── labels/
+        └── ...
+```
+
+In this format, the dataset is organized by split first, then by type (images/labels).
+
 ## ⌨️ FiftyOne commands
 
 You can use the following commands bellow to interact with the FiftyOne datasets and application:
@@ -120,7 +178,7 @@ fiftyone datasets delete <dataset_name>
 python -c "import fiftyone as fo; [fo.delete_dataset(name) for name in fo.list_datasets()]"
 
 # Launch the FiftyOne app
-fiftyone app launch 
+fiftyone app launch
 
 # Launch the FiftyOne app and pre-select a dataset using its name
 fiftyone app launch <dataset_name>
