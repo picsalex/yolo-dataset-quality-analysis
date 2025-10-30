@@ -4,10 +4,12 @@ FiftyOne Analysis Script for YOLO Dataset with proper directory structure
 and thumbnail generation using transform_images
 """
 
+import os
 import fiftyone.brain as fob
 import fiftyone as fo
 
-from src.enum import DatasetTask
+from src.config import download_file
+from src.enum import DatasetTask, EmbeddingsModel
 
 
 def compute_visualizations(
@@ -116,3 +118,59 @@ def get_object_count_from_labels(labels: fo.Label, dataset_task: DatasetTask) ->
         )
 
     return 0
+
+
+def set_model_zoo_dir(path: str) -> None:
+    """
+    Set the FiftyOne model zoo URL to a custom path
+
+    Args:
+        path: The custom path to set for the model zoo
+    """
+    fo.config.model_zoo_dir = path
+
+
+def prepare_embeddings_models(
+    embeddings_model: EmbeddingsModel, destination_path: str
+) -> EmbeddingsModel:
+    """
+    Download the specified embeddings model from the FiftyOne model zoo
+
+    Args:
+        embeddings_model: The embeddings model to download
+        destination_path: The path to save the downloaded model
+
+    Returns:
+        The embeddings model that was prepared (and downloaded if it was not already present in the destination path)
+    """
+    # Default to OpenAI CLIP if invalid model specified
+    if embeddings_model not in EmbeddingsModel:
+        print(
+            f"Embeddings model '{embeddings_model}' is not supported. Defaulting to OpenAI CLIP."
+        )
+        embeddings_model = EmbeddingsModel.OPENAI_CLIP
+
+    else:
+        embeddings_model = EmbeddingsModel(embeddings_model)
+
+    models_destination_path = os.path.join(
+        destination_path, str(embeddings_model.value)
+    )
+    set_model_zoo_dir(path=models_destination_path)
+
+    if embeddings_model == EmbeddingsModel.OPENAI_CLIP:
+        base_url = "https://github.com/picsalex/yolo-dataset-quality-analysis/releases/download/v1.0.0"
+        files = [
+            "CLIP-ViT-B-32.pt",
+            "clip_bpe_simple_vocab_16e6.txt.gz",
+            "mobilenet_v2-b0353104.pth",
+        ]
+
+        for filename in files:
+            url = f"{base_url}/{filename}"
+            output_path = os.path.join(models_destination_path, filename)
+
+            if not os.path.exists(output_path):
+                download_file(url, output_path)
+
+    return embeddings_model

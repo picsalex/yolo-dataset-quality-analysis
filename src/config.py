@@ -1,5 +1,7 @@
+import os
 from typing import Dict, List
-
+import tqdm
+import requests
 import matplotlib.pyplot as plt
 
 from src.enum import DatasetTask
@@ -95,3 +97,43 @@ def get_color_palette(labels: List[str]) -> List[Dict[str, str]]:
         palette.append({"value": labels[i], "color": color_hex})
 
     return palette
+
+
+def download_file(url: str, destination_path: str) -> None:
+    """
+    Download a file from a URL to a destination path with progress bar
+
+    Args:
+        url: The URL to download from
+        destination_path: The full path (including filename) to save the file
+    """
+    filename = os.path.basename(destination_path)
+
+    print(f"Downloading {filename}...")
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+
+        total_size = int(response.headers.get("content-length", 0))
+
+        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+
+        with (
+            open(destination_path, "wb") as f,
+            tqdm.tqdm(
+                total=total_size,
+                unit="B",
+                unit_scale=True,
+                unit_divisor=1024,
+                desc=filename,
+            ) as pbar,
+        ):
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+                pbar.update(len(chunk))
+
+        print(f"Downloaded {filename}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to download {filename}: {e}")
+        raise

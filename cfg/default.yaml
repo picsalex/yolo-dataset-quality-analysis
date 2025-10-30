@@ -8,17 +8,17 @@ dataset:
   # Path to your YOLO dataset
   # Can be overridden with --dataset-path argument
   path: "/path/to/dataset"
-  
+
   # Name for the FiftyOne dataset
   # This will be used for the dataset in FiftyOne and for thumbnail directories
   # Can be overridden with --dataset-name argument
   name: "default"
-  
+
   # Dataset task type
   # Options: classify, detect, segment, pose, obb
   # Can be overridden with --dataset-task argument
   task: "detect"
-  
+
   # Force reload dataset even if it exists
   # Set to true to reprocess everything from scratch
   # Can be overridden with --reload argument
@@ -33,8 +33,11 @@ embeddings:
   skip: false
 
   # CLIP model to use for embeddings
-  # Available models: https://docs.voxel51.com/model_zoo/models.html
-  model: "clip-vit-base32-torch"
+  # Available models are listed in src/enum.py under EmbeddingsModel
+  model: "openai_clip"
+
+  # Path to save the downloaded embeddings models
+  dir: "./models/fiftyone"
 
   # Batch size for embedding computation
   batch_size: 16

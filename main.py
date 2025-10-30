@@ -25,7 +25,10 @@ from src.config import (
 from src.dataset import prepare_voxel_dataset
 from src.enum import DatasetTask
 from src.images import generate_thumbnails
-from src.voxel51 import compute_visualizations
+from src.voxel51 import (
+    compute_visualizations,
+    prepare_embeddings_models,
+)
 
 
 def load_config(config_path: str) -> Dict[str, Any]:
@@ -94,6 +97,13 @@ def parse_arguments() -> argparse.Namespace:
 
     parser.add_argument(
         "--model", type=str, default=None, help="CLIP model name for embeddings"
+    )
+
+    parser.add_argument(
+        "--embeddings-models-dir",
+        type=str,
+        default=None,
+        help="Base path to save downloaded embeddings models",
     )
 
     parser.add_argument(
@@ -168,6 +178,9 @@ def build_config(args: argparse.Namespace) -> Dict[str, Any]:
     if args.model is not None:
         config["embeddings"]["model"] = args.model
 
+    if args.embeddings_models_dir is not None:
+        config["embeddings"]["dir"] = args.embeddings_models_dir
+
     if args.thumbnail_dir is not None:
         config["thumbnails"]["dir"] = args.thumbnail_dir
 
@@ -213,6 +226,11 @@ def main():
     dataset_task = DatasetTask(config["dataset"]["task"])
     thumbnail_width = config["thumbnails"]["width"]
 
+    embeddings_model = prepare_embeddings_models(
+        embeddings_model=config["embeddings"]["model"],
+        destination_path=config["embeddings"]["dir"],
+    )
+
     # Validate dataset path exists
     if not os.path.exists(dataset_path):
         print(f"❌ Dataset path does not exist: {dataset_path}")
@@ -235,7 +253,7 @@ def main():
     print(f"🔄 Force Reload: {config['dataset']['reload']}")
     print(f"🧠 Skip Embeddings: {config['embeddings']['skip']}")
     print(f"📦 Batch Size: {config['embeddings']['batch_size']}")
-    print(f"🤖 CLIP Model: {config['embeddings']['model']}")
+    print(f"🤖 Embeddings model: {embeddings_model.value}")
     print(f"🖼️ Thumbnail size: ({config['thumbnails']['width']}, -1)")
     print("=" * 60 + "\n")
 
@@ -262,8 +280,10 @@ def main():
             patches_field = get_box_field_from_task(task=DatasetTask.DETECTION)
 
         # Step 2: Load CLIP model
-        print("\n🤖 Step 2: Loading CLIP model...")
-        embeddings_model = foz.load_zoo_model(config["embeddings"]["model"])
+        print("\n🤖 Step 2: Loading embeddings model...")
+        embeddings_model = foz.load_zoo_model(
+            name_or_url=embeddings_model.get_fiftyone_model_name()
+        )
         print(f"Loaded {config['embeddings']['model']}")
 
         # Step 3: Compute visualizations
