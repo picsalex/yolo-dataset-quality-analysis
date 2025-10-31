@@ -42,9 +42,6 @@ embeddings:
   # Batch size for embedding computation
   batch_size: 16
 
-    # Key to store image embeddings in FiftyOne samples
-  images_embeddings_brain_key: "images_embeddings"
-
 # ===========================
 # THUMBNAIL CONFIGURATION
 # ===========================

@@ -5,7 +5,7 @@
 
   **A comprehensive tool for analyzing and visualizing YOLO dataset quality using FiftyOne**
 
-  [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
+  [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
   [![FiftyOne](https://img.shields.io/badge/FiftyOne-Latest-orange.svg)](https://voxel51.com/fiftyone)
   [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 </div>
@@ -55,14 +55,19 @@ If you want to use the configuration file option, you can either override the de
 ```yaml
 dataset:
   path: "/path/to/your/dataset"
+  name: "my_dataset"  # optional, auto-generated if not set
   task: "detect"  # detect, segment, classify, pose, obb
-  name: "my_analysis"  # optional, auto-generated if not set
   reload: false
 
 embeddings:
   skip: false
-  model: "clip-vit-base32-torch"
+  model: "openai_clip"
+  dir: "./models/fiftyone"
   batch_size: 16
+
+thumbnails:
+  dir: "./thumbnails"
+  width: 800
 ```
 
 ### Command-Line Arguments

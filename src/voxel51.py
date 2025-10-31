@@ -131,7 +131,7 @@ def set_model_zoo_dir(path: str) -> None:
 
 
 def prepare_embeddings_models(
-    embeddings_model: EmbeddingsModel, destination_path: str
+    embeddings_model: str, destination_path: str
 ) -> EmbeddingsModel:
     """
     Download the specified embeddings model from the FiftyOne model zoo
@@ -144,7 +144,7 @@ def prepare_embeddings_models(
         The embeddings model that was prepared (and downloaded if it was not already present in the destination path)
     """
     # Default to OpenAI CLIP if invalid model specified
-    if embeddings_model not in EmbeddingsModel:
+    if not EmbeddingsModel.is_valid_value(embeddings_model):
         print(
             f"Embeddings model '{embeddings_model}' is not supported. Defaulting to OpenAI CLIP."
         )

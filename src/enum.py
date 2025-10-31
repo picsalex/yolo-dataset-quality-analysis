@@ -22,3 +22,13 @@ class EmbeddingsModel(Enum):
             return "clip-vit-base32-torch"
 
         raise ValueError(f"Unsupported embeddings model: {self}")
+
+    @classmethod
+    def is_valid_value(cls, value: str) -> bool:
+        """Check if value is a valid enum value."""
+        try:
+            cls(value)
+            return True
+
+        except ValueError:
+            return False
