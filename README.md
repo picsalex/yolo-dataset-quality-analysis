@@ -38,7 +38,7 @@ pip install -r requirements.txt
 
 ```bash
 # Option 1: Command-line only (no config file)
-python main.py --dataset-path /path/to/dataset --dataset-task detection
+python main.py --dataset-path /path/to/dataset --dataset-task detect
 
 # Option 2: Config file only (more details below)
 python main.py --config cfg/my_config.yaml
@@ -47,7 +47,7 @@ python main.py --config cfg/my_config.yaml
 python main.py --config cfg/default.yaml --batch_size 8
 
 # Option 4: Force reload of an existing dataset
-python main.py --dataset-path /path/to/dataset --dataset-task detection --reload
+python main.py --dataset-path /path/to/dataset --dataset-task detect --reload
 ```
 
 If you want to use the configuration file option, you can either override the default config file located at `cfg/default.yaml` or create your own config file (e.g., `cfg/my_config.yaml`) with the following structure:
@@ -171,7 +171,7 @@ In this format, the dataset is organized by split first, then by type (images/la
 
 ## ⌨️ FiftyOne commands
 
-You can use the following commands bellow to interact with the FiftyOne datasets and application:
+If you have used this tool at least one time to visualize a dataset, you can then use the following commands bellow to interact with the FiftyOne datasets and application:
 
 ```bash
 # List all the datasets
