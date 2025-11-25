@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Dict, Optional
 
 
 class DatasetTask(Enum):
@@ -14,14 +15,40 @@ class DatasetTask(Enum):
 class EmbeddingsModel(Enum):
     """Enumeration of different embeddings models."""
 
+    # CLIP
     OPENAI_CLIP = "openai_clip"
 
-    def get_fiftyone_model_name(self) -> str:
-        """Get the corresponding model name for the embeddings model."""
-        if self == EmbeddingsModel.OPENAI_CLIP:
-            return "clip-vit-base32-torch"
+    # METACLIP
+    METACLIP_400M = "metaclip_400m"
+    METACLIP_FULL = "metaclip_fullcc"
 
-        raise ValueError(f"Unsupported embeddings model: {self}")
+    # SIGLIP
+    SIGLIP_BASE_224 = "siglip_base_224"
+
+    def get_model_kwargs(self) -> Optional[Dict]:
+        """
+        Get model_kwargs for OpenCLIP models.
+        Returns None for hosted models.
+        """
+        openclip_configs = {
+            EmbeddingsModel.OPENAI_CLIP: {
+                "clip_model": "ViT-B-32",
+                "pretrained": "openai",
+            },
+            EmbeddingsModel.METACLIP_400M: {
+                "clip_model": "ViT-B-32-quickgelu",
+                "pretrained": "metaclip_400m",
+            },
+            EmbeddingsModel.METACLIP_FULL: {
+                "clip_model": "ViT-B-32-quickgelu",
+                "pretrained": "metaclip_fullcc",
+            },
+            EmbeddingsModel.SIGLIP_BASE_224: {
+                "clip_model": "hf-hub:timm/ViT-B-16-SigLIP",
+                "pretrained": "",
+            },
+        }
+        return openclip_configs.get(self)
 
     @classmethod
     def is_valid_value(cls, value: str) -> bool:
@@ -29,6 +56,5 @@ class EmbeddingsModel(Enum):
         try:
             cls(value)
             return True
-
         except ValueError:
             return False

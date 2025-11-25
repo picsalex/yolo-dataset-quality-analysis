@@ -32,12 +32,9 @@ embeddings:
   # Can be overridden with --skip-embeddings argument
   skip: false
 
-  # CLIP model to use for embeddings
-  # Available models are listed in src/enum.py under EmbeddingsModel
+  # Embedding model to use
+  # Available models are listed in src/enum.py
   model: "openai_clip"
-
-  # Path to save the downloaded embeddings models
-  dir: "./models/fiftyone"
 
   # Batch size for embedding computation
   batch_size: 16

@@ -14,13 +14,13 @@ from pathlib import Path
 from typing import Any, Dict
 
 import fiftyone as fo
-import fiftyone.zoo as foz
 import yaml
 
 from src.config import (
     get_box_field_from_task,
     get_color_palette,
-    images_embeddings_field,
+    images_embeddings_brain_key,
+    patches_embeddings_brain_key,
 )
 from src.dataset import prepare_voxel_dataset
 from src.enum import DatasetTask
@@ -100,13 +100,6 @@ def parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--embeddings-models-dir",
-        type=str,
-        default=None,
-        help="Base path to save downloaded embeddings models",
-    )
-
-    parser.add_argument(
         "--thumbnail-dir", type=str, default=None, help="Base directory for thumbnails"
     )
 
@@ -178,9 +171,6 @@ def build_config(args: argparse.Namespace) -> Dict[str, Any]:
     if args.model is not None:
         config["embeddings"]["model"] = args.model
 
-    if args.embeddings_models_dir is not None:
-        config["embeddings"]["dir"] = args.embeddings_models_dir
-
     if args.thumbnail_dir is not None:
         config["thumbnails"]["dir"] = args.thumbnail_dir
 
@@ -228,8 +218,8 @@ def main():
 
     embeddings_model = prepare_embeddings_models(
         embeddings_model=config["embeddings"]["model"],
-        destination_path=config["embeddings"]["dir"],
     )
+    model_kwargs = embeddings_model.get_model_kwargs()
 
     # Validate dataset path exists
     if not os.path.exists(dataset_path):
@@ -253,7 +243,9 @@ def main():
     print(f"🔄 Force Reload: {config['dataset']['reload']}")
     print(f"🧠 Skip Embeddings: {config['embeddings']['skip']}")
     print(f"📦 Batch Size: {config['embeddings']['batch_size']}")
-    print(f"🤖 Embeddings model: {embeddings_model.value}")
+    print(
+        f"🤖 Embeddings model: {model_kwargs.get('clip_model')} ({model_kwargs.get('pretrained')})"
+    )
     print(f"🖼️ Thumbnail size: ({config['thumbnails']['width']}, -1)")
     print("=" * 60 + "\n")
 
@@ -273,28 +265,26 @@ def main():
         )
 
     elif not config["embeddings"]["skip"]:
-        patches_field = get_box_field_from_task(task=dataset_task)
+        patches_field_name = get_box_field_from_task(task=dataset_task)
 
         # For pose estimation, we use bounding boxes to extract patches
         if dataset_task == DatasetTask.POSE:
-            patches_field = get_box_field_from_task(task=DatasetTask.DETECTION)
+            patches_field_name = get_box_field_from_task(task=DatasetTask.DETECTION)
 
-        # Step 2: Load CLIP model
+        # Step 2: Load embeddings model
         print("\n🤖 Step 2: Loading embeddings model...")
-        embeddings_model = foz.load_zoo_model(
-            name_or_url=embeddings_model.get_fiftyone_model_name()
-        )
-        print(f"Loaded {config['embeddings']['model']}")
+        print(f"Using OpenCLIP model: {embeddings_model.value}")
 
         # Step 3: Compute visualizations
         print("\n🧠 Step 3: Computing embeddings and visualizations...")
         compute_visualizations(
             dataset=dataset,
-            model=embeddings_model,
             dataset_task=dataset_task,
             batch_size=config["embeddings"]["batch_size"],
-            patches_embeddings_brain_key=patches_field,
-            images_embeddings_brain_key=images_embeddings_field,
+            images_embeddings_brain_key=images_embeddings_brain_key,
+            patches_embeddings_brain_key=patches_embeddings_brain_key,
+            patches_field_name=patches_field_name,
+            model_kwargs=model_kwargs,
         )
 
     else:
