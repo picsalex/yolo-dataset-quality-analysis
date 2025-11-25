@@ -72,21 +72,21 @@ thumbnails:
 
 ### Command-Line Arguments
 
-| Argument                  | Type   | Default               | Description                                                                                                                                                             |
-|---------------------------|--------|-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--dataset-path`          | `str`  | `None`                | Path to your dataset. Required unless provided in config file and must follow the [YOLO format](https://docs.ultralytics.com/datasets/).                                |
-| `--dataset-task`          | `str`  | `'detect'`            | Task type: `classify`, `detect`, `segment`, `pose`, `obb`. Required unless in config. More info on the tasks [below](#-supported-tasks-and-image-metadata).             |
-| `--dataset-name`          | `str`  | `'default'`           | Name for the FiftyOne dataset. Auto-generated from path if not set.                                                                                                     |
-| `--config`                | `str`  | `None`                | Path to config YAML file. Overrides default settings.                                                                                                                   |
-| `--reload`                | `bool` | `false`               | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                               |
-| `--skip-embeddings`       | `bool` | `false`               | Skip CLIP embedding computation (useful for quick visualization).                                                                                                       |
-| `--batch-size`            | `int`  | `16`                  | Batch size used during CLIP embedding computation.                                                                                                                      |
-| `--model`                 | `str`  | `'openai_clip'`       | Embeddings model to use for embedding computation. Possible values are `openai_clip`, `metaclip_400m`, `metaclip_fullcc` and `siglip_base_224`.                         |
-| `--embeddings-models-dir` | `str`  | `'./models/fiftyone'` | Path to the directory where the embeddings models are saved.                                                                                                            |
-| `--thumbnail-dir`         | `str`  | `'./thumbnails'`      | Path to the directory where the thumbnails are saved.                                                                                                                   |
-| `--thumbnail-width`       | `int`  | `800`                 | Width (in pixels) of the generated image thumbnails in FiftyOne. The height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable thumbnail saving.|
-| `--port`                  | `int`  | `5151`                | Port to launch the FiftyOne app on.                                                                                                                                     |
-| `--no-launch`             | `bool` | `false`               | Prevents launching the FiftyOne app in the browser.                                                                                                                     |
+| Argument                  | Type   | Default               | Description                                                                                                                                                              |
+|---------------------------|--------|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--dataset-path`          | `str`  | `None`                | Path to your dataset. Required unless provided in config file and must follow the [YOLO format](https://docs.ultralytics.com/datasets/).                                 |
+| `--dataset-task`          | `str`  | `'detect'`            | Task type: `classify`, `detect`, `segment`, `pose`, `obb`. Required unless in config. More info on the tasks [below](#-supported-tasks-and-image-metadata).              |
+| `--dataset-name`          | `str`  | `'default'`           | Name for the FiftyOne dataset. Auto-generated from path if not set.                                                                                                      |
+| `--config`                | `str`  | `None`                | Path to config YAML file. Overrides default settings.                                                                                                                    |
+| `--reload`                | `bool` | `false`               | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                                |
+| `--skip-embeddings`       | `bool` | `false`               | Skip CLIP embedding computation (useful for quick visualization).                                                                                                        |
+| `--batch-size`            | `int`  | `16`                  | Batch size used during CLIP embedding computation.                                                                                                                       |
+| `--model`                 | `str`  | `'openai_clip'`       | Embeddings model to use for embedding computation. Possible values are `openai_clip`, `metaclip_400m`, `metaclip_fullcc` and `siglip_base_224`.                          |
+| `--embeddings-models-dir` | `str`  | `'./models/fiftyone'` | Path to the directory where the embeddings models are saved.                                                                                                             |
+| `--thumbnail-dir`         | `str`  | `'./thumbnails'`      | Path to the directory where the thumbnails are saved.                                                                                                                    |
+| `--thumbnail-width`       | `int`  | `800`                 | Width (in pixels) of the generated image thumbnails in FiftyOne. The height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable thumbnail saving. |
+| `--port`                  | `int`  | `5151`                | Port to launch the FiftyOne app on.                                                                                                                                      |
+| `--no-launch`             | `bool` | `false`               | Prevents launching the FiftyOne app in the browser.                                                                                                                      |
 
 ## 📊 Supported tasks and image metadata
 
@@ -115,12 +115,12 @@ Also, for each image, the following metadata will be computed:
 
 All models use **224x224 input resolution**. This is a constraint imposed by FiftyOne's OpenCLIP integration - higher resolution variants (384, 512) cause preprocessing errors when computing embeddings. The 224x224 resolution provides excellent quality for most computer vision tasks while maintaining compatibility with FiftyOne's model zoo.
 
-| Model | Description | Training Dataset |
-|-------|-------------|------------------|
-| **openai_clip** | Original OpenAI CLIP model with ViT-B/32 architecture. Hosted on GitHub releases for offline usage. This is the default model and works without internet connection after first download. | [OpenAI CLIP](https://github.com/openai/CLIP) |
-| **metaclip_400m** | MetaCLIP model trained on curated 400M image-text pairs. Offers improved data quality and better embeddings compared to OpenAI CLIP while maintaining the same speed and architecture. | [MetaCLIP](https://github.com/facebookresearch/MetaCLIP) |
-| **metaclip_fullcc** | MetaCLIP model trained on the full CommonCrawl dataset. Provides the highest quality embeddings among MetaCLIP variants with more diverse training data. | [MetaCLIP](https://github.com/facebookresearch/MetaCLIP) |
-| **siglip_base_224** | SigLIP (Sigmoid Loss for Language-Image Pre-training) base model. Uses improved sigmoid loss function for better performance with smaller batch sizes and more efficient training. | [SigLIP](https://github.com/google-research/big_vision) |
+| Model               | Description                                                                                                                                                                               | Training Dataset                                         |
+|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
+| **openai_clip**     | Original OpenAI CLIP model with ViT-B/32 architecture. Hosted on GitHub releases for offline usage. This is the default model and works without internet connection after first download. | [OpenAI CLIP](https://github.com/openai/CLIP)            |
+| **metaclip_400m**   | MetaCLIP model trained on curated 400M image-text pairs. Offers improved data quality and better embeddings compared to OpenAI CLIP while maintaining the same speed and architecture.    | [MetaCLIP](https://github.com/facebookresearch/MetaCLIP) |
+| **metaclip_fullcc** | MetaCLIP model trained on the full CommonCrawl dataset. Provides the highest quality embeddings among MetaCLIP variants with more diverse training data.                                  | [MetaCLIP](https://github.com/facebookresearch/MetaCLIP) |
+| **siglip_base_224** | SigLIP (Sigmoid Loss for Language-Image Pre-training) base model. Uses improved sigmoid loss function for better performance with smaller batch sizes and more efficient training.        | [SigLIP](https://github.com/google-research/big_vision)  |
 
 ### Model Selection Guide
 
