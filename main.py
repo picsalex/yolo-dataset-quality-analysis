@@ -336,7 +336,7 @@ def main():
         if dataset_task == DatasetTask.POSE:
             field_name = get_box_field_from_task(task=DatasetTask.DETECTION)
 
-        _ = fo.launch_app(
+        session = fo.launch_app(
             dataset,
             port=config.get("port", 5151),
             color_scheme=fo.ColorScheme(
@@ -357,13 +357,10 @@ def main():
         print("\nTo exit, close the App or press ctrl + c")
 
         try:
-            while True:
-                import time
-
-                time.sleep(1)
+            session.wait(-1)
 
         except KeyboardInterrupt:
-            print("\n\nShutting down gracefully...")
+            print("\nShutting down gracefully...")
 
         finally:
             print("App closed successfully")
