@@ -149,6 +149,9 @@ def build_config(args: argparse.Namespace) -> Dict[str, Any]:
         if "thumbnails" in user_config:
             config["thumbnails"].update(user_config["thumbnails"])
 
+        if "port" in user_config:
+            config["port"] = user_config["port"]
+
     # Override with command-line arguments
     if args.dataset_path is not None:
         config["dataset"]["path"] = args.dataset_path
@@ -220,6 +223,7 @@ def main():
         embeddings_model=config["embeddings"]["model"],
     )
     model_kwargs = embeddings_model.get_model_kwargs()
+    fiftyone_app_port = config.get("port", 5151)
 
     # Validate dataset path exists
     if not os.path.exists(dataset_path):
@@ -247,6 +251,7 @@ def main():
         f"🤖 Embeddings model: {model_kwargs.get('clip_model')} ({model_kwargs.get('pretrained')})"
     )
     print(f"🖼️ Thumbnail size: ({config['thumbnails']['width']}, -1)")
+    print(f"🌐 Port: {fiftyone_app_port}")
     print("=" * 60 + "\n")
 
     # Step 1: Prepare dataset
@@ -338,7 +343,7 @@ def main():
 
         session = fo.launch_app(
             dataset,
-            port=config.get("port", 5151),
+            port=fiftyone_app_port,
             color_scheme=fo.ColorScheme(
                 color_by="value",
                 fields=[
@@ -351,7 +356,7 @@ def main():
             ),
         )
 
-        print(f"\n🌐 App running at: http://localhost:{config.get('port', 5151)}")
+        print(f"\n🌐 App running at: http://localhost:{fiftyone_app_port}")
         print("📊 Dataset: " + config["dataset"]["name"])
         print("🎯 Task: " + config["dataset"]["task"])
         print("\nTo exit, close the App or press ctrl + c")

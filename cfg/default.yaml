@@ -49,3 +49,10 @@ thumbnails:
 
   # Width of the thumbnails (in pixels), height is scaled proportionally
   width: 800
+
+# ===========================
+# APP CONFIGURATION
+# ===========================
+# Port for the FiftyOne app
+# Can be overridden with --port argument
+port: 5151
