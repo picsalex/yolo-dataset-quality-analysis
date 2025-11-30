@@ -20,6 +20,7 @@ dataset_split_options = [
     "train",
     "val",
     "valid",
+    "validation",
     "test",
     "train2017",
     "val2017",
