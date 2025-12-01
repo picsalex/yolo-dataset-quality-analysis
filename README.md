@@ -1,4 +1,4 @@
-# 🎯 YOLO Dataset Quality Analysis
+# 🎯 Ultralytics YOLO Dataset Quality Analysis tool
 
 <div align="center">
   <img src="https://github.com/ultralytics/assets/raw/main/logo/Ultralytics-logomark-color.png" width="120" alt="Ultralytics Logo">
