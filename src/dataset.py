@@ -258,7 +258,7 @@ def configure_dataset_additional_fields(
                     fo.IntField,
                 )
                 dataset.add_sample_field(
-                    f"{get_box_field_from_task(task=DatasetTask.SEGMENTATION)}.polylines.num_points",
+                    f"{get_box_field_from_task(task=DatasetTask.SEGMENTATION)}.polylines.num_keypoints",
                     fo.IntField,
                 )
                 dataset.add_sample_field(
@@ -618,7 +618,7 @@ def _get_fiftyone_detection_label(
     num_keypoints: Optional[int] = None,
 ) -> Optional[fo.Detection]:
     """
-    Convert a single YOLO annotation line to a FiftyOne Detection object.
+    Convert a single YOLO annotation line to a FiftyOne Detection object. Used for object detection datasets.
 
     Args:
         line: A single line from a YOLO label file
@@ -626,7 +626,7 @@ def _get_fiftyone_detection_label(
         image_width: Width of the image
         image_height: Height of the image
         split: The dataset split (train/val/test)
-        num_keypoints: Optional number of keypoints associated with the detection (for pose estimation)
+        num_keypoints: Optional number of pose keypoints associated with the detection
 
     Returns:
         A FiftyOne Detection object or None if the line is invalid
@@ -698,7 +698,7 @@ def _get_fiftyone_keypoint_label(
     split: str,
 ) -> Optional[fo.Keypoint]:
     """
-    Convert a single YOLO annotation line to a FiftyOne Keypoint object.
+    Convert a single YOLO annotation line to a FiftyOne Keypoint object. Used for pose datasets.
 
     Args:
         line: A single line from a YOLO label file
@@ -744,6 +744,8 @@ def _get_fiftyone_keypoint_label(
 
     # Parse keypoints - groups of 3 (x, y, visibility)
     points = []
+    num_keypoints = 0
+
     for i in range(0, len(keypoint_data), 3):
         if i + 2 < len(keypoint_data):
             kp_x = float(keypoint_data[i])
@@ -755,6 +757,12 @@ def _get_fiftyone_keypoint_label(
 
             if kp_x != 0 and kp_y != 0:
                 points.append([kp_x, kp_y])
+                num_keypoints += 1
+
+            else:
+                # Indicates hidden keypoint, setting to -1,-1 for FiftyOne so
+                # they're not displayed and the colors order is preserved
+                points.append([-1, -1])
 
     if not points:
         return None
@@ -771,7 +779,7 @@ def _get_fiftyone_keypoint_label(
     )
 
     keypoint["area"] = int(bbox_width * image_width * bbox_height * image_height)
-    keypoint["num_keypoints"] = len(points)
+    keypoint["num_keypoints"] = num_keypoints
 
     return keypoint
 
@@ -784,7 +792,7 @@ def _get_fiftyone_obb_label(
     image_height: int,
 ) -> Optional[fo.Polyline]:
     """
-    Convert a single YOLO OBB (Oriented Bounding Box) annotation line to a FiftyOne Polygon object.
+    Convert a single YOLO OBB (Oriented Bounding Box) annotation line to a FiftyOne Polygon object. Used for OBB datasets.
 
     Args:
         line: A single line from a YOLO OBB label file
@@ -888,7 +896,7 @@ def _get_fiftyone_polygon_label(
     image_height: int,
 ) -> Optional[fo.Polyline]:
     """
-    Convert a single YOLO annotation line to a FiftyOne Polygon object.
+    Convert a single YOLO annotation line to a FiftyOne Polygon object. Used for segmentation datasets.
 
     Args:
         line: A single line from a YOLO label file
@@ -970,7 +978,7 @@ def _get_fiftyone_polygon_label(
             else points_pixels
         ).area
     )
-    polygon["num_points"] = len(points)
+    polygon["num_keypoints"] = len(points)
     polygon["width"] = int((max_x - min_x) * image_width)
     polygon["height"] = int((max_y - min_y) * image_height)
 

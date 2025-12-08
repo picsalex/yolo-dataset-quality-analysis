@@ -92,13 +92,13 @@ thumbnails:
 
 For each expected task format, the following metadata will be computed and available in FiftyOne for each annotation:
 
-| Task                                                       | Available parameters when using the UI                     |
-|------------------------------------------------------------|------------------------------------------------------------|
-| [`classify`](https://docs.ultralytics.com/tasks/classify/) | `cls_label.label`                                          |
-| [`detect`](https://docs.ultralytics.com/tasks/detect/)     | `area`, `aspect_ratio`, `width`, `height`                  |
-| [`segment`](https://docs.ultralytics.com/tasks/segment/)   | `area`, `num_points`, `width`, `height`                    |
-| [`obb`](https://docs.ultralytics.com/tasks/obb/)           | `area`, `width`, `height`                                  |
-| [`pose`](https://docs.ultralytics.com/tasks/pose/)         | `area`, `num_keypoints`, `aspect_ratio`, `width`, `height` |
+| Task                                                       | Available parameters when using the UI                                   |
+|------------------------------------------------------------|--------------------------------------------------------------------------|
+| [`classify`](https://docs.ultralytics.com/tasks/classify/) | `cls_label.label`                                                        |
+| [`detect`](https://docs.ultralytics.com/tasks/detect/)     | `area`, `aspect_ratio`, `width`, `height`, `duplicates`                  |
+| [`segment`](https://docs.ultralytics.com/tasks/segment/)   | `area`, `num_keypoints`, `width`, `height`, `duplicates`                 |
+| [`obb`](https://docs.ultralytics.com/tasks/obb/)           | `area`, `width`, `height`, `duplicates`                                  |
+| [`pose`](https://docs.ultralytics.com/tasks/pose/)         | `area`, `num_keypoints`, `aspect_ratio`, `width`, `height`, `duplicates` |
 
 Also, for each image, the following metadata will be computed:
 
