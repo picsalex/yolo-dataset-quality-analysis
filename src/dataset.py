@@ -14,7 +14,7 @@ from src.images import (
     get_image_mime_type,
     get_image_size_bytes,
 )
-from src.voxel51 import get_object_count_from_labels
+from src.voxel51 import get_object_count_from_labels, set_duplicates_from_labels
 
 dataset_split_options = [
     "train",
@@ -241,6 +241,10 @@ def configure_dataset_additional_fields(
                     f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.height",
                     fo.FloatField,
                 )
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.duplicates",
+                    fo.FloatField,
+                )
 
                 if dataset_task == DatasetTask.POSE:
                     dataset.add_sample_field(
@@ -265,6 +269,10 @@ def configure_dataset_additional_fields(
                     f"{get_box_field_from_task(task=DatasetTask.SEGMENTATION)}.polylines.height",
                     fo.IntField,
                 )
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.SEGMENTATION)}.polylines.duplicates",
+                    fo.IntField,
+                )
 
             elif dataset_task == DatasetTask.OBB:
                 dataset.add_sample_field(
@@ -277,6 +285,10 @@ def configure_dataset_additional_fields(
                 )
                 dataset.add_sample_field(
                     f"{get_box_field_from_task(task=DatasetTask.OBB)}.polylines.height",
+                    fo.IntField,
+                )
+                dataset.add_sample_field(
+                    f"{get_box_field_from_task(task=DatasetTask.OBB)}.polylines.duplicates",
                     fo.IntField,
                 )
 
@@ -366,6 +378,7 @@ def _process_split(
             # Add detections to sample
             if labels:
                 field = get_box_field_from_task(task=dataset_task)
+                set_duplicates_from_labels(labels=labels, dataset_task=dataset_task)
                 sample[field] = labels
 
                 # For pose estimation, also add bounding boxes
@@ -383,7 +396,9 @@ def _process_split(
                     detection_field = get_box_field_from_task(
                         task=DatasetTask.DETECTION
                     )
-
+                    set_duplicates_from_labels(
+                        labels=detection_labels, dataset_task=DatasetTask.DETECTION
+                    )
                     sample[detection_field] = detection_labels
 
             sample["image_path"] = image_path
