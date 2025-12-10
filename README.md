@@ -95,10 +95,10 @@ For each expected task format, the following metadata will be computed and avail
 | Task                                                       | Available parameters when using the UI                                   |
 |------------------------------------------------------------|--------------------------------------------------------------------------|
 | [`classify`](https://docs.ultralytics.com/tasks/classify/) | `cls_label.label`                                                        |
-| [`detect`](https://docs.ultralytics.com/tasks/detect/)     | `area`, `aspect_ratio`, `width`, `height`, `duplicates`                  |
-| [`segment`](https://docs.ultralytics.com/tasks/segment/)   | `area`, `num_keypoints`, `width`, `height`, `duplicates`                 |
-| [`obb`](https://docs.ultralytics.com/tasks/obb/)           | `area`, `width`, `height`, `duplicates`                                  |
-| [`pose`](https://docs.ultralytics.com/tasks/pose/)         | `area`, `num_keypoints`, `aspect_ratio`, `width`, `height`, `duplicates` |
+| [`detect`](https://docs.ultralytics.com/tasks/detect/)     | `area`, `aspect_ratio`, `width`, `height`, `iou_score`                   |
+| [`segment`](https://docs.ultralytics.com/tasks/segment/)   | `area`, `num_keypoints`, `width`, `height`, `iou_score`                  |
+| [`obb`](https://docs.ultralytics.com/tasks/obb/)           | `area`, `width`, `height`, `iou_score`                                   |
+| [`pose`](https://docs.ultralytics.com/tasks/pose/)         | `area`, `num_keypoints`, `aspect_ratio`, `width`, `height`, `iou_score`  |
 
 Also, for each image, the following metadata will be computed:
 

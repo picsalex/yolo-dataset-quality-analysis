@@ -113,10 +113,10 @@ def get_object_count_from_labels(labels: fo.Label, dataset_task: DatasetTask) ->
     return 0
 
 
-def set_duplicates_from_labels(labels: fo.Label, dataset_task: DatasetTask) -> None:
+def compute_iou_scores(labels: fo.Label, dataset_task: DatasetTask) -> None:
     """
-    Set the duplicates property for each object in the labels based on IoU overlap.
-    Objects with >99% IoU are considered duplicates and grouped together.
+    Set the iou_score property for each object in the labels based on IoU overlap.
+    For each object, stores the maximum IoU value with any other object in the image.
 
     Args:
         labels: The labels containing detections or polylines
@@ -126,9 +126,6 @@ def set_duplicates_from_labels(labels: fo.Label, dataset_task: DatasetTask) -> N
         return
 
     from shapely.geometry import Polygon, box
-
-    # Hardcoded IoU threshold for duplicates
-    IOU_THRESHOLD = 0.99
 
     # Extract objects based on task type
     if dataset_task == DatasetTask.DETECTION:
@@ -206,40 +203,13 @@ def set_duplicates_from_labels(labels: fo.Label, dataset_task: DatasetTask) -> N
     else:
         return
 
-    # Group objects based on IoU threshold using Union-Find
-    parent = list(range(n))
-
-    def find(x):
-        if parent[x] != x:
-            parent[x] = find(parent[x])
-        return parent[x]
-
-    def union(x, y):
-        root_x = find(x)
-        root_y = find(y)
-        if root_x != root_y:
-            parent[root_x] = root_y
-
-    # Find all duplicate pairs and union them
+    # Set iou_score property for each object (maximum IoU with any other object)
     for i in range(n):
-        for j in range(i + 1, n):
-            if iou_matrix[i][j] >= IOU_THRESHOLD:
-                union(i, j)
-
-    # Count group sizes
-    group_sizes = {}
-    for i in range(n):
-        root = find(i)
-        group_sizes[root] = group_sizes.get(root, 0) + 1
-
-    # Set duplicates property for each object
-    for i in range(n):
-        root = find(i)
-        group_size = group_sizes[root]
-
-        # Set to 0 if alone, otherwise set to group size
-        duplicates_count = 0 if group_size == 1 else group_size
-        objects[i]["duplicates"] = duplicates_count
+        max_iou = 0.0
+        for j in range(n):
+            if i != j:
+                max_iou = max(max_iou, iou_matrix[i][j])
+        objects[i]["iou_score"] = round(max_iou, 3)
 
 
 def prepare_embeddings_models(embeddings_model: str) -> EmbeddingsModel:

@@ -14,7 +14,7 @@ from src.images import (
     get_image_mime_type,
     get_image_size_bytes,
 )
-from src.voxel51 import get_object_count_from_labels, set_duplicates_from_labels
+from src.voxel51 import get_object_count_from_labels, compute_iou_scores
 
 dataset_split_options = [
     "train",
@@ -242,7 +242,7 @@ def configure_dataset_additional_fields(
                     fo.FloatField,
                 )
                 dataset.add_sample_field(
-                    f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.duplicates",
+                    f"{get_box_field_from_task(task=DatasetTask.DETECTION)}.detections.iou_score",
                     fo.FloatField,
                 )
 
@@ -270,8 +270,8 @@ def configure_dataset_additional_fields(
                     fo.IntField,
                 )
                 dataset.add_sample_field(
-                    f"{get_box_field_from_task(task=DatasetTask.SEGMENTATION)}.polylines.duplicates",
-                    fo.IntField,
+                    f"{get_box_field_from_task(task=DatasetTask.SEGMENTATION)}.polylines.iou_score",
+                    fo.FloatField,
                 )
 
             elif dataset_task == DatasetTask.OBB:
@@ -288,8 +288,8 @@ def configure_dataset_additional_fields(
                     fo.IntField,
                 )
                 dataset.add_sample_field(
-                    f"{get_box_field_from_task(task=DatasetTask.OBB)}.polylines.duplicates",
-                    fo.IntField,
+                    f"{get_box_field_from_task(task=DatasetTask.OBB)}.polylines.iou_score",
+                    fo.FloatField,
                 )
 
         except ValueError as e:
@@ -378,7 +378,7 @@ def _process_split(
             # Add detections to sample
             if labels:
                 field = get_box_field_from_task(task=dataset_task)
-                set_duplicates_from_labels(labels=labels, dataset_task=dataset_task)
+                compute_iou_scores(labels=labels, dataset_task=dataset_task)
                 sample[field] = labels
 
                 # For pose estimation, also add bounding boxes
@@ -396,7 +396,7 @@ def _process_split(
                     detection_field = get_box_field_from_task(
                         task=DatasetTask.DETECTION
                     )
-                    set_duplicates_from_labels(
+                    compute_iou_scores(
                         labels=detection_labels, dataset_task=DatasetTask.DETECTION
                     )
                     sample[detection_field] = detection_labels
