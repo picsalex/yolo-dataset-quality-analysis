@@ -14,6 +14,7 @@ from src.images import (
     get_image_mime_type,
     get_image_size_bytes,
 )
+from src.logger import logger
 from src.voxel51 import get_object_count_from_labels, compute_iou_scores
 
 dataset_split_options = [
@@ -57,14 +58,18 @@ def load_class_names(dataset_path: str, dataset_task: DatasetTask) -> List[str]:
             yaml_path = os.path.join(dataset_path, yaml_name)
 
             if os.path.exists(yaml_path):
-                with open(yaml_path, "r") as f:
-                    data = yaml.safe_load(f)
-                    names = data.get("names", [])
+                try:
+                    with open(yaml_path, "r") as f:
+                        data = yaml.safe_load(f)
+                        names = data.get("names", [])
 
-                    if isinstance(names, dict):
-                        return [names[i] for i in sorted(names.keys())]
+                        if isinstance(names, dict):
+                            return [names[i] for i in sorted(names.keys())]
 
-                    return names
+                        return names
+                except Exception as e:
+                    logger.error(f"Failed to load class names from {yaml_path}: {e}")
+                    raise
     return []
 
 
@@ -95,23 +100,26 @@ def prepare_voxel_dataset(
         and dataset is the FiftyOne dataset object
     """
     if not os.path.isdir(dataset_path):
+        logger.error(
+            f"Dataset path '{dataset_path}' does not exist or is not a directory"
+        )
         raise NotADirectoryError(
             f"Dataset path '{dataset_path}' does not exist or is not a directory."
         )
 
     if dataset_name in fo.list_datasets():
         if not force_reload:
-            print("Loading existing dataset...")
+            logger.info("Loading existing dataset...")
             return True, fo.load_dataset(dataset_name)
 
         else:
-            print("Force reload is enabled. Deleting existing dataset...")
+            logger.info("Force reload enabled, deleting existing dataset...")
             fo.delete_dataset(dataset_name)
 
-    print(f"Creating new dataset '{dataset_name}'...")
+    logger.info(f"Creating new dataset '{dataset_name}'...")
 
     class_names = load_class_names(dataset_path=dataset_path, dataset_task=dataset_task)
-    print(f"Found {len(class_names)} classes: {class_names}")
+    logger.info(f"Found {len(class_names)} classes: {class_names}")
 
     if dataset_task != DatasetTask.CLASSIFICATION:
         # Create empty dataset
@@ -171,10 +179,11 @@ def prepare_voxel_dataset(
             )
 
         else:
+            logger.error("Dataset directory structure not recognized")
             raise FileNotFoundError(
                 "Dataset directory structure not recognized. Expected either:\n"
-                "  - images/{{split}}/ and labels/{{split}}/, or\n"
-                "  - {{split}}/images/ and {{split}}/labels/"
+                "  - images/{split}/ and labels/{split}/, or\n"
+                "  - {split}/images/ and {split}/labels/"
             )
 
     else:
@@ -202,7 +211,7 @@ def prepare_voxel_dataset(
 
     dataset.save()
 
-    print(f"\nDataset created with {len(dataset)} total samples")
+    logger.info(f"Dataset created with {len(dataset)} total samples")
 
     return False, dataset
 
@@ -293,9 +302,10 @@ def configure_dataset_additional_fields(
                 )
 
         except ValueError as e:
-            print(
-                f"Error adding the external field. Maybe the chosen dataset task `{str(dataset_task)}` is not the right one: {e} "
+            logger.error(
+                f"Failed to add external field. Dataset task '{str(dataset_task)}' may be incorrect: {e}"
             )
+            raise
 
 
 def _process_split(
@@ -320,10 +330,10 @@ def _process_split(
     """
 
     if not os.path.exists(images_dir):
-        print(f"Images directory for split '{split}' not found, skipping...")
+        logger.warning(f"Images directory for split '{split}' not found, skipping")
         return
 
-    print(f"\nProcessing {split} split...")
+    logger.info(f"\nProcessing {split} split:")
 
     # Get all image files
     image_files = sorted(
@@ -407,13 +417,13 @@ def _process_split(
             samples.append(sample)
 
         except Exception as e:
-            print(f"Error processing {img_file}: {e}")
+            logger.warning(f"Failed to process {img_file}: {e}")
             continue
 
     # Add samples to dataset
     if samples:
         dataset.add_samples(samples)
-        print(f"Added {len(samples)} samples from {split} split")
+        logger.info(f"Added {len(samples)} samples from {split} split")
 
 
 def _process_classification_split(
@@ -431,10 +441,10 @@ def _process_classification_split(
         split: The split name (train/val/test)
     """
     if not os.path.exists(split_dir):
-        print(f"Split directory '{split}' not found, skipping...")
+        logger.warning(f"Split directory '{split}' not found, skipping")
         return
 
-    print(f"\nProcessing {split} split...")
+    logger.info(f"\nProcessing {split} split:")
 
     # Get all class directories
     class_dirs = sorted(
@@ -442,10 +452,10 @@ def _process_classification_split(
     )
 
     if not class_dirs:
-        print(f"No class directories found in {split_dir}, skipping...")
+        logger.warning(f"No class directories found in {split_dir}, skipping")
         return
 
-    print(f"Found {len(class_dirs)} classes in {split}: {class_dirs}")
+    logger.info(f"Found {len(class_dirs)} classes in {split}: {class_dirs}")
 
     samples = []
 
@@ -497,13 +507,13 @@ def _process_classification_split(
                 samples.append(sample)
 
             except Exception as e:
-                print(f"Error processing {image_path}: {e}")
+                logger.warning(f"Failed to process {image_path}: {e}")
                 continue
 
     # Add samples to dataset
     if samples:
         dataset.add_samples(samples)
-        print(f"Added {len(samples)} samples from {split} split")
+        logger.info(f"Added {len(samples)} samples from {split} split")
 
 
 def _get_fiftyone_labels(
@@ -535,78 +545,83 @@ def _get_fiftyone_labels(
     if not os.path.exists(label_path):
         return None
 
-    with open(label_path, "r") as f:
-        if dataset_task == DatasetTask.DETECTION:
-            detections = []
-            for index, line in enumerate(f):
-                if detection := _get_fiftyone_detection_label(
-                    line=line,
-                    class_names=class_names,
-                    image_width=image_width,
-                    image_height=image_height,
-                    split=split_name,
-                    num_keypoints=keypoint_labels.keypoints[index]["num_keypoints"]
-                    if keypoint_labels
-                    else None,
-                ):
-                    detection["label_path"] = label_path
-                    detection["image_path"] = image_path
-                    detections.append(detection)
+    try:
+        with open(label_path, "r") as f:
+            if dataset_task == DatasetTask.DETECTION:
+                detections = []
+                for index, line in enumerate(f):
+                    if detection := _get_fiftyone_detection_label(
+                        line=line,
+                        class_names=class_names,
+                        image_width=image_width,
+                        image_height=image_height,
+                        split=split_name,
+                        num_keypoints=keypoint_labels.keypoints[index]["num_keypoints"]
+                        if keypoint_labels
+                        else None,
+                    ):
+                        detection["label_path"] = label_path
+                        detection["image_path"] = image_path
+                        detections.append(detection)
 
-            return fo.Detections(detections=detections) if detections else None
+                return fo.Detections(detections=detections) if detections else None
 
-        elif dataset_task == DatasetTask.POSE:
-            keypoints = []
+            elif dataset_task == DatasetTask.POSE:
+                keypoints = []
 
-            for line in f:
-                if keypoint := _get_fiftyone_keypoint_label(
-                    line=line,
-                    class_names=class_names,
-                    image_width=image_width,
-                    image_height=image_height,
-                    split=split_name,
-                ):
-                    keypoint["label_path"] = label_path
-                    keypoint["image_path"] = image_path
-                    keypoints.append(keypoint)
+                for line in f:
+                    if keypoint := _get_fiftyone_keypoint_label(
+                        line=line,
+                        class_names=class_names,
+                        image_width=image_width,
+                        image_height=image_height,
+                        split=split_name,
+                    ):
+                        keypoint["label_path"] = label_path
+                        keypoint["image_path"] = image_path
+                        keypoints.append(keypoint)
 
-            return fo.Keypoints(keypoints=keypoints) if keypoints else None
+                return fo.Keypoints(keypoints=keypoints) if keypoints else None
 
-        elif dataset_task == DatasetTask.SEGMENTATION:
-            polygons = []
+            elif dataset_task == DatasetTask.SEGMENTATION:
+                polygons = []
 
-            for line in f:
-                if polygon := _get_fiftyone_polygon_label(
-                    line=line,
-                    class_names=class_names,
-                    split=split_name,
-                    image_width=image_width,
-                    image_height=image_height,
-                ):
-                    polygon["label_path"] = label_path
-                    polygon["image_path"] = image_path
-                    polygons.append(polygon)
+                for line in f:
+                    if polygon := _get_fiftyone_polygon_label(
+                        line=line,
+                        class_names=class_names,
+                        split=split_name,
+                        image_width=image_width,
+                        image_height=image_height,
+                    ):
+                        polygon["label_path"] = label_path
+                        polygon["image_path"] = image_path
+                        polygons.append(polygon)
 
-            return fo.Polylines(polylines=polygons) if polygons else None
+                return fo.Polylines(polylines=polygons) if polygons else None
 
-        elif dataset_task == DatasetTask.OBB:
-            obbs = []
-            for line in f:
-                if obb := _get_fiftyone_obb_label(
-                    line=line,
-                    class_names=class_names,
-                    split=split_name,
-                    image_width=image_width,
-                    image_height=image_height,
-                ):
-                    obb["label_path"] = label_path
-                    obb["image_path"] = image_path
-                    obbs.append(obb)
+            elif dataset_task == DatasetTask.OBB:
+                obbs = []
+                for line in f:
+                    if obb := _get_fiftyone_obb_label(
+                        line=line,
+                        class_names=class_names,
+                        split=split_name,
+                        image_width=image_width,
+                        image_height=image_height,
+                    ):
+                        obb["label_path"] = label_path
+                        obb["image_path"] = image_path
+                        obbs.append(obb)
 
-            return fo.Polylines(polylines=obbs) if obbs else None
+                return fo.Polylines(polylines=obbs) if obbs else None
 
-        else:
-            return None
+            else:
+                return None
+
+    except Exception as e:
+        logger.warning(f"Failed to load labels from {label_path}: {e}")
+        return None
 
 
 def _get_fiftyone_detection_label(

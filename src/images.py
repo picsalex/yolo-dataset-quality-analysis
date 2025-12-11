@@ -5,6 +5,8 @@ from PIL import Image
 import fiftyone as fo
 import fiftyone.utils.image as foui
 
+from src.logger import logger
+
 
 def get_image_dimensions(filepath: str) -> Tuple[int, int]:
     """
@@ -16,8 +18,12 @@ def get_image_dimensions(filepath: str) -> Tuple[int, int]:
     Returns:
         Tuple of (width, height)
     """
-    with Image.open(filepath) as img:
-        return img.size
+    try:
+        with Image.open(filepath) as img:
+            return img.size
+    except Exception as e:
+        logger.error(f"Failed to get dimensions for {filepath}: {e}")
+        raise
 
 
 def get_image_aspect_ratio(filepath: str) -> float:
@@ -30,8 +36,12 @@ def get_image_aspect_ratio(filepath: str) -> float:
     Returns:
         Aspect ratio (width / height)
     """
-    width, height = get_image_dimensions(filepath)
-    return round(width / height, 2)
+    try:
+        width, height = get_image_dimensions(filepath)
+        return round(width / height, 2)
+    except Exception as e:
+        logger.error(f"Failed to calculate aspect ratio for {filepath}: {e}")
+        raise
 
 
 def get_image_channel_count(filepath: str) -> int:
@@ -44,8 +54,12 @@ def get_image_channel_count(filepath: str) -> int:
     Returns:
         Number of channels (e.g., 3 for RGB, 4 for RGBA)
     """
-    with Image.open(filepath) as img:
-        return len(img.getbands())
+    try:
+        with Image.open(filepath) as img:
+            return len(img.getbands())
+    except Exception as e:
+        logger.error(f"Failed to get channel count for {filepath}: {e}")
+        raise
 
 
 def get_image_size_bytes(filepath: str) -> int:
@@ -58,7 +72,11 @@ def get_image_size_bytes(filepath: str) -> int:
     Returns:
         File size in bytes
     """
-    return os.path.getsize(filepath)
+    try:
+        return os.path.getsize(filepath)
+    except Exception as e:
+        logger.error(f"Failed to get file size for {filepath}: {e}")
+        raise
 
 
 def get_image_mime_type(filepath: str) -> str:
@@ -71,8 +89,12 @@ def get_image_mime_type(filepath: str) -> str:
     Returns:
         MIME type (e.g., "image/jpeg", "image/png")
     """
-    with Image.open(filepath) as img:
-        return img.get_format_mimetype()
+    try:
+        with Image.open(filepath) as img:
+            return img.get_format_mimetype()
+    except Exception as e:
+        logger.error(f"Failed to get MIME type for {filepath}: {e}")
+        raise
 
 
 def generate_thumbnails(
@@ -86,30 +108,34 @@ def generate_thumbnails(
         thumbnail_dir_path: Directory to save thumbnails
         thumbnail_width: Width of the generated thumbnails in pixels
     """
-    print("\n" + "=" * 60)
-    print("GENERATING THUMBNAILS")
-    print("=" * 60)
-
-    print(f"Output directory: {thumbnail_dir_path}")
+    logger.info(f"Output directory: {thumbnail_dir_path}")
 
     # Create thumbnail directory if it doesn't exist
-    os.makedirs(thumbnail_dir_path, exist_ok=True)
+    try:
+        os.makedirs(thumbnail_dir_path, exist_ok=True)
+    except Exception as e:
+        logger.error(f"Failed to create thumbnail directory: {e}")
+        raise
 
-    common_base = os.path.commonpath(
-        [os.path.dirname(p) for p in dataset.values("filepath")]
-    )
+    try:
+        common_base = os.path.commonpath(
+            [os.path.dirname(p) for p in dataset.values("filepath")]
+        )
 
-    # Generate thumbnails preserving relative directory structure
-    foui.transform_images(
-        dataset,
-        size=(
-            thumbnail_width,
-            -1,
-        ),
-        output_dir=thumbnail_dir_path,
-        rel_dir=common_base,
-        output_field="thumbnail_path",
-    )
+        # Generate thumbnails preserving relative directory structure
+        foui.transform_images(
+            dataset,
+            size=(
+                thumbnail_width,
+                -1,
+            ),
+            output_dir=thumbnail_dir_path,
+            rel_dir=common_base,
+            output_field="thumbnail_path",
+        )
 
-    print("Thumbnails generated!")
-    print("=" * 60)
+        logger.info("Thumbnails generated successfully")
+
+    except Exception as e:
+        logger.error(f"Thumbnail generation failed: {e}")
+        raise

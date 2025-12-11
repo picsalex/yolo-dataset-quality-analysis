@@ -25,6 +25,7 @@ from src.config import (
 from src.dataset import prepare_voxel_dataset
 from src.enum import DatasetTask
 from src.images import generate_thumbnails
+from src.logger import logger, configure_external_loggers
 from src.voxel51 import (
     compute_visualizations,
     prepare_embeddings_models,
@@ -33,9 +34,13 @@ from src.voxel51 import (
 
 def load_config(config_path: str) -> Dict[str, Any]:
     """Load configuration from YAML file"""
-    with open(config_path, "r") as f:
-        config = yaml.safe_load(f)
-    return config
+    try:
+        with open(config_path, "r") as f:
+            config = yaml.safe_load(f)
+        return config
+    except Exception as e:
+        logger.error(f"Failed to load configuration file '{config_path}': {e}")
+        raise
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -127,7 +132,7 @@ def build_config(args: argparse.Namespace) -> Dict[str, Any]:
 
     default_config_path = "cfg/default.yaml"
     if not os.path.exists(default_config_path):
-        print(f"❌ Error: default configuration file not found: {default_config_path}")
+        logger.error(f"Default configuration file not found: {default_config_path}")
         sys.exit(1)
 
     config = load_config(default_config_path)
@@ -135,7 +140,7 @@ def build_config(args: argparse.Namespace) -> Dict[str, Any]:
     # Load user-specified config file if provided
     if args.config:
         if not os.path.exists(args.config):
-            print(f"❌ Config file not found: {args.config}")
+            logger.error(f"Configuration file not found: {args.config}")
             sys.exit(1)
 
         user_config = load_config(args.config)
@@ -187,18 +192,18 @@ def build_config(args: argparse.Namespace) -> Dict[str, Any]:
 
     # Validate required fields
     if not config["dataset"].get("path"):
-        print(
-            "❌ Error: dataset path is required (use --dataset-path or specify in config file)"
+        logger.error(
+            "Dataset path is required (use --dataset-path or specify in config file)"
         )
         sys.exit(1)
 
     if not config["dataset"].get("task"):
-        print(
-            "❌ Error: dataset task is required (use --dataset-task or specify in config file)"
+        logger.error(
+            "Dataset task is required (use --dataset-task or specify in config file)"
         )
         sys.exit(1)
 
-    # Auto-generate dataset name if not provided or if it"s still set to "default"
+    # Auto-generate dataset name if not provided or if it's still set to "default"
     if (
         not config["dataset"].get("name")
         or config["dataset"]["name"].strip() == "default"
@@ -212,6 +217,9 @@ def build_config(args: argparse.Namespace) -> Dict[str, Any]:
 
 
 def main():
+    # Configure logging for external libraries
+    configure_external_loggers()
+
     args = parse_arguments()
     config = build_config(args)
 
@@ -227,46 +235,50 @@ def main():
 
     # Validate dataset path exists
     if not os.path.exists(dataset_path):
-        print(f"❌ Dataset path does not exist: {dataset_path}")
+        logger.error(f"Dataset path does not exist: {dataset_path}")
         sys.exit(1)
 
     # Validate task and convert to enum
     valid_tasks = [task.value for task in DatasetTask]
     if config["dataset"]["task"] not in valid_tasks:
-        print(
-            f"❌ Invalid task: {config['dataset']['task']}. Must be one of {valid_tasks}"
+        logger.error(
+            f"Invalid task: {config['dataset']['task']}. Must be one of {valid_tasks}"
         )
         sys.exit(1)
 
-    print("\n" + "=" * 60)
-    print("FIFTYONE YOLO DATASET ANALYSIS")
-    print("=" * 60)
-    print(f"📁 Dataset Path: {config['dataset']['path']}")
-    print(f"📊 Dataset Name: {config['dataset']['name']}")
-    print(f"🎯 Dataset Task: {config['dataset']['task']}")
-    print(f"🔄 Force Reload: {config['dataset']['reload']}")
-    print(f"🧠 Skip Embeddings: {config['embeddings']['skip']}")
-    print(f"📦 Batch Size: {config['embeddings']['batch_size']}")
-    print(
-        f"🤖 Embeddings model: {model_kwargs.get('clip_model')} ({model_kwargs.get('pretrained')})"
+    logger.info("=" * 60)
+    logger.info("🚀 FIFTYONE YOLO DATASET ANALYSIS")
+    logger.info("=" * 60)
+    logger.info(f"Dataset Path: {config['dataset']['path']}")
+    logger.info(f"Dataset Name: {config['dataset']['name']}")
+    logger.info(f"Dataset Task: {config['dataset']['task']}")
+    logger.info(f"Force Reload: {config['dataset']['reload']}")
+    logger.info(f"Skip Embeddings: {config['embeddings']['skip']}")
+    logger.info(f"Batch Size: {config['embeddings']['batch_size']}")
+    logger.info(
+        f"Embeddings Model: {model_kwargs.get('clip_model')} ({model_kwargs.get('pretrained')})"
     )
-    print(f"🖼️ Thumbnail size: ({config['thumbnails']['width']}, -1)")
-    print(f"🌐 Port: {fiftyone_app_port}")
-    print("=" * 60 + "\n")
+    logger.info(f"Thumbnail Size: ({config['thumbnails']['width']}, -1)")
+    logger.info(f"Port: {fiftyone_app_port}")
+    logger.info("=" * 60 + "\n")
 
     # Step 1: Prepare dataset
-    print("📁 Step 1: Preparing dataset...")
-    is_already_loaded, dataset = prepare_voxel_dataset(
-        dataset_path=config["dataset"]["path"],
-        dataset_name=config["dataset"]["name"],
-        force_reload=config["dataset"]["reload"],
-        thumbnail_width=config["thumbnails"]["width"],
-        dataset_task=dataset_task,
-    )
+    logger.info("📁 Step 1: Preparing dataset")
+    try:
+        is_already_loaded, dataset = prepare_voxel_dataset(
+            dataset_path=config["dataset"]["path"],
+            dataset_name=config["dataset"]["name"],
+            force_reload=config["dataset"]["reload"],
+            thumbnail_width=config["thumbnails"]["width"],
+            dataset_task=dataset_task,
+        )
+    except Exception as e:
+        logger.error(f"Dataset preparation failed: {e}")
+        raise
 
     if is_already_loaded:
-        print(
-            f"Dataset '{config['dataset']['name']}' is already loaded, skipping preparation."
+        logger.info(
+            f"\n🧠 Step 2: Dataset '{config['dataset']['name']}' already loaded, skipping preparation"
         )
 
     elif not config["embeddings"]["skip"]:
@@ -276,106 +288,116 @@ def main():
         if dataset_task == DatasetTask.POSE:
             patches_field_name = get_box_field_from_task(task=DatasetTask.DETECTION)
 
-        # Step 2: Load embeddings model
-        print("\n🤖 Step 2: Loading embeddings model...")
-        print(f"Using OpenCLIP model: {embeddings_model.value}")
-
-        # Step 3: Compute visualizations
-        print("\n🧠 Step 3: Computing embeddings and visualizations...")
-        compute_visualizations(
-            dataset=dataset,
-            dataset_task=dataset_task,
-            batch_size=config["embeddings"]["batch_size"],
-            images_embeddings_brain_key=images_embeddings_brain_key,
-            patches_embeddings_brain_key=patches_embeddings_brain_key,
-            patches_field_name=patches_field_name,
-            model_kwargs=model_kwargs,
-        )
+        # Step 2: Compute embeddings and visualizations
+        logger.info("\n🧠 Step 2: Computing embeddings and visualizations")
+        try:
+            compute_visualizations(
+                dataset=dataset,
+                dataset_task=dataset_task,
+                batch_size=config["embeddings"]["batch_size"],
+                images_embeddings_brain_key=images_embeddings_brain_key,
+                patches_embeddings_brain_key=patches_embeddings_brain_key,
+                patches_field_name=patches_field_name,
+                model_kwargs=model_kwargs,
+            )
+        except Exception as e:
+            logger.error(f"Embeddings computation failed: {e}")
+            raise
 
     else:
-        print("Skipping embeddings computation requested by user.")
+        logger.info("Skipping embeddings computation (user requested)")
 
-    # Step 4: Generate thumbnails
+    # Step 3: Generate thumbnails
     if thumbnail_width > 0:
         if (
             "thumbnail_width" in dataset.info
             and dataset.info["thumbnail_width"] == thumbnail_width
             and is_already_loaded
         ):
-            print(
-                f"\n🖼️ Step 4: Thumbnails of size ({thumbnail_width}, -1) already exist, skipping generation..."
+            logger.info(
+                f"\n🖼️ Step 3: Thumbnails of size ({thumbnail_width}, -1) already exist, skipping generation"
             )
 
         else:
-            print(
-                f"\n🖼️ Step 4: Generating thumbnails of size ({thumbnail_width}, -1) for optimized Fiftyone dashboard..."
+            logger.info(
+                f"\n🖼️ Step 3: Generating thumbnails ({thumbnail_width}, -1) for optimized FiftyOne dashboard"
             )
             thumbnail_dir = Path(
                 os.path.join(
                     config.get("thumbnail_dir", "thumbnails"), config["dataset"]["name"]
                 )
             ).resolve()
-            generate_thumbnails(
-                dataset=dataset,
-                thumbnail_dir_path=str(thumbnail_dir),
-                thumbnail_width=config["thumbnails"]["width"],
-            )
+            try:
+                generate_thumbnails(
+                    dataset=dataset,
+                    thumbnail_dir_path=str(thumbnail_dir),
+                    thumbnail_width=config["thumbnails"]["width"],
+                )
+            except Exception as e:
+                logger.error(f"Thumbnail generation failed: {e}")
+                raise
     else:
-        print(
-            "\n🖼️ Step 4: Skipping thumbnail generation as the provided width is not greater than 0"
+        logger.info(
+            f"\n🖼️ Step 3: Skipping thumbnail generation (the provided width is {thumbnail_width} but must be > 0)"
         )
 
     # Launch FiftyOne app unless no_launch is specified
     if not config.get("no_launch", False):
-        print("\n🚀 Launching FiftyOne app:")
+        logger.info("\n🌐 Step 4: Launching FiftyOne app")
 
         if "class_names" not in dataset.info:
-            raise ValueError(
-                "Dataset class names not found in dataset info. Cannot launch app with color scheme. Please force reload the dataset."
+            logger.error(
+                "Dataset class names not found. Cannot launch app with color scheme. Please force reload the dataset"
             )
-
-        color_palette = get_color_palette(labels=dataset.info["class_names"])
-        field_name = get_box_field_from_task(task=dataset_task)
-
-        # For pose estimation, we only color the bounding boxes, keypoints colors are picked randomly
-        if dataset_task == DatasetTask.POSE:
-            field_name = get_box_field_from_task(task=DatasetTask.DETECTION)
-
-        session = fo.launch_app(
-            dataset,
-            port=fiftyone_app_port,
-            color_scheme=fo.ColorScheme(
-                color_by="value",
-                fields=[
-                    {
-                        "path": field_name,
-                        "valueColors": color_palette,
-                    }
-                ],
-                multicolor_keypoints=True,
-            ),
-        )
-
-        print(f"\n🌐 App running at: http://localhost:{fiftyone_app_port}")
-        print("📊 Dataset: " + config["dataset"]["name"])
-        print("🎯 Task: " + config["dataset"]["task"])
-        print("\nTo exit, close the App or press ctrl + c")
+            raise ValueError("Missing class names in dataset info")
 
         try:
-            session.wait(-1)
+            color_palette = get_color_palette(labels=dataset.info["class_names"])
+            field_name = get_box_field_from_task(task=dataset_task)
 
-        except KeyboardInterrupt:
-            print("\nShutting down gracefully...")
+            # For pose estimation, we only color the bounding boxes, keypoints colors are picked randomly
+            if dataset_task == DatasetTask.POSE:
+                field_name = get_box_field_from_task(task=DatasetTask.DETECTION)
 
-        finally:
-            print("App closed successfully")
-            print("=" * 60)
+            session = fo.launch_app(
+                dataset,
+                port=fiftyone_app_port,
+                color_scheme=fo.ColorScheme(
+                    color_by="value",
+                    fields=[
+                        {
+                            "path": field_name,
+                            "valueColors": color_palette,
+                        }
+                    ],
+                    multicolor_keypoints=True,
+                ),
+            )
+
+            logger.info(f"App running at: http://localhost:{fiftyone_app_port}")
+            logger.info("\nTo exit, close the App or press Ctrl+C")
+
+            try:
+                session.wait(-1)
+
+            except KeyboardInterrupt:
+                logger.info("\nShutting down gracefully...")
+
+            finally:
+                logger.info("App closed successfully")
+                logger.info("=" * 60)
+
+        except Exception as e:
+            logger.error(f"Failed to launch FiftyOne app: {e}")
+            raise
 
     else:
-        print("\n✅ Processing complete. Dataset saved as:", config["dataset"]["name"])
-        print("To launch the app later, run:")
-        print(f"    fiftyone app launch {config['dataset']['name']}")
-        print("=" * 60)
+        logger.info(
+            f"\n✅ Processing complete. Dataset saved as: {config['dataset']['name']}"
+        )
+        logger.info("To launch the app later, run:")
+        logger.info(f"    fiftyone app launch {config['dataset']['name']}")
+        logger.info("=" * 60)
 
 
 if __name__ == "__main__":
