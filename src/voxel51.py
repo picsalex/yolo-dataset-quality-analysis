@@ -12,6 +12,7 @@ import fiftyone as fo
 
 from src.enum import DatasetTask, EmbeddingsModel
 from src.logger import logger
+from src.masking import compute_embeddings_for_all_patches
 
 
 def compute_visualizations(
@@ -27,6 +28,9 @@ def compute_visualizations(
     Compute visualizations for the dataset using the given model. Two visualizations are computed:
         - UMAP visualization of the image embeddings
         - UMAP visualization of the patch embeddings (bounding boxes)
+
+    For segmentation and OBB tasks, background masking is automatically applied to patch embeddings
+    to ensure embeddings are computed only on the object itself, not the background.
 
     Args:
         dataset: The dataset to compute the visualizations for
@@ -63,15 +67,27 @@ def compute_visualizations(
         logger.info("\nComputing patch embeddings and visualization...")
 
         try:
-            fob.compute_visualization(
-                dataset,
-                model=model,
+            # Compute the embeddings manually to apply background masking for segmentation and OBB tasks
+            patch_embeddings = compute_embeddings_for_all_patches(
+                dataset=dataset,
                 patches_field=patches_field_name,
-                method="umap",
-                brain_key=patches_embeddings_brain_key,
+                model=model,
+                dataset_task=dataset_task,
+                background_color=(114, 114, 114),
                 batch_size=batch_size,
             )
+
+            # Pass pre-computed embeddings to FiftyOne
+            fob.compute_visualization(
+                dataset,
+                patches_field=patches_field_name,
+                embeddings=patch_embeddings,
+                method="umap",
+                brain_key=patches_embeddings_brain_key,
+            )
+
             logger.info("Patch embeddings and visualization computed successfully")
+
         except Exception as e:
             logger.error(f"Failed to compute patch embeddings: {e}")
             raise
