@@ -12,7 +12,7 @@ import fiftyone as fo
 
 from src.enum import DatasetTask, EmbeddingsModel
 from src.logger import logger
-from src.masking import compute_embeddings_for_all_patches
+from src.embeddings import compute_embeddings_for_all_patches
 
 
 def compute_visualizations(
@@ -56,6 +56,7 @@ def compute_visualizations(
             method="umap",
             brain_key=images_embeddings_brain_key,
             batch_size=batch_size,
+            seed=0,
         )
         logger.info("Image embeddings and visualization computed successfully")
     except Exception as e:
@@ -84,6 +85,7 @@ def compute_visualizations(
                 embeddings=patch_embeddings,
                 method="umap",
                 brain_key=patches_embeddings_brain_key,
+                seed=0,
             )
 
             logger.info("Patch embeddings and visualization computed successfully")
