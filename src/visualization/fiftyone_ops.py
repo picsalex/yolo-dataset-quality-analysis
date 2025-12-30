@@ -30,7 +30,7 @@ def launch_fiftyone_app(
 
     try:
         color_palette = get_color_palette(labels=dataset.info["class_names"])
-        field_name = get_field_name(dataset_task)
+        field_name = get_field_name(task=dataset_task)
 
         # For pose estimation, we only color the bounding boxes
         if dataset_task == DatasetTask.POSE:
@@ -80,11 +80,11 @@ def prepare_embeddings_model(embeddings_model: str) -> EmbeddingsModel:
         The embeddings model enum
     """
     # Default to OpenAI CLIP if invalid model specified
-    if not EmbeddingsModel.is_valid_value(embeddings_model):
+    if not EmbeddingsModel.is_valid_value(value=embeddings_model):
         logger.warning(
             f"Embeddings model '{embeddings_model}' not supported, possible values are: {[e.value for e in EmbeddingsModel]}. Defaulting to 'openai_clip'.\n"
         )
         return EmbeddingsModel.OPENAI_CLIP
 
     else:
-        return EmbeddingsModel(embeddings_model)
+        return EmbeddingsModel(value=embeddings_model)

@@ -33,7 +33,7 @@ embeddings:
   skip: false
 
   # Embedding model to use
-  # Available models are listed in src/enum.py
+  # Available models are listed in src/core/enums.py
   model: "openai_clip"
 
   # Batch size for embedding computation

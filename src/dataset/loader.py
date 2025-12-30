@@ -56,13 +56,13 @@ def load_yolo_dataset(
     if dataset_name in fo.list_datasets():
         if not force_reload:
             logger.info("Loading existing dataset...")
-            return True, fo.load_dataset(dataset_name)
+            return True, fo.load_dataset(name=dataset_name)
         else:
             logger.info("Force reload enabled, deleting existing dataset...")
-            fo.delete_dataset(dataset_name)
+            fo.delete_dataset(name=dataset_name)
 
             # Also delete associated thumbnails
-            delete_thumbnails(dataset_name, thumbnail_dir)
+            delete_thumbnails(dataset_name=dataset_name, thumbnail_dir=thumbnail_dir)
 
     logger.info(f"Creating new dataset '{dataset_name}'...")
 
@@ -73,7 +73,9 @@ def load_yolo_dataset(
         )
 
     # Load class names
-    class_names = _load_class_names(dataset_path, dataset_task)
+    class_names = _load_class_names(
+        dataset_path=dataset_path, dataset_task=dataset_task
+    )
     logger.info(f"Found {len(class_names)} classes: {class_names}")
 
     # Create FiftyOne dataset
@@ -81,11 +83,11 @@ def load_yolo_dataset(
 
     if dataset_task != DatasetTask.CLASSIFICATION:
         # Add sample fields
-        dataset.add_sample_field("image_path", fo.StringField)
-        dataset.add_sample_field("label_path", fo.StringField)
+        dataset.add_sample_field(field_name="image_path", ftype=fo.StringField)
+        dataset.add_sample_field(field_name="label_path", ftype=fo.StringField)
 
         # Discover splits
-        splits = _discover_splits(dataset_path)
+        splits = _discover_splits(dataset_path=dataset_path)
 
         if not splits:
             raise FileNotFoundError(
@@ -96,16 +98,18 @@ def load_yolo_dataset(
 
         # Process each split
         for split in splits:
-            _process_split(dataset, split, class_names, dataset_task)
+            _process_split(
+                dataset=dataset, split=split, class_names=class_names, task=dataset_task
+            )
 
         # Configure additional fields
-        _configure_dataset_fields(dataset, dataset_task)
+        _configure_dataset_fields(dataset=dataset, task=dataset_task)
 
     else:
         # Process classification dataset
-        splits = _discover_classification_splits(dataset_path)
+        splits = _discover_classification_splits(dataset_path=dataset_path)
         for split in splits:
-            _process_classification_split(dataset, split)
+            _process_classification_split(dataset=dataset, split=split)
 
     # Configure app settings
     dataset.app_config.media_fields = ["filepath", "thumbnail_path"]
@@ -239,7 +243,9 @@ def _process_split(
     samples = []
 
     for img_file in tqdm(image_files, desc=f"Loading {split.name} images"):
-        sample = _create_sample(img_file, split, class_names, task)
+        sample = _create_sample(
+            img_file=img_file, split=split, class_names=class_names, task=task
+        )
         if sample:
             samples.append(sample)
 
@@ -263,7 +269,7 @@ def _create_sample(
 
     try:
         # Add metadata
-        sample.metadata = extract_image_metadata(image_path)
+        sample.metadata = extract_image_metadata(filepath=image_path)
 
         # Get label path
         label_file = os.path.splitext(img_file)[0] + ".txt"
@@ -272,20 +278,24 @@ def _create_sample(
         )
 
         # Parse annotations
-        annotations = parse_yolo_annotation(label_path, task) if label_path else None
+        annotations = (
+            parse_yolo_annotation(label_path=label_path, task=task)
+            if label_path
+            else None
+        )
         object_count = 0
 
         # Convert to FiftyOne labels
         if annotations:
             labels = yolo_to_fiftyone(
-                annotations,
-                task,
-                class_names,
-                sample.metadata.width,
-                sample.metadata.height,
-                split.name,
-                image_path,
-                label_path,
+                annotations=annotations,
+                task=task,
+                class_names=class_names,
+                image_width=sample.metadata.width,
+                image_height=sample.metadata.height,
+                split=split.name,
+                image_path=image_path,
+                label_path=label_path,
             )
 
             if labels:
@@ -296,13 +306,15 @@ def _create_sample(
                 # For pose, also add bounding boxes
                 if task == DatasetTask.POSE:
                     detection_labels = _create_detections_from_keypoints(
-                        labels,
-                        sample.metadata.width,
-                        sample.metadata.height,
-                        image_path,
-                        label_path,
+                        keypoints=labels,
+                        image_width=sample.metadata.width,
+                        image_height=sample.metadata.height,
+                        image_path=image_path,
+                        label_path=label_path,
                     )
-                    compute_iou_scores(detection_labels, DatasetTask.DETECTION)
+                    compute_iou_scores(
+                        labels=detection_labels, dataset_task=DatasetTask.DETECTION
+                    )
                     sample[DETECTION_FIELD] = detection_labels
 
                 object_count = _get_object_count(labels=labels)
@@ -329,7 +341,11 @@ def _create_detections_from_keypoints(
     detections = []
     for kp in keypoints.keypoints:
         det = create_detection_from_keypoint(
-            kp, image_width, image_height, image_path, label_path
+            keypoint=kp,
+            image_width=image_width,
+            image_height=image_height,
+            image_path=image_path,
+            label_path=label_path,
         )
         detections.append(det)
 
@@ -402,10 +418,10 @@ def _process_classification_split(
             sample = fo.Sample(filepath=image_path)
 
             try:
-                sample.metadata = extract_image_metadata(image_path)
+                sample.metadata = extract_image_metadata(filepath=image_path)
 
                 # Add classification label
-                field_name = get_field_name(DatasetTask.CLASSIFICATION)
+                field_name = get_field_name(task=DatasetTask.CLASSIFICATION)
                 sample[field_name] = fo.Classification(
                     label=class_name, tags=[split.name]
                 )
@@ -429,36 +445,60 @@ def _configure_dataset_fields(dataset: fo.Dataset, task: DatasetTask) -> None:
     if task == DatasetTask.CLASSIFICATION:
         return
 
-    dataset.add_sample_field("object_count", fo.IntField)
+    dataset.add_sample_field(field_name="object_count", ftype=fo.IntField)
 
     try:
         if task == DatasetTask.DETECTION or task == DatasetTask.POSE:
             base_field = f"{DETECTION_FIELD}.detections"
-            dataset.add_sample_field(f"{base_field}.area", fo.IntField)
-            dataset.add_sample_field(f"{base_field}.aspect_ratio", fo.FloatField)
-            dataset.add_sample_field(f"{base_field}.width", fo.FloatField)
-            dataset.add_sample_field(f"{base_field}.height", fo.FloatField)
-            dataset.add_sample_field(f"{base_field}.iou_score", fo.FloatField)
+            dataset.add_sample_field(field_name=f"{base_field}.area", ftype=fo.IntField)
+            dataset.add_sample_field(
+                field_name=f"{base_field}.aspect_ratio", ftype=fo.FloatField
+            )
+            dataset.add_sample_field(
+                field_name=f"{base_field}.width", ftype=fo.FloatField
+            )
+            dataset.add_sample_field(
+                field_name=f"{base_field}.height", ftype=fo.FloatField
+            )
+            dataset.add_sample_field(
+                field_name=f"{base_field}.iou_score", ftype=fo.FloatField
+            )
 
             if task == DatasetTask.POSE:
-                dataset.add_sample_field(f"{base_field}.num_keypoints", fo.IntField)
+                dataset.add_sample_field(
+                    field_name=f"{base_field}.num_keypoints", ftype=fo.IntField
+                )
 
         elif task == DatasetTask.SEGMENTATION:
-            field_name = get_field_name(task)
+            field_name = get_field_name(task=task)
             base_field = f"{field_name}.polylines"
-            dataset.add_sample_field(f"{base_field}.area", fo.IntField)
-            dataset.add_sample_field(f"{base_field}.num_keypoints", fo.IntField)
-            dataset.add_sample_field(f"{base_field}.width", fo.IntField)
-            dataset.add_sample_field(f"{base_field}.height", fo.IntField)
-            dataset.add_sample_field(f"{base_field}.iou_score", fo.FloatField)
+            dataset.add_sample_field(field_name=f"{base_field}.area", ftype=fo.IntField)
+            dataset.add_sample_field(
+                field_name=f"{base_field}.num_keypoints", ftype=fo.IntField
+            )
+            dataset.add_sample_field(
+                field_name=f"{base_field}.width", ftype=fo.IntField
+            )
+            dataset.add_sample_field(
+                field_name=f"{base_field}.height", ftype=fo.IntField
+            )
+            dataset.add_sample_field(
+                field_name=f"{base_field}.iou_score", ftype=fo.FloatField
+            )
 
         elif task == DatasetTask.OBB:
-            field_name = get_field_name(task)
+            field_name = get_field_name(task=task)
             base_field = f"{field_name}.polylines"
-            dataset.add_sample_field(f"{base_field}.area", fo.IntField)
-            dataset.add_sample_field(f"{base_field}.width", fo.IntField)
-            dataset.add_sample_field(f"{base_field}.height", fo.IntField)
-            dataset.add_sample_field(f"{base_field}.iou_score", fo.FloatField)
+            dataset.add_sample_field(field_name=f"{base_field}.area", ftype=fo.IntField)
+            dataset.add_sample_field(
+                field_name=f"{base_field}.width", ftype=fo.IntField
+            )
+            dataset.add_sample_field(
+                field_name=f"{base_field}.height", ftype=fo.IntField
+            )
+            dataset.add_sample_field(
+                field_name=f"{base_field}.iou_score", ftype=fo.FloatField
+            )
 
     except ValueError as e:
         logger.error(

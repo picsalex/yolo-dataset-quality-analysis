@@ -28,7 +28,9 @@ def main():
     config.validate()
 
     # Prepare embeddings model
-    embeddings_model = prepare_embeddings_model(config.embeddings_model.value)
+    embeddings_model = prepare_embeddings_model(
+        embeddings_model=config.embeddings_model.value
+    )
     model_kwargs = embeddings_model.get_model_kwargs()
 
     # Log configuration
@@ -73,7 +75,7 @@ def main():
             batch_size=config.batch_size,
         )
     else:
-        logger.info("Skipping embeddings computation (user requested)")
+        logger.info("\n🧠 Step 2: Skipping embeddings computation (user requested)")
 
     # Step 3: Generate thumbnails
     if config.thumbnail_width > 1:
