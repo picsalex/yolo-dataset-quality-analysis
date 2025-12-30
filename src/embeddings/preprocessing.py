@@ -1,21 +1,16 @@
-#!/usr/bin/env python3
-"""
-Efficient patch embedding computation with background masking for segmentation/OBB tasks.
-Supports all task types with multiprocessing for optimal performance.
-"""
+"""Image preprocessing for embeddings computation."""
 
-from typing import Dict, List, Tuple
-from multiprocessing import Pool, cpu_count
+from typing import List, Tuple
 from functools import partial
+from multiprocessing import Pool, cpu_count
 
 import cv2
 import numpy as np
-import fiftyone as fo
 from PIL import Image
 from tqdm import tqdm
 
-from src.enum import DatasetTask
-from src.logger import logger
+from src.core.enums import DatasetTask
+from src.utils.logger import logger
 
 
 def create_mask_from_polyline(
@@ -23,7 +18,7 @@ def create_mask_from_polyline(
     image_shape: Tuple[int, int, int],
 ) -> np.ndarray:
     """
-    Creates a binary mask from polyline points.
+    Create a binary mask from polyline points.
 
     Args:
         polyline_points: List of normalized [x, y] coordinates (values in [0, 1])
@@ -55,7 +50,7 @@ def apply_background_mask(
     background_color: Tuple[int, int, int] = (114, 114, 114),
 ) -> np.ndarray:
     """
-    Applies background masking to an image.
+    Apply background masking to an image.
 
     Args:
         image: Input image as (H, W, C) numpy array
@@ -81,7 +76,7 @@ def get_bbox_from_polyline(
     polyline_points: List[List[float]],
 ) -> Tuple[float, float, float, float]:
     """
-    Computes normalized bounding box from polyline points.
+    Compute normalized bounding box from polyline points.
 
     Args:
         polyline_points: List of normalized [x, y] coordinates
@@ -107,7 +102,7 @@ def normalize_bbox(
     bbox: List[float],
 ) -> Tuple[float, float, float, float]:
     """
-    Converts FiftyOne bbox format to (x_min, y_min, x_max, y_max).
+    Convert FiftyOne bbox format to (x_min, y_min, x_max, y_max).
 
     Args:
         bbox: FiftyOne bbox as [x_top_left, y_top_left, width, height]
@@ -125,7 +120,7 @@ def crop_to_bbox(
     image_shape: Tuple[int, int],
 ) -> np.ndarray:
     """
-    Crops image to bounding box coordinates.
+    Crop image to bounding box coordinates.
 
     Args:
         image: Input image as (H, W, C) array
@@ -159,7 +154,7 @@ def create_crop_for_detection(
     bbox: List[float],
 ) -> np.ndarray:
     """
-    Creates a crop for detection/pose tasks (no masking, just bbox crop).
+    Create a crop for detection/pose tasks (no masking, just bbox crop).
 
     Args:
         image: Original image as (H, W, C) array
@@ -178,7 +173,7 @@ def create_masked_crop_for_polyline(
     background_color: Tuple[int, int, int] = (114, 114, 114),
 ) -> np.ndarray:
     """
-    Creates a masked and cropped image for a polyline (segment/obb tasks).
+    Create a masked and cropped image for a polyline (segment/obb tasks).
 
     Args:
         image: Original image as (H, W, C) array
@@ -267,31 +262,23 @@ def process_sample_patches(
         return sample_id, []
 
 
-def compute_embeddings_for_all_patches(
-    dataset: fo.Dataset,
+def extract_all_patch_crops(
+    dataset,
     patches_field: str,
-    model,
     dataset_task: DatasetTask,
     background_color: Tuple[int, int, int] = (114, 114, 114),
-    batch_size: int = 32,
-) -> Dict[str, np.ndarray]:
+) -> Tuple[List[Image.Image], List[str]]:
     """
-    Computes embeddings for all patch types with multiprocessing and batch inference.
-
-    Handles all task types:
-    - detect/pose: Crops to bbox (no masking)
-    - segment/obb: Crops to bbox with background masking
+    Extract all patch crops from a dataset with multiprocessing.
 
     Args:
         dataset: FiftyOne dataset
         patches_field: Field name containing patches
-        model: Model with embed_all() method
         dataset_task: Dataset task type
         background_color: RGB background color for masking (segment/obb only)
-        batch_size: Batch size for model inference
 
     Returns:
-        Dict mapping sample_id -> (num_patches, embedding_dim) numpy array
+        Tuple of (list_of_crops, sample_id_per_crop)
     """
     # Prepare sample data for workers
     sample_data_list = []
@@ -323,7 +310,7 @@ def compute_embeddings_for_all_patches(
 
     if not sample_data_list:
         logger.warning("No patches found in dataset")
-        return {}
+        return [], []
 
     # Extract crops with multiprocessing
     process_func = partial(process_sample_patches, background_color=background_color)
@@ -339,49 +326,11 @@ def compute_embeddings_for_all_patches(
 
     # Flatten crops and track which sample each crop belongs to
     all_crops = []
-    sample_id_per_crop = []  # Maps each crop to its sample_id
+    sample_id_per_crop = []
 
     for sample_id, crops in results:
         for crop in crops:
             all_crops.append(Image.fromarray(crop))
             sample_id_per_crop.append(sample_id)
 
-    if not all_crops:
-        logger.warning("No crops extracted from dataset")
-        return {}
-
-    logger.info(f"Extracted {len(all_crops)} crops, computing embeddings...")
-
-    # Batch inference
-    all_embeddings_list = []
-
-    for i in tqdm(range(0, len(all_crops), batch_size), desc="Computing embeddings"):
-        batch = all_crops[i : i + batch_size]
-        batch_embeds = model.embed_all(batch)
-
-        # Convert to numpy array if needed
-        if hasattr(batch_embeds, "cpu"):
-            batch_embeds = batch_embeds.cpu().numpy()
-        elif not isinstance(batch_embeds, np.ndarray):
-            batch_embeds = np.array(batch_embeds)
-
-        all_embeddings_list.append(batch_embeds)
-
-    # Concatenate all embeddings
-    all_embeddings = np.vstack(all_embeddings_list)
-
-    # Group embeddings by sample_id
-    embeddings_dict = {}
-    sample_id_per_crop_array = np.array(sample_id_per_crop)
-
-    for sample_id in np.unique(sample_id_per_crop_array):
-        # Find all embeddings belonging to this sample
-        mask = sample_id_per_crop_array == sample_id
-        embeddings_dict[sample_id] = all_embeddings[mask]
-
-    logger.info(
-        f"Successfully computed embeddings for {len(all_crops)} patches "
-        f"across {len(embeddings_dict)} samples"
-    )
-
-    return embeddings_dict
+    return all_crops, sample_id_per_crop

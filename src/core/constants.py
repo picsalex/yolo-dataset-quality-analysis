@@ -1,22 +1,23 @@
+"""Constants used throughout the application."""
+
 from typing import Dict, List
 import matplotlib.pyplot as plt
 
-from src.enum import DatasetTask
+from src.core.enums import DatasetTask
 
-bounding_boxes_field = (
-    "bounding_boxes"  # Field containing bounding boxes in the dataset
-)
-keypoints_field = "pose_keypoints"  # Field containing keypoints in the dataset (if any)
-segmentation_field = "seg_polygons"  # Field containing polygons in the dataset (if any)
-classification_field = (
-    "cls_label"  # Field containing classification labels in the dataset (if any)
-)
-oriented_bounding_boxes_field = "obb_bounding_boxes"  # Field containing oriented bounding boxes in the dataset (if any)
+# Field names for different annotation types
+DETECTION_FIELD = "bounding_boxes"
+KEYPOINTS_FIELD = "pose_keypoints"
+SEGMENTATION_FIELD = "seg_polygons"
+CLASSIFICATION_FIELD = "cls_label"
+OBB_FIELD = "obb_bounding_boxes"
 
-images_embeddings_brain_key = "images_embeddings"
-patches_embeddings_brain_key = "patches_embeddings"
+# Brain keys for embeddings
+IMAGE_EMBEDDINGS_KEY = "images_embeddings"
+PATCH_EMBEDDINGS_KEY = "patches_embeddings"
 
-ultralytics_color_palette = [
+# Ultralytics color palette
+ULTRALYTICS_COLORS = [
     "042AFF",
     "0BDBEB",
     "F3F3F3",
@@ -39,10 +40,22 @@ ultralytics_color_palette = [
     "A2FF0B",
 ]
 
+# Dataset split options
+DATASET_SPLITS = [
+    "train",
+    "val",
+    "valid",
+    "validation",
+    "test",
+    "train2017",
+    "val2017",
+    "test2017",
+]
 
-def get_box_field_from_task(task: DatasetTask) -> str:
+
+def get_field_name(task: DatasetTask) -> str:
     """
-    Get the appropriate field name based on the dataset task
+    Get the appropriate field name based on the dataset task.
 
     Args:
         task: The dataset task (classify, detect, segment, pose, obb)
@@ -51,15 +64,15 @@ def get_box_field_from_task(task: DatasetTask) -> str:
         The corresponding field name in the FiftyOne dataset
     """
     if task == DatasetTask.CLASSIFICATION:
-        return classification_field
+        return CLASSIFICATION_FIELD
     elif task == DatasetTask.DETECTION:
-        return bounding_boxes_field
+        return DETECTION_FIELD
     elif task == DatasetTask.SEGMENTATION:
-        return segmentation_field
+        return SEGMENTATION_FIELD
     elif task == DatasetTask.POSE:
-        return keypoints_field
+        return KEYPOINTS_FIELD
     elif task == DatasetTask.OBB:
-        return oriented_bounding_boxes_field
+        return OBB_FIELD
     else:
         raise ValueError(f"Unsupported dataset task: {task}")
 
@@ -72,19 +85,15 @@ def get_color_palette(labels: List[str]) -> List[Dict[str, str]]:
     Args:
         labels: A list of label names.
 
-    Examples:
-        Output will look like this: [{"value": "cat", "color": "#042AFF"}, {"value": "dog", "color": "#0BDBEB"}, ...]
-
     Returns:
-        A list of hex color strings for each label.
+        A list of dicts with 'value' and 'color' keys for each label.
     """
     num_labels = len(labels)
     palette = []
 
     for i in range(num_labels):
-        if i < len(ultralytics_color_palette):
-            color_hex = f"#{ultralytics_color_palette[i]}"
-
+        if i < len(ULTRALYTICS_COLORS):
+            color_hex = f"#{ULTRALYTICS_COLORS[i]}"
         else:
             # Generate additional colors using a colormap
             cmap = plt.get_cmap("hsv")

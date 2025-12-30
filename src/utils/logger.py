@@ -1,6 +1,4 @@
-"""
-Logging configuration for YOLO Dataset Quality Analysis Tool
-"""
+"""Logging configuration for YOLO Dataset Quality Analysis Tool."""
 
 import logging
 import sys
@@ -11,7 +9,7 @@ def setup_logger(
     name: str = "yolo_analysis", level: int = logging.INFO
 ) -> logging.Logger:
     """
-    Configure and return a logger with consistent formatting
+    Configure and return a logger with consistent formatting.
 
     Args:
         name: Logger name
@@ -55,7 +53,7 @@ def setup_logger(
 
 def configure_external_loggers(level: int = logging.WARNING) -> None:
     """
-    Configure logging levels for external libraries to reduce noise
+    Configure logging levels for external libraries to reduce noise.
 
     Args:
         level: Logging level for external libraries (default: WARNING)
