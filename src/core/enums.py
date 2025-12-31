@@ -15,7 +15,7 @@ class DatasetTask(Enum):
     def is_valid_value(cls, value: str) -> bool:
         """Check if value is a valid enum value."""
         try:
-            cls(value)
+            cls(value.lower())
             return True
         except ValueError:
             return False
@@ -63,7 +63,7 @@ class EmbeddingsModel(Enum):
     def is_valid_value(cls, value: str) -> bool:
         """Check if value is a valid enum value."""
         try:
-            cls(value)
+            cls(value.lower())
             return True
         except ValueError:
             return False

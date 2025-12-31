@@ -1,0 +1,4 @@
+# Ignore downloaded datasets
+.cache/
+datasets/
+*.zip
