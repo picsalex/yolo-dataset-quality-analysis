@@ -455,10 +455,10 @@ def _configure_dataset_fields(dataset: fo.Dataset, task: DatasetTask) -> None:
                 field_name=f"{base_field}.aspect_ratio", ftype=fo.FloatField
             )
             dataset.add_sample_field(
-                field_name=f"{base_field}.width", ftype=fo.FloatField
+                field_name=f"{base_field}.width", ftype=fo.IntField
             )
             dataset.add_sample_field(
-                field_name=f"{base_field}.height", ftype=fo.FloatField
+                field_name=f"{base_field}.height", ftype=fo.IntField
             )
             dataset.add_sample_field(
                 field_name=f"{base_field}.iou_score", ftype=fo.FloatField
