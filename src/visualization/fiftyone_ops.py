@@ -3,7 +3,7 @@
 import fiftyone as fo
 
 from src.core.constants import DETECTION_FIELD, get_color_palette, get_field_name
-from src.core.enums import DatasetTask, EmbeddingsModel
+from src.core.enums import DatasetTask
 from src.utils.logger import logger
 
 
@@ -67,24 +67,3 @@ def launch_fiftyone_app(
     except Exception as e:
         logger.error(f"Failed to launch FiftyOne app: {e}")
         raise
-
-
-def prepare_embeddings_model(embeddings_model: str) -> EmbeddingsModel:
-    """
-    Validate and prepare embeddings model.
-
-    Args:
-        embeddings_model: The embeddings model name
-
-    Returns:
-        The embeddings model enum
-    """
-    # Default to OpenAI CLIP if invalid model specified
-    if not EmbeddingsModel.is_valid_value(value=embeddings_model):
-        logger.warning(
-            f"Embeddings model '{embeddings_model}' not supported, possible values are: {[e.value for e in EmbeddingsModel]}. Defaulting to 'openai_clip'.\n"
-        )
-        return EmbeddingsModel.OPENAI_CLIP
-
-    else:
-        return EmbeddingsModel(value=embeddings_model)

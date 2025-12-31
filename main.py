@@ -14,7 +14,7 @@ from src.core.config import Config
 from src.dataset.loader import load_yolo_dataset
 from src.embeddings.computer import compute_embeddings
 from src.utils.logger import logger, configure_external_loggers
-from src.visualization.fiftyone_ops import launch_fiftyone_app, prepare_embeddings_model
+from src.visualization.fiftyone_ops import launch_fiftyone_app
 from src.visualization.thumbnails import generate_thumbnails
 
 
@@ -27,11 +27,8 @@ def main():
     config = Config.from_cli()
     config.validate()
 
-    # Prepare embeddings model
-    embeddings_model = prepare_embeddings_model(
-        embeddings_model=config.embeddings_model.value
-    )
-    model_kwargs = embeddings_model.get_model_kwargs()
+    # Prepare embeddings model kwargs
+    model_kwargs = config.embeddings_model.get_model_kwargs()
 
     # Log configuration
     logger.info("=" * 60)

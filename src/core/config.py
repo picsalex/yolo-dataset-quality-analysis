@@ -95,7 +95,6 @@ def _parse_arguments() -> argparse.Namespace:
         "--dataset-task",
         type=str,
         default=None,
-        choices=[task.value for task in DatasetTask],
         help="Dataset task type (required if no config file)",
     )
 
@@ -211,11 +210,11 @@ def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
     if args.skip_embeddings is not None:
         config["embeddings"]["skip"] = args.skip_embeddings
 
-    if args.batch_size is not None:
-        config["embeddings"]["batch_size"] = args.batch_size
-
     if args.model is not None:
         config["embeddings"]["model"] = args.model
+
+    if args.batch_size is not None:
+        config["embeddings"]["batch_size"] = args.batch_size
 
     if args.thumbnail_dir is not None:
         config["thumbnails"]["dir"] = args.thumbnail_dir
@@ -226,18 +225,30 @@ def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
     if args.port is not None:
         config["port"] = args.port
 
+    # Defaults to False if not specified
     config["no_launch"] = args.no_launch
 
-    # Validate required fields
+    # Validate the dataset path
     if not config["dataset"].get("path"):
         logger.error(
             "Dataset path is required (use --dataset-path or specify in config file)"
         )
         sys.exit(1)
 
+    elif not os.path.exists(config["dataset"]["path"]):
+        logger.error(f"Dataset path does not exist: {config['dataset']['path']}")
+        sys.exit(1)
+
+    # Validate the dataset task
     if not config["dataset"].get("task"):
         logger.error(
             "Dataset task is required (use --dataset-task or specify in config file)"
+        )
+        sys.exit(1)
+
+    elif not DatasetTask.is_valid_value(value=config["dataset"]["task"]):
+        logger.error(
+            f"Dataset task '{config['dataset']['task']}' not supported, possible values are: {[t.value for t in DatasetTask]}"
         )
         sys.exit(1)
 
@@ -250,5 +261,14 @@ def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
         config["dataset"]["name"] = (
             dataset_path.parent.name if not dataset_path.is_dir() else dataset_path.name
         )
+
+    # Validate embeddings model
+    if not config["embeddings"].get("model") or not EmbeddingsModel.is_valid_value(
+        value=config["embeddings"]["model"]
+    ):
+        logger.warning(
+            f"Embeddings model '{config['embeddings']['model']}' not supported, possible values are: {[e.value for e in EmbeddingsModel]}. Defaulting to 'openai_clip'.\n"
+        )
+        config["embeddings"]["model"] = EmbeddingsModel.OPENAI_CLIP.value
 
     return config
