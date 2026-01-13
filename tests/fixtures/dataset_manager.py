@@ -17,7 +17,7 @@ DATASETS_URL = (
 )
 
 # SHA256 checksum for integrity verification
-EXPECTED_SHA256 = "a6b982e28fe23c209fcd11bb5d43d21061c199cc6b923260f2a8a0846c2e689b"
+EXPECTED_SHA256 = "a9a770918a03ab05f02b01c35bd80f3f4b650d471c5110a2f1f5215f0d880a96"
 
 FIXTURES_DIR = Path(__file__).parent
 CACHE_DIR = FIXTURES_DIR / ".cache"
