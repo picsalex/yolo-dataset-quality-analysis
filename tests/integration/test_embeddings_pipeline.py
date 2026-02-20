@@ -459,6 +459,148 @@ class TestEmbeddingsFieldMapping:
 @pytest.mark.requires_dataset
 @pytest.mark.integration
 @pytest.mark.slow
+class TestBackgroundMasking:
+    """Test background masking configuration for embeddings."""
+
+    def test_mask_background_enabled_by_default(self, segment_dataset, tmp_path):
+        """Test that background masking is enabled by default for segmentation."""
+        dataset_name = "test_mask_bg_default"
+
+        if dataset_name in fo.list_datasets():
+            fo.delete_dataset(dataset_name)
+
+        _, dataset = load_yolo_dataset(
+            dataset_path=str(segment_dataset),
+            dataset_name=dataset_name,
+            dataset_task=DatasetTask.SEGMENTATION,
+            force_reload=True,
+            thumbnail_width=100,
+            thumbnail_dir=str(tmp_path / "thumbnails"),
+        )
+
+        try:
+            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
+            # Test with default (mask_background=True)
+            compute_embeddings(
+                dataset=dataset,
+                dataset_task=DatasetTask.SEGMENTATION,
+                model_kwargs=model_kwargs,
+                batch_size=4,
+                mask_background=True,
+            )
+
+            # Should successfully compute embeddings
+            brain_keys = dataset.list_brain_runs()
+            assert PATCH_EMBEDDINGS_KEY in brain_keys
+
+        finally:
+            fo.delete_dataset(dataset_name)
+
+    def test_mask_background_disabled(self, segment_dataset, tmp_path):
+        """Test that background masking can be disabled for segmentation."""
+        dataset_name = "test_mask_bg_disabled"
+
+        if dataset_name in fo.list_datasets():
+            fo.delete_dataset(dataset_name)
+
+        _, dataset = load_yolo_dataset(
+            dataset_path=str(segment_dataset),
+            dataset_name=dataset_name,
+            dataset_task=DatasetTask.SEGMENTATION,
+            force_reload=True,
+            thumbnail_width=100,
+            thumbnail_dir=str(tmp_path / "thumbnails"),
+        )
+
+        try:
+            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
+            # Test with mask_background=False
+            compute_embeddings(
+                dataset=dataset,
+                dataset_task=DatasetTask.SEGMENTATION,
+                model_kwargs=model_kwargs,
+                batch_size=4,
+                mask_background=False,
+            )
+
+            # Should successfully compute embeddings without masking
+            brain_keys = dataset.list_brain_runs()
+            assert PATCH_EMBEDDINGS_KEY in brain_keys
+
+        finally:
+            fo.delete_dataset(dataset_name)
+
+    def test_mask_background_obb_task(self, obb_dataset, tmp_path):
+        """Test that background masking works for OBB tasks."""
+        dataset_name = "test_mask_bg_obb"
+
+        if dataset_name in fo.list_datasets():
+            fo.delete_dataset(dataset_name)
+
+        _, dataset = load_yolo_dataset(
+            dataset_path=str(obb_dataset),
+            dataset_name=dataset_name,
+            dataset_task=DatasetTask.OBB,
+            force_reload=True,
+            thumbnail_width=100,
+            thumbnail_dir=str(tmp_path / "thumbnails"),
+        )
+
+        try:
+            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
+            # Test both enabled and disabled
+            for mask_bg in [True, False]:
+                compute_embeddings(
+                    dataset=dataset,
+                    dataset_task=DatasetTask.OBB,
+                    model_kwargs=model_kwargs,
+                    batch_size=4,
+                    mask_background=mask_bg,
+                )
+
+                brain_keys = dataset.list_brain_runs()
+                assert PATCH_EMBEDDINGS_KEY in brain_keys
+
+        finally:
+            fo.delete_dataset(dataset_name)
+
+    def test_mask_background_not_applied_to_detection(self, detect_dataset, tmp_path):
+        """Test that mask_background parameter doesn't affect detection tasks."""
+        dataset_name = "test_mask_bg_detect"
+
+        if dataset_name in fo.list_datasets():
+            fo.delete_dataset(dataset_name)
+
+        _, dataset = load_yolo_dataset(
+            dataset_path=str(detect_dataset),
+            dataset_name=dataset_name,
+            dataset_task=DatasetTask.DETECTION,
+            force_reload=True,
+            thumbnail_width=100,
+            thumbnail_dir=str(tmp_path / "thumbnails"),
+        )
+
+        try:
+            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
+            # For detection, mask_background shouldn't matter
+            compute_embeddings(
+                dataset=dataset,
+                dataset_task=DatasetTask.DETECTION,
+                model_kwargs=model_kwargs,
+                batch_size=4,
+                mask_background=False,  # Should have no effect
+            )
+
+            brain_keys = dataset.list_brain_runs()
+            assert PATCH_EMBEDDINGS_KEY in brain_keys
+
+        finally:
+            fo.delete_dataset(dataset_name)
+
+
+@pytest.mark.requires_dataset
+@pytest.mark.integration
+@pytest.mark.slow
 class TestEmbeddingsBehavior:
     """Test embeddings computation behavior and edge cases."""
 

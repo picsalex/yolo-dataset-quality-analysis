@@ -39,6 +39,11 @@ embeddings:
   # Batch size for embedding computation
   batch_size: 16
 
+  # Mask background in patch crops for segmentation/OBB tasks
+  # When enabled, the background is replaced with a gray color (114, 114, 114)
+  # This is enabled by default to improve embedding quality for segmentation and obb tasks
+  mask_background: true
+
 # ===========================
 # THUMBNAIL CONFIGURATION
 # ===========================

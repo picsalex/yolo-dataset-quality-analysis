@@ -27,6 +27,7 @@ class Config:
     skip_embeddings: bool
     embeddings_model: EmbeddingsModel
     batch_size: int
+    mask_background: bool
 
     # Thumbnails
     thumbnail_width: int
@@ -54,6 +55,7 @@ class Config:
             skip_embeddings=config_dict["embeddings"]["skip"],
             embeddings_model=EmbeddingsModel(config_dict["embeddings"]["model"]),
             batch_size=config_dict["embeddings"]["batch_size"],
+            mask_background=config_dict["embeddings"]["mask_background"],
             thumbnail_width=config_dict["thumbnails"]["width"],
             thumbnail_dir=config_dict["thumbnails"]["dir"],
             port=config_dict.get("port", 5151),
@@ -125,6 +127,13 @@ def _parse_arguments() -> argparse.Namespace:
         type=int,
         default=None,
         help="Batch size for embedding computation",
+    )
+
+    parser.add_argument(
+        "--no-mask-background",
+        action="store_true",
+        default=None,
+        help="Disable background masking in patch crops for segmentation/OBB tasks (enabled by default)",
     )
 
     parser.add_argument(
@@ -215,6 +224,9 @@ def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
 
     if args.batch_size is not None:
         config["embeddings"]["batch_size"] = args.batch_size
+
+    if args.no_mask_background is not None:
+        config["embeddings"]["mask_background"] = False
 
     if args.thumbnail_dir is not None:
         config["thumbnails"]["dir"] = args.thumbnail_dir

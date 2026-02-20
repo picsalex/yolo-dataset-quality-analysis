@@ -8,6 +8,7 @@ License: MIT
 """
 
 import os
+from dataclasses import asdict
 from pathlib import Path
 
 from src.core.config import Config
@@ -30,25 +31,20 @@ def main():
     # Prepare embeddings model kwargs
     model_kwargs = config.embeddings_model.get_model_kwargs()
 
-    # Log configuration
     logger.info("=" * 60)
     logger.info("🚀 FIFTYONE YOLO DATASET ANALYSIS")
     logger.info("=" * 60)
-    logger.info(f"Dataset Path: {config.dataset_path}")
-    logger.info(f"Dataset Name: {config.dataset_name}")
-    logger.info(f"Dataset Task: {config.dataset_task.value}")
-    logger.info(f"Force Reload: {config.force_reload}")
-    logger.info(f"Skip Embeddings: {config.skip_embeddings}")
-    logger.info(f"Batch Size: {config.batch_size}")
-    logger.info(
-        f"Embeddings Model: {model_kwargs.get('clip_model')} ({model_kwargs.get('pretrained')})"
+
+    config_dict = asdict(config)
+    # Convert enum to value for cleaner output
+
+    params_str = ", ".join(
+        f"{k}={v.value if hasattr(v, 'value') else v}" for k, v in config_dict.items()
     )
-    logger.info(f"Thumbnail Size: ({config.thumbnail_width}, -1)")
-    logger.info(f"Port: {config.port}")
-    logger.info("=" * 60 + "\n")
+    logger.info(f"configuration: {params_str}")
 
     # Step 1: Load dataset
-    logger.info("📁 Step 1: Preparing dataset")
+    logger.info("\n 📁 Step 1: Preparing dataset")
     was_cached, dataset = load_yolo_dataset(
         dataset_path=config.dataset_path,
         dataset_name=config.dataset_name,
@@ -70,6 +66,7 @@ def main():
             dataset_task=config.dataset_task,
             model_kwargs=model_kwargs,
             batch_size=config.batch_size,
+            mask_background=config.mask_background,
         )
     else:
         logger.info("\n🧠 Step 2: Skipping embeddings computation (user requested)")

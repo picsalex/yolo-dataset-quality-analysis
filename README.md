@@ -64,6 +64,7 @@ embeddings:
   model: "openai_clip"
   dir: "./models/fiftyone"
   batch_size: 16
+  mask_background: true  # Mask background for segment/OBB patch crops
 
 thumbnails:
   dir: "./thumbnails"
@@ -81,6 +82,7 @@ thumbnails:
 | `--reload`                | `bool` | `false`               | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                                |
 | `--skip-embeddings`       | `bool` | `false`               | Skip CLIP embedding computation (useful for quick visualization).                                                                                                        |
 | `--batch-size`            | `int`  | `16`                  | Batch size used during CLIP embedding computation.                                                                                                                       |
+| `--no-mask-background`    | `bool` | `false`               | Disable background masking for patch crops in segmentation/OBB tasks. Masking is enabled by default, replacing background with gray (114, 114, 114).                     |
 | `--model`                 | `str`  | `'openai_clip'`       | Embeddings model to use for embedding computation. Possible values are `openai_clip`, `metaclip_400m`, `metaclip_fullcc` and `siglip_base_224`.                          |
 | `--embeddings-models-dir` | `str`  | `'./models/fiftyone'` | Path to the directory where the embeddings models are saved.                                                                                                             |
 | `--thumbnail-dir`         | `str`  | `'./thumbnails'`      | Path to the directory where the thumbnails are saved.                                                                                                                    |

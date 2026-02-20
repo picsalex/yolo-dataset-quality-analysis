@@ -24,6 +24,7 @@ def compute_embeddings(
     dataset_task: DatasetTask,
     model_kwargs: Dict,
     batch_size: int,
+    mask_background: bool = True,
 ) -> None:
     """
     Compute embeddings and visualizations for the dataset.
@@ -33,6 +34,7 @@ def compute_embeddings(
         dataset_task: Dataset task type
         model_kwargs: Model configuration kwargs
         batch_size: Batch size for processing
+        mask_background: Whether to mask background in patch crops for segment/obb tasks
     """
     # Load embeddings model
     try:
@@ -69,13 +71,14 @@ def compute_embeddings(
             patches_field = DETECTION_FIELD
 
         try:
-            # Compute embeddings with background masking for segmentation/OBB
+            # Compute embeddings with optional background masking for segmentation/OBB
             patch_embeddings = _compute_patch_embeddings(
                 dataset=dataset,
                 patches_field=patches_field,
                 model=model,
                 dataset_task=dataset_task,
                 batch_size=batch_size,
+                mask_background=mask_background,
             )
 
             # Pass pre-computed embeddings to FiftyOne
@@ -101,9 +104,10 @@ def _compute_patch_embeddings(
     model,
     dataset_task: DatasetTask,
     batch_size: int,
+    mask_background: bool = True,
 ) -> Dict[str, np.ndarray]:
     """
-    Compute embeddings for all patches with background masking.
+    Compute embeddings for all patches with optional background masking.
 
     Args:
         dataset: FiftyOne dataset
@@ -111,6 +115,7 @@ def _compute_patch_embeddings(
         model: Model with embed_all() method
         dataset_task: Dataset task type
         batch_size: Batch size for model inference
+        mask_background: Whether to mask background for segment/obb tasks
 
     Returns:
         Dict mapping sample_id -> (num_patches, embedding_dim) numpy array
@@ -121,6 +126,7 @@ def _compute_patch_embeddings(
         patches_field=patches_field,
         dataset_task=dataset_task,
         background_color=(114, 114, 114),
+        mask_background=mask_background,
     )
 
     if not all_crops:

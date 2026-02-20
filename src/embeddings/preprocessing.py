@@ -171,6 +171,7 @@ def create_masked_crop_for_polyline(
     image: np.ndarray,
     polyline_points: List[List[float]],
     background_color: Tuple[int, int, int] = (114, 114, 114),
+    mask_background: bool = True,
 ) -> np.ndarray:
     """
     Create a masked and cropped image for a polyline (segment/obb tasks).
@@ -179,6 +180,7 @@ def create_masked_crop_for_polyline(
         image: Original image as (H, W, C) array
         polyline_points: Normalized polyline coordinates
         background_color: RGB background color for masking
+        mask_background: Whether to mask the background (default: True)
 
     Returns:
         Cropped and masked image
@@ -191,11 +193,16 @@ def create_masked_crop_for_polyline(
         # Invalid polygon, return a small blank image
         return np.full((10, 10, 3), background_color, dtype=np.uint8)
 
-    # Create mask
-    mask = create_mask_from_polyline(polyline_points, image.shape)
+    # Apply background masking if enabled
+    if mask_background:
+        # Create mask
+        mask = create_mask_from_polyline(polyline_points, image.shape)
 
-    # Apply background masking
-    masked_image = apply_background_mask(image, mask, background_color)
+        # Apply background masking
+        masked_image = apply_background_mask(image, mask, background_color)
+    else:
+        # No masking, use original image
+        masked_image = image
 
     # Get bounding box and crop
     bbox = get_bbox_from_polyline(polyline_points)
@@ -207,6 +214,7 @@ def create_masked_crop_for_polyline(
 def process_sample_patches(
     sample_data: Tuple[str, str, str, List, DatasetTask],
     background_color: Tuple[int, int, int] = (114, 114, 114),
+    mask_background: bool = True,
 ) -> Tuple[str, List[np.ndarray]]:
     """
     Process a single sample to extract all patch crops.
@@ -215,6 +223,7 @@ def process_sample_patches(
     Args:
         sample_data: Tuple of (sample_id, filepath, patches_field, patches_list, task)
         background_color: Background color for masking (segment/obb only)
+        mask_background: Whether to mask the background for segment/obb tasks (default: True)
 
     Returns:
         Tuple of (sample_id, list_of_crops)
@@ -244,14 +253,14 @@ def process_sample_patches(
                 crops.append(crop)
 
         elif task in [DatasetTask.SEGMENTATION, DatasetTask.OBB]:
-            # For segmentation/obb: mask background and crop
+            # For segmentation/obb: optionally mask background and crop
             for patch in patches_list:
                 if not patch.points or len(patch.points) == 0:
                     continue
 
                 polyline_points = patch.points[0]
                 crop = create_masked_crop_for_polyline(
-                    image, polyline_points, background_color
+                    image, polyline_points, background_color, mask_background
                 )
                 crops.append(crop)
 
@@ -267,6 +276,7 @@ def extract_all_patch_crops(
     patches_field: str,
     dataset_task: DatasetTask,
     background_color: Tuple[int, int, int] = (114, 114, 114),
+    mask_background: bool = True,
 ) -> Tuple[List[Image.Image], List[str]]:
     """
     Extract all patch crops from a dataset with multiprocessing.
@@ -276,6 +286,7 @@ def extract_all_patch_crops(
         patches_field: Field name containing patches
         dataset_task: Dataset task type
         background_color: RGB background color for masking (segment/obb only)
+        mask_background: Whether to mask the background for segment/obb tasks (default: True)
 
     Returns:
         Tuple of (list_of_crops, sample_id_per_crop)
@@ -313,7 +324,11 @@ def extract_all_patch_crops(
         return [], []
 
     # Extract crops with multiprocessing
-    process_func = partial(process_sample_patches, background_color=background_color)
+    process_func = partial(
+        process_sample_patches,
+        background_color=background_color,
+        mask_background=mask_background,
+    )
 
     with Pool(processes=max(1, cpu_count() - 1)) as pool:
         results = list(
