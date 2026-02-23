@@ -64,7 +64,7 @@ embeddings:
   model: "openai_clip"
   dir: "./models/fiftyone"
   batch_size: 16
-  mask_background: true  # Mask background for segment/OBB patch crops
+  mask_background: false  # Enable with --mask-background for segment/OBB patch crops
 
 thumbnails:
   dir: "./thumbnails"
@@ -73,22 +73,21 @@ thumbnails:
 
 ### Command-Line Arguments
 
-| Argument                  | Type   | Default               | Description                                                                                                                                                              |
-|---------------------------|--------|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--dataset-path`          | `str`  | `None`                | Path to your dataset. Required unless provided in config file and must follow the [YOLO format](https://docs.ultralytics.com/datasets/).                                 |
-| `--dataset-task`          | `str`  | `'detect'`            | Task type: `classify`, `detect`, `segment`, `pose`, `obb`. Required unless in config. More info on the tasks [below](#-supported-tasks-and-image-metadata).              |
-| `--dataset-name`          | `str`  | `'default'`           | Name for the FiftyOne dataset. Auto-generated from path if not set.                                                                                                      |
-| `--config`                | `str`  | `None`                | Path to config YAML file. Overrides default settings.                                                                                                                    |
-| `--reload`                | `bool` | `false`               | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                                |
-| `--skip-embeddings`       | `bool` | `false`               | Skip CLIP embedding computation (useful for quick visualization).                                                                                                        |
-| `--batch-size`            | `int`  | `16`                  | Batch size used during CLIP embedding computation.                                                                                                                       |
-| `--no-mask-background`    | `bool` | `false`               | Disable background masking for patch crops in segmentation/OBB tasks. Masking is enabled by default, replacing background with gray (114, 114, 114).                     |
-| `--model`                 | `str`  | `'openai_clip'`       | Embeddings model to use for embedding computation. Possible values are `openai_clip`, `metaclip_400m`, `metaclip_fullcc` and `siglip_base_224`.                          |
-| `--embeddings-models-dir` | `str`  | `'./models/fiftyone'` | Path to the directory where the embeddings models are saved.                                                                                                             |
-| `--thumbnail-dir`         | `str`  | `'./thumbnails'`      | Path to the directory where the thumbnails are saved.                                                                                                                    |
-| `--thumbnail-width`       | `int`  | `800`                 | Width (in pixels) of the generated image thumbnails in FiftyOne. The height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable thumbnail saving. |
-| `--port`                  | `int`  | `5151`                | Port to launch the FiftyOne app on.                                                                                                                                      |
-| `--no-launch`             | `bool` | `false`               | Prevents launching the FiftyOne app in the browser.                                                                                                                      |
+| Argument             | Type   | Default          | Description                                                                                                                                                              |
+|----------------------|--------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--config`           | `str`  | `None`           | Path to config YAML file. Overrides default settings.                                                                                                                    |
+| `--dataset-path`     | `str`  | `None`           | Path to your dataset. Required unless provided in config file and must follow the [YOLO format](https://docs.ultralytics.com/datasets/).                                 |
+| `--dataset-task`     | `str`  | `'detect'`       | Task type: `classify`, `detect`, `segment`, `pose`, `obb`. Required unless in config. More info on the tasks [below](#-supported-tasks-and-image-metadata).              |
+| `--dataset-name`     | `str`  | `'default'`      | Name for the FiftyOne dataset. Auto-generated from path if not set.                                                                                                      |
+| `--reload`           | `bool` | `false`          | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                                |
+| `--skip-embeddings`  | `bool` | `false`          | Skip CLIP embedding computation (useful for quick visualization).                                                                                                        |
+| `--embeddings-model` | `str`  | `'openai_clip'`  | Embeddings model to use. Possible values: `openai_clip`, `metaclip_400m`, `metaclip_fullcc`, `siglip_base_224`.                                                         |
+| `--batch-size`       | `int`  | `16`             | Batch size used during CLIP embedding computation.                                                                                                                       |
+| `--mask-background`  | `bool` | `false`          | Enable background masking for patch crops in segmentation/OBB tasks. Replaces background with gray (114, 114, 114) to improve embedding quality.                         |
+| `--thumbnail-width`  | `int`  | `800`            | Width (in pixels) of the generated image thumbnails in FiftyOne. The height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable thumbnail saving. |
+| `--thumbnail-dir`    | `str`  | `'./thumbnails'` | Path to the directory where the thumbnails are saved.                                                                                                                    |
+| `--port`             | `int`  | `5151`           | Port to launch the FiftyOne app on.                                                                                                                                      |
+| `--skip-launch`      | `bool` | `false`          | Skip launching the FiftyOne app after processing.                                                                                                                        |
 
 ## 📊 Supported tasks and image metadata
 

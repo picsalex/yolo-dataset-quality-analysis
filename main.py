@@ -102,7 +102,7 @@ def main():
         )
 
     # Step 4: Launch FiftyOne app
-    if not config.no_launch:
+    if not config.skip_launch:
         launch_fiftyone_app(
             dataset=dataset,
             dataset_task=config.dataset_task,

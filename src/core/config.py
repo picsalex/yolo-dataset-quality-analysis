@@ -35,7 +35,7 @@ class Config:
 
     # App
     port: int
-    no_launch: bool
+    skip_launch: bool
 
     @classmethod
     def from_cli(cls) -> "Config":
@@ -59,7 +59,7 @@ class Config:
             thumbnail_width=config_dict["thumbnails"]["width"],
             thumbnail_dir=config_dict["thumbnails"]["dir"],
             port=config_dict.get("port", 5151),
-            no_launch=config_dict.get("no_launch", False),
+            skip_launch=config_dict.get("skip_launch", False),
         )
 
     def validate(self):
@@ -100,7 +100,6 @@ def _parse_arguments() -> argparse.Namespace:
         help="Dataset task type (required if no config file)",
     )
 
-    # Optional arguments
     parser.add_argument(
         "--dataset-name",
         type=str,
@@ -123,6 +122,13 @@ def _parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--embeddings-model",
+        type=str,
+        default=None,
+        help="CLIP model name for embeddings",
+    )
+
+    parser.add_argument(
         "--batch-size",
         type=int,
         default=None,
@@ -130,34 +136,30 @@ def _parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--no-mask-background",
+        "--mask-background",
         action="store_true",
         default=None,
-        help="Disable background masking in patch crops for segmentation/OBB tasks (enabled by default)",
-    )
-
-    parser.add_argument(
-        "--model", type=str, default=None, help="CLIP model name for embeddings"
-    )
-
-    parser.add_argument(
-        "--thumbnail-dir", type=str, default=None, help="Base directory for thumbnails"
+        help="Enable background masking in patch crops for segmentation/OBB tasks (disabled by default)",
     )
 
     parser.add_argument(
         "--thumbnail-width",
         type=int,
         default=None,
-        help="Thumbnail width (width in pixels)",
+        help="Thumbnail width in pixels (height is scaled proportionally)",
+    )
+
+    parser.add_argument(
+        "--thumbnail-dir", type=str, default=None, help="Base directory for thumbnails"
     )
 
     parser.add_argument("--port", type=int, default=None, help="Port for FiftyOne app")
 
     parser.add_argument(
-        "--no-launch",
+        "--skip-launch",
         action="store_true",
         default=False,
-        help="Don't launch FiftyOne app after processing",
+        help="Skip launching the FiftyOne app after processing",
     )
 
     return parser.parse_args()
@@ -219,14 +221,14 @@ def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
     if args.skip_embeddings is not None:
         config["embeddings"]["skip"] = args.skip_embeddings
 
-    if args.model is not None:
-        config["embeddings"]["model"] = args.model
+    if args.embeddings_model is not None:
+        config["embeddings"]["model"] = args.embeddings_model
 
     if args.batch_size is not None:
         config["embeddings"]["batch_size"] = args.batch_size
 
-    if args.no_mask_background is not None:
-        config["embeddings"]["mask_background"] = False
+    if args.mask_background is not None:
+        config["embeddings"]["mask_background"] = True
 
     if args.thumbnail_dir is not None:
         config["thumbnails"]["dir"] = args.thumbnail_dir
@@ -238,7 +240,7 @@ def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
         config["port"] = args.port
 
     # Defaults to False if not specified
-    config["no_launch"] = args.no_launch
+    config["skip_launch"] = args.skip_launch
 
     # Validate the dataset path
     if not config["dataset"].get("path"):
