@@ -35,17 +35,30 @@ def generate_thumbnails(
             [os.path.dirname(p) for p in dataset.values("filepath")]
         )
 
-        # Generate thumbnails preserving relative directory structure
-        foui.transform_images(
-            dataset,
-            size=(
-                thumbnail_width,
-                -1,
+        # Resize along the largest dimension; set -1 on the smallest so FiftyOne
+        # computes it automatically (handles both landscape and portrait images).
+        for size, view in [
+            (
+                (thumbnail_width, -1),
+                dataset.match(
+                    fo.ViewField("metadata.width") >= fo.ViewField("metadata.height")
+                ),
             ),
-            output_dir=thumbnail_dir_path,
-            rel_dir=common_base,
-            output_field="thumbnail_path",
-        )
+            (
+                (-1, thumbnail_width),
+                dataset.match(
+                    fo.ViewField("metadata.height") > fo.ViewField("metadata.width")
+                ),
+            ),
+        ]:
+            if len(view) > 0:
+                foui.transform_images(
+                    view,
+                    size=size,
+                    output_dir=thumbnail_dir_path,
+                    rel_dir=common_base,
+                    output_field="thumbnail_path",
+                )
 
         logger.info("Thumbnails generated successfully")
 
