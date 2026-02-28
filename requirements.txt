@@ -11,7 +11,7 @@ timm>=0.9.0
 # Image processing and data handling
 numpy>=1.24.0,<2.3  # Compatible with numba for UMAP
 Pillow>=10.0.0
-shapely>=2.1.0
+shapely>=2.0.7
 
 # YAML configuration
 PyYAML>=6.0
