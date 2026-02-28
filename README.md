@@ -64,7 +64,7 @@ embeddings:
   model: "openai_clip"
   dir: "./models/fiftyone"
   batch_size: 16
-  mask_background: false  # Enable with --mask-background for segment/OBB patch crops
+  mask_background: true  # Disable with --skip-mask-background if needed
 
 thumbnails:
   dir: "./thumbnails"
@@ -83,7 +83,7 @@ thumbnails:
 | `--skip-embeddings`  | `bool` | `false`          | Skip CLIP embedding computation (useful for quick visualization).                                                                                                        |
 | `--embeddings-model` | `str`  | `'openai_clip'`  | Embeddings model to use. Possible values: `openai_clip`, `metaclip_400m`, `metaclip_fullcc`, `siglip_base_224`.                                                         |
 | `--batch-size`       | `int`  | `16`             | Batch size used during CLIP embedding computation.                                                                                                                       |
-| `--mask-background`  | `bool` | `false`          | Enable background masking for patch crops in segmentation/OBB tasks. Replaces background with gray (114, 114, 114) to improve embedding quality.                         |
+| `--skip-mask-background` | `bool` | `false`      | Skip background masking for patch crops in segmentation/OBB tasks. Masking is enabled by default, replacing background with gray (114, 114, 114).                       |
 | `--thumbnail-width`  | `int`  | `800`            | Width (in pixels) of the generated image thumbnails in FiftyOne. The height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable thumbnail saving. |
 | `--thumbnail-dir`    | `str`  | `'./thumbnails'` | Path to the directory where the thumbnails are saved.                                                                                                                    |
 | `--port`             | `int`  | `5151`           | Port to launch the FiftyOne app on.                                                                                                                                      |

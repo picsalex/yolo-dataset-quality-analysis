@@ -136,10 +136,10 @@ def _parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--mask-background",
+        "--skip-mask-background",
         action="store_true",
         default=None,
-        help="Enable background masking in patch crops for segmentation/OBB tasks (disabled by default)",
+        help="Skip background masking in patch crops for segmentation/OBB tasks (enabled by default)",
     )
 
     parser.add_argument(
@@ -227,8 +227,8 @@ def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
     if args.batch_size is not None:
         config["embeddings"]["batch_size"] = args.batch_size
 
-    if args.mask_background is not None:
-        config["embeddings"]["mask_background"] = True
+    if args.skip_mask_background is not None:
+        config["embeddings"]["mask_background"] = False
 
     if args.thumbnail_dir is not None:
         config["thumbnails"]["dir"] = args.thumbnail_dir
