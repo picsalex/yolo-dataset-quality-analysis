@@ -11,8 +11,8 @@ from tqdm import tqdm
 from src.core.constants import DATASET_SPLITS, DETECTION_FIELD, get_field_name
 from src.core.enums import DatasetTask
 from src.dataset.converter import (
-    yolo_to_fiftyone,
     create_detection_from_keypoint,
+    yolo_to_fiftyone,
 )
 from src.dataset.metadata import extract_image_metadata
 from src.dataset.parser import parse_yolo_annotation
@@ -56,7 +56,18 @@ def load_yolo_dataset(
     if dataset_name in fo.list_datasets():
         if not force_reload:
             logger.info("Loading existing dataset...")
-            return True, fo.load_dataset(name=dataset_name)
+            dataset = fo.load_dataset(name=dataset_name)
+            if len(dataset) == 0:
+                logger.warning(
+                    f"Cached dataset '{dataset_name}' is empty, likely due to a previously interrupted run. "
+                    "Reloading from scratch..."
+                )
+                fo.delete_dataset(name=dataset_name)
+                delete_thumbnails(
+                    dataset_name=dataset_name, thumbnail_dir=thumbnail_dir
+                )
+            else:
+                return True, dataset
         else:
             logger.info("Force reload enabled, deleting existing dataset...")
             fo.delete_dataset(name=dataset_name)
@@ -539,6 +550,6 @@ def _configure_dataset_fields(dataset: fo.Dataset, task: DatasetTask) -> None:
 
     except ValueError as e:
         logger.error(
-            f"Failed to add external field. Dataset task '{str(task)}' may be incorrect: {e}"
+            f"Failed• to add external field. Dataset task '{str(task)}' may be incorrect: {e}"
         )
         raise

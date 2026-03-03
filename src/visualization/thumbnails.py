@@ -31,9 +31,15 @@ def generate_thumbnails(
         raise
 
     try:
-        common_base = os.path.commonpath(
-            [os.path.dirname(p) for p in dataset.values("filepath")]
-        )
+        filepaths = [p for p in dataset.values("filepath") if p]
+        if not filepaths:
+            logger.error(
+                "Thumbnail generation failed: the dataset appears to be empty. "
+                "If this dataset was loaded from cache, try re-running with --reload."
+            )
+            return
+
+        common_base = os.path.commonpath([os.path.dirname(p) for p in filepaths])
 
         # Resize along the largest dimension; set -1 on the smallest so FiftyOne
         # computes it automatically (handles both landscape and portrait images).
