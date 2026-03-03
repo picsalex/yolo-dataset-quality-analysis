@@ -16,6 +16,7 @@ from src.dataset.loader import load_yolo_dataset
 from src.embeddings.computer import compute_embeddings
 from src.utils.logger import logger, configure_external_loggers
 from src.visualization.fiftyone_ops import launch_fiftyone_app
+from src.visualization.quality import compute_quality_metrics
 from src.visualization.thumbnails import generate_thumbnails
 
 
@@ -71,7 +72,18 @@ def main():
     else:
         logger.info("\n🧠 Step 2: Skipping embeddings computation (user requested)")
 
-    # Step 3: Generate thumbnails
+    # Step 3: Compute image quality metrics
+    if not config.skip_quality:
+        logger.info("\n📊 Step 3: Computing image quality metrics")
+        compute_quality_metrics(
+            dataset=dataset,
+            dataset_task=config.dataset_task,
+            mask_background=config.mask_background,
+        )
+    else:
+        logger.info("\n📊 Step 3: Skipping image quality metrics (user requested)")
+
+    # Step 4: Generate thumbnails
     if config.thumbnail_width > 1:
         thumbnail_dir = Path(
             os.path.join(config.thumbnail_dir, config.dataset_name)
@@ -84,11 +96,11 @@ def main():
             and os.path.exists(thumbnail_dir)
         ):
             logger.info(
-                f"\n🖼️ Step 3: Thumbnails of size ({config.thumbnail_width}, -1) already exist, skipping generation"
+                f"\n🖼️ Step 4: Thumbnails of size ({config.thumbnail_width}, -1) already exist, skipping generation"
             )
         else:
             logger.info(
-                f"\n🖼️ Step 3: Generating thumbnails ({config.thumbnail_width}, -1) for optimized FiftyOne dashboard"
+                f"\n🖼️ Step 4: Generating thumbnails ({config.thumbnail_width}, -1) for optimized FiftyOne dashboard"
             )
 
             generate_thumbnails(
@@ -98,10 +110,10 @@ def main():
             )
     else:
         logger.info(
-            f"\n🖼️ Step 3: Skipping thumbnail generation (the provided width is {config.thumbnail_width} but must be > 1)"
+            f"\n🖼️ Step 4: Skipping thumbnail generation (the provided width is {config.thumbnail_width} but must be > 1)"
         )
 
-    # Step 4: Launch FiftyOne app
+    # Step 5: Launch FiftyOne app
     if not config.skip_launch:
         launch_fiftyone_app(
             dataset=dataset,

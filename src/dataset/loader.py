@@ -446,6 +446,7 @@ def _configure_dataset_fields(dataset: fo.Dataset, task: DatasetTask) -> None:
         return
 
     dataset.add_sample_field(field_name="object_count", ftype=fo.IntField)
+    dataset.add_sample_field(field_name="blurriness", ftype=fo.FloatField)
 
     try:
         if task == DatasetTask.DETECTION or task == DatasetTask.POSE:
@@ -462,6 +463,9 @@ def _configure_dataset_fields(dataset: fo.Dataset, task: DatasetTask) -> None:
             )
             dataset.add_sample_field(
                 field_name=f"{base_field}.iou_score", ftype=fo.FloatField
+            )
+            dataset.add_sample_field(
+                field_name=f"{base_field}.blurriness", ftype=fo.FloatField
             )
 
             if task == DatasetTask.POSE:
@@ -485,6 +489,9 @@ def _configure_dataset_fields(dataset: fo.Dataset, task: DatasetTask) -> None:
             dataset.add_sample_field(
                 field_name=f"{base_field}.iou_score", ftype=fo.FloatField
             )
+            dataset.add_sample_field(
+                field_name=f"{base_field}.blurriness", ftype=fo.FloatField
+            )
 
         elif task == DatasetTask.OBB:
             field_name = get_field_name(task=task)
@@ -498,6 +505,9 @@ def _configure_dataset_fields(dataset: fo.Dataset, task: DatasetTask) -> None:
             )
             dataset.add_sample_field(
                 field_name=f"{base_field}.iou_score", ftype=fo.FloatField
+            )
+            dataset.add_sample_field(
+                field_name=f"{base_field}.blurriness", ftype=fo.FloatField
             )
 
     except ValueError as e:

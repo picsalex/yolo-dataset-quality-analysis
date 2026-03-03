@@ -87,6 +87,7 @@ thumbnails:
 | `--thumbnail-width`  | `int`  | `800`            | Width (in pixels) of the generated image thumbnails in FiftyOne. The height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable thumbnail saving. |
 | `--thumbnail-dir`    | `str`  | `'./thumbnails'` | Path to the directory where the thumbnails are saved.                                                                                                                    |
 | `--port`             | `int`  | `5151`           | Port to launch the FiftyOne app on.                                                                                                                                      |
+| `--skip-quality`     | `bool` | `false`          | Skip image quality metrics computation (blurriness, etc.).                                                                                                               |
 | `--skip-launch`      | `bool` | `false`          | Skip launching the FiftyOne app after processing.                                                                                                                        |
 
 ## 📊 Supported tasks and image metadata
@@ -95,26 +96,33 @@ For each expected task format, the following metadata will be computed and avail
 
 | Task                                                       | Available parameters when using the UI                                   |
 |------------------------------------------------------------|--------------------------------------------------------------------------|
-| [`classify`](https://docs.ultralytics.com/tasks/classify/) | `cls_label.label`                                                        |
-| [`detect`](https://docs.ultralytics.com/tasks/detect/)     | `area`, `aspect_ratio`, `width`, `height`, `iou_score`                   |
-| [`segment`](https://docs.ultralytics.com/tasks/segment/)   | `area`, `num_keypoints`, `width`, `height`, `iou_score`                  |
-| [`obb`](https://docs.ultralytics.com/tasks/obb/)           | `area`, `width`, `height`, `iou_score`                                   |
-| [`pose`](https://docs.ultralytics.com/tasks/pose/)         | `area`, `num_keypoints`, `aspect_ratio`, `width`, `height`, `iou_score`  |
+| [`classify`](https://docs.ultralytics.com/tasks/classify/) | `cls_label.label`                                              |
+| [`detect`](https://docs.ultralytics.com/tasks/detect/)     | `area`, `aspect_ratio`, `width`, `height`, `iou_score`         |
+| [`segment`](https://docs.ultralytics.com/tasks/segment/)   | `area`, `num_keypoints`, `width`, `height`, `iou_score`        |
+| [`obb`](https://docs.ultralytics.com/tasks/obb/)           | `area`, `width`, `height`, `iou_score`                         |
+| [`pose`](https://docs.ultralytics.com/tasks/pose/)         | `area`, `num_keypoints`, `aspect_ratio`, `width`, `height`, `iou_score` |
 
 Also, for each image, the following metadata will be computed:
 
 | Image Metadata          | Description                                             |
 |-------------------------|---------------------------------------------------------|
-| `oject_count`           | Number of objects in the image                          |
+| `object_count`          | Number of objects in the image                          |
 | `metadata.size_bytes`   | Size of the image file in bytes                         |
 | `metadata.width`        | Width of the image in pixels                            |
 | `metadata.height`       | Height of the image in pixels                           |
 | `metadata.mime_type`    | MIME type of the image (e.g., `image/jpeg`)             |
 | `metadata.num_channels` | Number of color channels (e.g., 3 for RGB)              |
 
+
+The following quality metrics are computed unless `--skip-quality` is passed. Some metrics are available at both the image and patch level, others only at one level.
+
+| Metric       | Description                                    | Images | Patches |
+|--------------|------------------------------------------------|--------|---------|
+| `blurriness` | Laplacian variance, lower score means blurrier | ✅     | ✅      |
+
 ## ⭐️ Supported Models
 
-All models use **224x224 input resolution**. This is a constraint imposed by FiftyOne's OpenCLIP integration - higher resolution variants (384, 512) cause preprocessing errors when computing embeddings. The 224x224 resolution provides excellent quality for most computer vision tasks while maintaining compatibility with FiftyOne's model zoo.
+All models use **224x224 input resolution**. This is a constraint imposed by FiftyOne's OpenCLIP integration (higher resolution variants (384, 512) cause preprocessing errors when computing embeddings). The 224x224 resolution provides excellent quality for most computer vision tasks while maintaining compatibility with FiftyOne's model zoo.
 
 | Model               | Description                                                                                                                                                                               | Training Dataset                                         |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|

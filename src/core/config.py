@@ -33,6 +33,9 @@ class Config:
     thumbnail_width: int
     thumbnail_dir: str
 
+    # Quality
+    skip_quality: bool
+
     # App
     port: int
     skip_launch: bool
@@ -58,6 +61,7 @@ class Config:
             mask_background=config_dict["embeddings"]["mask_background"],
             thumbnail_width=config_dict["thumbnails"]["width"],
             thumbnail_dir=config_dict["thumbnails"]["dir"],
+            skip_quality=config_dict["quality"]["skip"],
             port=config_dict.get("port", 5151),
             skip_launch=config_dict.get("skip_launch", False),
         )
@@ -156,6 +160,13 @@ def _parse_arguments() -> argparse.Namespace:
     parser.add_argument("--port", type=int, default=None, help="Port for FiftyOne app")
 
     parser.add_argument(
+        "--skip-quality",
+        action="store_true",
+        default=False,
+        help="Skip image quality metrics computation (blurriness, etc.)",
+    )
+
+    parser.add_argument(
         "--skip-launch",
         action="store_true",
         default=False,
@@ -177,7 +188,12 @@ def _load_yaml_config(config_path: str) -> Dict[str, Any]:
 
 
 def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
-    """Build configuration dictionary from default.yaml, optional config file, and arguments."""
+    """Build configuration dictionary from default.yaml, optional config file, and arguments.
+    These fields are populated as follows (in order of precedence):
+    1. Default values from cfg/default.yaml
+    2. User-specified values from --config YAML file (if provided)
+    3. Command-line arguments (which override both defaults and config file)
+    """
     default_config_path = "cfg/default.yaml"
     if not os.path.exists(default_config_path):
         logger.error(f"Default configuration file not found: {default_config_path}")
@@ -201,6 +217,9 @@ def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
 
         if "thumbnails" in user_config:
             config["thumbnails"].update(user_config["thumbnails"])
+
+        if "quality" in user_config:
+            config["quality"].update(user_config["quality"])
 
         if "port" in user_config:
             config["port"] = user_config["port"]
@@ -239,8 +258,11 @@ def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
     if args.port is not None:
         config["port"] = args.port
 
-    # Defaults to False if not specified
-    config["skip_launch"] = args.skip_launch
+    if args.skip_quality is not None:
+        config["quality"]["skip"] = args.skip_quality
+
+    if args.skip_launch is not None:
+        config["skip_launch"] = args.skip_launch
 
     # Validate the dataset path
     if not config["dataset"].get("path"):

@@ -56,6 +56,14 @@ thumbnails:
   width: 800
 
 # ===========================
+# QUALITY CONFIGURATION
+# ===========================
+quality:
+  # Skip image quality metrics computation (blurriness, etc.)
+  # Can be overridden with --skip-quality argument
+  skip: false
+
+# ===========================
 # APP CONFIGURATION
 # ===========================
 # Port for the FiftyOne app
