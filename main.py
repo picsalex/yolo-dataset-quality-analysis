@@ -11,6 +11,8 @@ import os
 from dataclasses import asdict
 from pathlib import Path
 
+import fiftyone.plugins as fop
+
 from src.core.config import Config
 from src.dataset.loader import load_yolo_dataset
 from src.embeddings.computer import compute_embeddings
@@ -18,6 +20,34 @@ from src.utils.logger import configure_external_loggers, logger
 from src.visualization.fiftyone_ops import launch_fiftyone_app
 from src.visualization.quality import compute_quality_metrics
 from src.visualization.thumbnails import generate_thumbnails
+
+# Plugins to auto-install if not already present
+REQUIRED_PLUGINS = [
+    "https://github.com/allenleetc/sample-inspector",
+]
+REQUIRED_PLUGIN_NAMES = [
+    "@allenleetc/sample-inspector",  # brightness/contrast/semantic mask filter in sample detail view
+]
+
+
+def ensure_plugins() -> None:
+    """Install required FiftyOne plugins if not already installed."""
+    installed = {p.name for p in fop.list_plugins()}
+    missing = [name for name in REQUIRED_PLUGIN_NAMES if name not in installed]
+
+    if not missing:
+        logger.info("🔌 Plugins: all required plugins are already installed")
+        return
+
+    logger.info("🔌 Installing missing FiftyOne plugins...")
+    for name in missing:
+        repo = REQUIRED_PLUGINS[REQUIRED_PLUGIN_NAMES.index(name)]
+        logger.info(f"  - {name}...")
+        try:
+            fop.download_plugin(repo, plugin_names=[name], overwrite=False)
+            logger.info(f"  - {name}... done")
+        except Exception as e:
+            logger.warning(f"  - {name}... failed ({e})")
 
 
 def main():
@@ -43,6 +73,9 @@ def main():
         f"{k}={v.value if hasattr(v, 'value') else v}" for k, v in config_dict.items()
     )
     logger.info(f"configuration: {params_str}")
+
+    # Step 0: Ensure required plugins are installed
+    ensure_plugins()
 
     # Step 1: Load dataset
     logger.info("\n 📁 Step 1: Preparing dataset")
