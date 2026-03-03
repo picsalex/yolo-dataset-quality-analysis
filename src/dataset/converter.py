@@ -137,7 +137,6 @@ def _create_detection(
     )
 
     detection["area"] = int(width * image_width * height * image_height)
-    detection["aspect_ratio"] = round((width / height if height != 0 else 0), 2)
     detection["width"] = int(width * image_width)
     detection["height"] = int(height * image_height)
 
@@ -378,7 +377,6 @@ def create_detection_from_keypoint(
     detection["num_keypoints"] = keypoint.get_field("num_keypoints")
     detection["width"] = int(bbox[2] * image_width)
     detection["height"] = int(bbox[3] * image_height)
-    detection["aspect_ratio"] = round((bbox[2] / bbox[3] if bbox[3] != 0 else 0), 2)
     detection["image_path"] = image_path
     detection["label_path"] = label_path
 

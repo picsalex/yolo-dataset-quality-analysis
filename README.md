@@ -3,11 +3,11 @@
 <div align="center">
   <img src="https://github.com/ultralytics/assets/raw/main/logo/Ultralytics-logomark-color.png" width="120" alt="Ultralytics Logo">
 
-  **A comprehensive tool for analyzing and visualizing YOLO dataset quality using FiftyOne**
+**A comprehensive tool for analyzing and visualizing YOLO dataset quality using FiftyOne**
 
-  [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
-  [![FiftyOne](https://img.shields.io/badge/FiftyOne-Latest-orange.svg)](https://voxel51.com/fiftyone)
-  [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
+[![FiftyOne](https://img.shields.io/badge/FiftyOne-Latest-orange.svg)](https://voxel51.com/fiftyone)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 </div>
 
 ---
@@ -15,7 +15,6 @@
 <div align="center">
   <img src="images/voxel_ui.avif" alt="FiftyOne UI Screenshot with OBB dataset" width="100%">
 </div>
-
 
 ## 🚀 Quick Start
 
@@ -50,7 +49,8 @@ python main.py --config cfg/default.yaml --batch_size 8
 python main.py --dataset-path /path/to/dataset --dataset-task detect --reload
 ```
 
-If you want to use the configuration file option, you can either override the default config file located at `cfg/default.yaml` or create your own config file (e.g., `cfg/my_config.yaml`) with the following structure:
+If you want to use the configuration file option, you can either override the default config file located at
+`cfg/default.yaml` or create your own config file (e.g., `cfg/my_config.yaml`) with the following structure:
 
 ```yaml
 dataset:
@@ -73,56 +73,61 @@ thumbnails:
 
 ### Command-Line Arguments
 
-| Argument             | Type   | Default          | Description                                                                                                                                                              |
-|----------------------|--------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--config`           | `str`  | `None`           | Path to config YAML file. Overrides default settings.                                                                                                                    |
-| `--dataset-path`     | `str`  | `None`           | Path to your dataset. Required unless provided in config file and must follow the [YOLO format](https://docs.ultralytics.com/datasets/).                                 |
-| `--dataset-task`     | `str`  | `'detect'`       | Task type: `classify`, `detect`, `segment`, `pose`, `obb`. Required unless in config. More info on the tasks [below](#-supported-tasks-and-image-metadata).              |
-| `--dataset-name`     | `str`  | `'default'`      | Name for the FiftyOne dataset. Auto-generated from path if not set.                                                                                                      |
-| `--reload`           | `bool` | `false`          | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                                |
-| `--skip-embeddings`  | `bool` | `false`          | Skip CLIP embedding computation (useful for quick visualization).                                                                                                        |
-| `--embeddings-model` | `str`  | `'openai_clip'`  | Embeddings model to use. Possible values: `openai_clip`, `metaclip_400m`, `metaclip_fullcc`, `siglip_base_224`.                                                         |
-| `--batch-size`       | `int`  | `16`             | Batch size used during CLIP embedding computation.                                                                                                                       |
-| `--skip-mask-background` | `bool` | `false`      | Skip background masking for patch crops in segmentation/OBB tasks. Masking is enabled by default, replacing background with gray (114, 114, 114).                       |
-| `--thumbnail-width`  | `int`  | `800`            | Width (in pixels) of the generated image thumbnails in FiftyOne. The height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable thumbnail saving. |
-| `--thumbnail-dir`    | `str`  | `'./thumbnails'` | Path to the directory where the thumbnails are saved.                                                                                                                    |
-| `--port`             | `int`  | `5151`           | Port to launch the FiftyOne app on.                                                                                                                                      |
-| `--skip-quality`     | `bool` | `false`          | Skip image quality metrics computation (blurriness, etc.).                                                                                                               |
-| `--skip-launch`      | `bool` | `false`          | Skip launching the FiftyOne app after processing.                                                                                                                        |
+| Argument                 | Type   | Default          | Description                                                                                                                                                              |
+|--------------------------|--------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--config`               | `str`  | `None`           | Path to config YAML file. Overrides default settings.                                                                                                                    |
+| `--dataset-path`         | `str`  | `None`           | Path to your dataset. Required unless provided in config file and must follow the [YOLO format](https://docs.ultralytics.com/datasets/).                                 |
+| `--dataset-task`         | `str`  | `'detect'`       | Task type: `classify`, `detect`, `segment`, `pose`, `obb`. Required unless in config. More info on the tasks [below](#-supported-tasks-and-image-metadata).              |
+| `--dataset-name`         | `str`  | `'default'`      | Name for the FiftyOne dataset. Auto-generated from path if not set.                                                                                                      |
+| `--reload`               | `bool` | `false`          | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                                |
+| `--skip-embeddings`      | `bool` | `false`          | Skip CLIP embedding computation (useful for quick visualization).                                                                                                        |
+| `--embeddings-model`     | `str`  | `'openai_clip'`  | Embeddings model to use. Possible values: `openai_clip`, `metaclip_400m`, `metaclip_fullcc`, `siglip_base_224`.                                                          |
+| `--batch-size`           | `int`  | `16`             | Batch size used during CLIP embedding computation.                                                                                                                       |
+| `--skip-mask-background` | `bool` | `false`          | Skip background masking for patch crops in segmentation/OBB tasks. Masking is enabled by default, replacing background with gray (114, 114, 114).                        |
+| `--thumbnail-width`      | `int`  | `800`            | Width (in pixels) of the generated image thumbnails in FiftyOne. The height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable thumbnail saving. |
+| `--thumbnail-dir`        | `str`  | `'./thumbnails'` | Path to the directory where the thumbnails are saved.                                                                                                                    |
+| `--port`                 | `int`  | `5151`           | Port to launch the FiftyOne app on.                                                                                                                                      |
+| `--skip-quality`         | `bool` | `false`          | Skip image quality metrics computation (blurriness, brightness, aspect_ratio, entropy).                                                                                  |
+| `--skip-launch`          | `bool` | `false`          | Skip launching the FiftyOne app after processing.                                                                                                                        |
 
 ## 📊 Supported tasks and image metadata
 
 For each expected task format, the following metadata will be computed and available in FiftyOne for each annotation:
 
-| Task                                                       | Available parameters when using the UI                                   |
-|------------------------------------------------------------|--------------------------------------------------------------------------|
-| [`classify`](https://docs.ultralytics.com/tasks/classify/) | `cls_label.label`                                              |
-| [`detect`](https://docs.ultralytics.com/tasks/detect/)     | `area`, `aspect_ratio`, `width`, `height`, `iou_score`         |
-| [`segment`](https://docs.ultralytics.com/tasks/segment/)   | `area`, `num_keypoints`, `width`, `height`, `iou_score`        |
-| [`obb`](https://docs.ultralytics.com/tasks/obb/)           | `area`, `width`, `height`, `iou_score`                         |
-| [`pose`](https://docs.ultralytics.com/tasks/pose/)         | `area`, `num_keypoints`, `aspect_ratio`, `width`, `height`, `iou_score` |
+| Task                                                       | Available parameters when using the UI                  |
+|------------------------------------------------------------|---------------------------------------------------------|
+| [`classify`](https://docs.ultralytics.com/tasks/classify/) | `cls_label.label`                                       |
+| [`detect`](https://docs.ultralytics.com/tasks/detect/)     | `area`, `width`, `height`, `iou_score`                  |
+| [`segment`](https://docs.ultralytics.com/tasks/segment/)   | `area`, `num_keypoints`, `width`, `height`, `iou_score` |
+| [`obb`](https://docs.ultralytics.com/tasks/obb/)           | `area`, `width`, `height`, `iou_score`                  |
+| [`pose`](https://docs.ultralytics.com/tasks/pose/)         | `area`, `num_keypoints`, `width`, `height`, `iou_score` |
 
 Also, for each image, the following metadata will be computed:
 
-| Image Metadata          | Description                                             |
-|-------------------------|---------------------------------------------------------|
-| `object_count`          | Number of objects in the image                          |
-| `metadata.size_bytes`   | Size of the image file in bytes                         |
-| `metadata.width`        | Width of the image in pixels                            |
-| `metadata.height`       | Height of the image in pixels                           |
-| `metadata.mime_type`    | MIME type of the image (e.g., `image/jpeg`)             |
-| `metadata.num_channels` | Number of color channels (e.g., 3 for RGB)              |
+| Image Metadata          | Description                                 |
+|-------------------------|---------------------------------------------|
+| `object_count`          | Number of objects in the image              |
+| `metadata.size_bytes`   | Size of the image file in bytes             |
+| `metadata.width`        | Width of the image in pixels                |
+| `metadata.height`       | Height of the image in pixels               |
+| `metadata.mime_type`    | MIME type of the image (e.g., `image/jpeg`) |
+| `metadata.num_channels` | Number of color channels (e.g., 3 for RGB)  |
 
+The following quality metrics are computed unless `--skip-quality` is passed. All metrics operate on grayscale pixel
+values and are available at both image and patch level.
 
-The following quality metrics are computed unless `--skip-quality` is passed. Some metrics are available at both the image and patch level, others only at one level.
-
-| Metric       | Description                                    | Images | Patches |
-|--------------|------------------------------------------------|--------|---------|
-| `blurriness` | Laplacian variance, lower score means blurrier | ✅     | ✅      |
+| Metric         | Description                                                                                                                                                                                            |
+|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `blurriness`   | Inverse of the [Laplacian variance](https://pyimagesearch.com/2015/09/07/blur-detection-with-opencv/). A score close to `1` indicates a blurry image, while a score close to `0` indicates a sharp one |
+| `brightness`   | Mean pixel intensity normalized between `0` and `1`. A score of `0` is fully dark and a score of `1` is fully bright                                                                                   |
+| `aspect_ratio` | Width-to-height ratio of the image or patch crop. Values greater than `1` are wider than tall, values less than `1` are taller than wide                                                               |
+| `entropy`      | Shannon entropy of the pixel intensity histogram. A low score indicates a flat or visually repetitive image                                                                                            |
 
 ## ⭐️ Supported Models
 
-All models use **224x224 input resolution**. This is a constraint imposed by FiftyOne's OpenCLIP integration (higher resolution variants (384, 512) cause preprocessing errors when computing embeddings). The 224x224 resolution provides excellent quality for most computer vision tasks while maintaining compatibility with FiftyOne's model zoo.
+All models use **224x224 input resolution**. This is a constraint imposed by FiftyOne's OpenCLIP integration (higher
+resolution variants (384, 512) cause preprocessing errors when computing embeddings). The 224x224 resolution provides
+excellent quality for most computer vision tasks while maintaining compatibility with FiftyOne's model zoo.
 
 | Model               | Description                                                                                                                                                                               | Training Dataset                                         |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
@@ -138,13 +143,15 @@ All models use **224x224 input resolution**. This is a constraint imposed by Fif
 - **Use `metaclip_fullcc`** when you need the highest quality embeddings
 - **Use `siglip_base_224`** as an alternative to CLIP-based models
 
-All models have similar inference speed and produce 512-dimensional embeddings with full support for FiftyOne visualization and analysis features.
+All models have similar inference speed and produce 512-dimensional embeddings with full support for FiftyOne
+visualization and analysis features.
 
 ## ⚒️ Dataset Structure
 
 This tool supports two common YOLO dataset directory structures:
 
 ### Format 1: Type-First Structure
+
 ```
 dataset/
 ├── images/
@@ -172,6 +179,7 @@ dataset/
 In this format, images and labels are organized by type first, then by split.
 
 ### Format 2: Split-First Structure
+
 ```
 dataset/
 ├── train/
@@ -199,7 +207,8 @@ In this format, the dataset is organized by split first, then by type (images/la
 
 ## ⌨️ FiftyOne commands
 
-If you have used this tool at least one time to visualize a dataset, you can then use the following commands bellow to interact with the FiftyOne datasets and application:
+If you have used this tool at least one time to visualize a dataset, you can then use the following commands bellow to
+interact with the FiftyOne datasets and application:
 
 ```bash
 # List all the datasets

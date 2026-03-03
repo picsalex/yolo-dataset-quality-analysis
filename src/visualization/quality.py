@@ -22,6 +22,34 @@ def _blurriness(gray: np.ndarray) -> float:
     return 1.0 / (1.0 + cv2.Laplacian(gray, cv2.CV_64F).var())
 
 
+def _brightness(gray: np.ndarray) -> float:
+    """
+    Mean pixel intensity normalized to [0, 1].
+    0 = fully dark, 1 = fully bright.
+    """
+    return float(gray.mean()) / 255.0
+
+
+def _aspect_ratio(gray: np.ndarray) -> float:
+    """
+    Width-to-height ratio derived from the array shape.
+    Values > 1 are wider than tall, < 1 are taller than wide.
+    """
+    h, w = gray.shape[:2]
+    return round(w / h, 2) if h != 0 else 0.0
+
+
+def _entropy(gray: np.ndarray) -> float:
+    """
+    Shannon entropy of the pixel intensity histogram.
+    Higher = more texture/complexity, lower = uniform/flat regions.
+    """
+    hist = cv2.calcHist([gray], [0], None, [256], [0, 256]).flatten()
+    hist = hist / (hist.sum() + 1e-10)
+    non_zero = hist[hist > 0]
+    return float(-np.sum(non_zero * np.log2(non_zero)))
+
+
 def compute_quality_metrics(
     dataset: fo.Dataset,
     dataset_task: DatasetTask,
@@ -30,16 +58,15 @@ def compute_quality_metrics(
     """Compute quality metrics for images and patches."""
     logger.info("Computing quality metrics...")
 
-    import time
-
-    start = time.time()
-
     # Image-level
     for sample in tqdm(dataset, desc="Image metrics"):
         gray = cv2.imread(sample.filepath, cv2.IMREAD_GRAYSCALE)
         if gray is None:
             continue
         sample["blurriness"] = _blurriness(gray)
+        sample["brightness"] = _brightness(gray)
+        sample["aspect_ratio"] = _aspect_ratio(gray)
+        sample["entropy"] = _entropy(gray)
         sample.save()
 
     # Patch-level
@@ -83,9 +110,11 @@ def compute_quality_metrics(
         sample = dataset[sample_id]
         patches = get_patches(sample)
         for patch, crop in zip(patches, crops):
-            patch["blurriness"] = _blurriness(cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY))
+            patch_gray = cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY)
+            patch["blurriness"] = _blurriness(patch_gray)
+            patch["brightness"] = _brightness(patch_gray)
+            patch["aspect_ratio"] = _aspect_ratio(patch_gray)
+            patch["entropy"] = _entropy(patch_gray)
         sample.save()
 
     logger.info("Quality metrics computed successfully")
-    end = time.time()
-    print(f"Quality metrics computation took {end - start:.2f} seconds")

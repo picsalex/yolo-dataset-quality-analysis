@@ -14,7 +14,7 @@ from pathlib import Path
 from src.core.config import Config
 from src.dataset.loader import load_yolo_dataset
 from src.embeddings.computer import compute_embeddings
-from src.utils.logger import logger, configure_external_loggers
+from src.utils.logger import configure_external_loggers, logger
 from src.visualization.fiftyone_ops import launch_fiftyone_app
 from src.visualization.quality import compute_quality_metrics
 from src.visualization.thumbnails import generate_thumbnails
@@ -73,7 +73,11 @@ def main():
         logger.info("\n🧠 Step 2: Skipping embeddings computation (user requested)")
 
     # Step 3: Compute image quality metrics
-    if not config.skip_quality:
+    if was_cached:
+        logger.info(
+            f"\n📊 Step 3: Dataset '{config.dataset_name}' already loaded, skipping quality metrics computation"
+        )
+    elif not config.skip_quality:
         logger.info("\n📊 Step 3: Computing image quality metrics")
         compute_quality_metrics(
             dataset=dataset,
