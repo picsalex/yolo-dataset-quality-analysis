@@ -20,7 +20,7 @@ def launch_fiftyone_app(
         dataset_task: Dataset task type
         port: Port to launch the app on
     """
-    logger.info("\n🌐 Step 4: Launching FiftyOne app")
+    logger.info("\n🌐 Step 5: Launching FiftyOne app")
 
     if "class_names" not in dataset.info:
         logger.error(

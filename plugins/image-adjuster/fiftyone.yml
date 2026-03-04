@@ -1,0 +1,5 @@
+name: "@ultralytics/image-adjuster"
+version: "1.0.0"
+description: "Floating brightness / contrast / overlay-opacity panel for the FiftyOne sample viewer"
+fiftyone_compatibility: ">=1.0"
+js_bundle: dist/index.umd.js

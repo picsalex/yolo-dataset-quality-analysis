@@ -148,13 +148,12 @@ visualization and analysis features.
 
 ## 🧩 Additional Installed Plugins
 
-This tool automatically installs a curated set of [FiftyOne plugins](https://docs.voxel51.com/plugins/) at startup
-if they are not already present. These plugins extend the FiftyOne App with extra interactivity and visualization
-features directly useful for dataset quality analysis.
+This tool ships with a custom-built FiftyOne plugin that is automatically
+installed at startup. No manual setup required.
 
-| Plugin                                                                           | Description                                                                                                                                            | How to use?                                                          |
-|----------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| [`@allenleetc/sample-inspector`](https://github.com/allenleetc/sample-inspector) | Adjust image brightness, contrast, and overlay opacity interactively. Filter semantic mask classes on/off using chip toggles, directly within the App. | Select samples in the grid, click `+` and choose `Sample Inspector`. |
+| Plugin                        | Description                                                                    | How to use?                                                          |
+|-------------------------------|--------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| `@ultralytics/image-adjuster` | Custom plugin to adjust image brightness, contrast, and label overlay opacity. | Open a sample, then use the slider icon in the bottom-right toolbar. |
 
 ## ⚒️ Dataset Structure
 
