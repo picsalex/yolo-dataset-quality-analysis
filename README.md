@@ -151,9 +151,9 @@ visualization and analysis features.
 This tool ships with a custom-built FiftyOne plugin that is automatically
 installed at startup. No manual setup required.
 
-| Plugin                        | Description                                                                    | Icon                                                                                                          | How to use?                                                              |
-|-------------------------------|--------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
-| `@ultralytics/image-adjuster` | Custom plugin to adjust image brightness, contrast, and label overlay opacity. | <img src="plugins/image-adjuster/images/slider.svg" width="20" height="20" alt="Image Adjuster icon"> | Open a sample, then click the slider icon in the bottom-left corner. |
+| Plugin                        | Description                                                                    | Icon                                                                   | How to use?                                                          |
+|-------------------------------|--------------------------------------------------------------------------------|------------------------------------------------------------------------|----------------------------------------------------------------------|
+| `@ultralytics/image-adjuster` | Custom plugin to adjust image brightness, contrast, and label overlay opacity. | <img src="images/icons/image-adjuster.avif" alt="Image Adjuster icon"> | Open a sample, then click the slider icon in the bottom-left corner. |
 
 ## ⚒️ Dataset Structure
 
