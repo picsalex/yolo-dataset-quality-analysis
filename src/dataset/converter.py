@@ -139,6 +139,7 @@ def _create_detection(
     detection["area"] = int(width * image_width * height * image_height)
     detection["width"] = int(width * image_width)
     detection["height"] = int(height * image_height)
+    detection["aspect_ratio"] = round(width / height, 2)
 
     return detection
 

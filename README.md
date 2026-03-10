@@ -62,13 +62,17 @@ dataset:
 embeddings:
   skip: false
   model: "openai_clip"
-  dir: "./models/fiftyone"
   batch_size: 16
   mask_background: true  # Disable with --skip-mask-background if needed
 
 thumbnails:
   dir: "./thumbnails"
   width: 800
+
+quality:
+  skip: false
+
+port: 5151
 ```
 
 ### Command-Line Arguments
