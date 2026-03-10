@@ -13,5 +13,14 @@ repos:
     rev: v0.12.8
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [ --fix ]
       - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: uv-export
+        name: Sync requirements.txt
+        entry: uv export --no-dev --no-hashes -o requirements.txt
+        language: system
+        pass_filenames: false
+        files: ^(pyproject\.toml|uv\.lock)$
