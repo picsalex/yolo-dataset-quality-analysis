@@ -16,7 +16,7 @@ dependencies = [
     "PyYAML>=6.0.3",
     "tqdm>=4.67.3",
     "umap-learn>=0.5.11",
-    "opencv-python>=4.13.0.92",
+    "opencv-python-headless>=4.13.0.92",
 ]
 
 [project.optional-dependencies]
