@@ -15,33 +15,24 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
+          enable-cache: true
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-          pip install pytest pytest-cov pytest-mock
+      - run: uv sync --extra dev
 
       - name: Run unit tests
         run: |
-          pytest tests/unit/ \
+          uv run pytest tests/unit/ \
             --skip-download \
             --cov=src \
             --cov-report=xml \
-            --cov-report=term \
-            -v
+            --cov-report=term
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           flags: unittests-py${{ matrix.python-version }}
@@ -53,49 +44,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.11"
-          cache: 'pip'
+          enable-cache: true
 
-      - name: Cache test datasets
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: tests/fixtures/.cache
           key: test-datasets-${{ hashFiles('tests/fixtures/dataset_manager.py') }}
-          restore-keys: |
-            test-datasets-
+          restore-keys: test-datasets-
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-          pip install pytest pytest-cov pytest-mock
+      - run: uv sync --extra dev
 
-      - name: Download test datasets
-        run: |
-          python tests/fixtures/dataset_manager.py download
+      - run: uv run python tests/fixtures/dataset_manager.py download
 
-      - name: Show dataset info
-        run: |
-          python tests/fixtures/dataset_manager.py info
+      - run: uv run python tests/fixtures/dataset_manager.py info
 
-      - name: Run integration tests (excluding slow tests)
+      - name: Run integration tests
         run: |
-          pytest tests/integration/ \
+          uv run pytest tests/integration/ \
             -m "not slow" \
             --cov=src \
             --cov-report=xml \
-            --cov-report=term \
-            -v
+            --cov-report=term
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           flags: integration
@@ -105,34 +81,23 @@ jobs:
   integration-tests-slow:
     name: Integration Tests (Slow - Embeddings)
     runs-on: ubuntu-latest
-    # Only run on main branch pushes to save CI minutes
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.11"
-          cache: 'pip'
+          enable-cache: true
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-          pip install pytest pytest-cov pytest-mock
+      - run: uv sync --extra dev
 
-      - name: Download test datasets
-        run: |
-          python tests/fixtures/dataset_manager.py download
+      - run: uv run python tests/fixtures/dataset_manager.py download
 
-      - name: Run slow integration tests (embeddings)
+      - name: Run slow integration tests
         run: |
-          pytest tests/integration/test_embeddings_pipeline.py \
-            -v \
+          uv run pytest tests/integration/test_embeddings_pipeline.py \
             --cov=src \
             --cov-report=xml \
             --cov-report=term
@@ -142,27 +107,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.11"
-          cache: 'pip'
+          enable-cache: true
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff
+      - run: uv sync --extra dev
 
-      - name: Run Ruff linter
-        run: |
-          ruff check src/ tests/ --output-format=github
+      - run: uv run ruff check src/ tests/ --output-format=github
 
-      - name: Run Ruff formatter check
-        run: |
-          ruff format --check src/ tests/
+      - run: uv run ruff format --check src/ tests/
 
   test-summary:
     name: Test Summary
@@ -176,10 +132,10 @@ jobs:
           if [ "${{ needs.unit-tests.result }}" == "success" ] && \
              [ "${{ needs.integration-tests.result }}" == "success" ] && \
              [ "${{ needs.lint.result }}" == "success" ]; then
-            echo "✅ All tests passed!"
+            echo "All tests passed!"
             exit 0
           else
-            echo "❌ Some tests failed:"
+            echo "Some tests failed:"
             echo "  Unit tests: ${{ needs.unit-tests.result }}"
             echo "  Integration tests: ${{ needs.integration-tests.result }}"
             echo "  Linting: ${{ needs.lint.result }}"
