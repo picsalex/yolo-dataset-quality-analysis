@@ -55,9 +55,7 @@ class TestDatasetFixtures:
         assert labels_train.exists(), "Missing train labels directory"
 
         # Check for at least one image
-        train_images = list(images_train.glob("*.jpg")) + list(
-            images_train.glob("*.png")
-        )
+        train_images = list(images_train.glob("*.jpg")) + list(images_train.glob("*.png"))
         assert len(train_images) > 0, "No training images found"
 
     def test_classify_dataset_structure(self, classify_dataset):

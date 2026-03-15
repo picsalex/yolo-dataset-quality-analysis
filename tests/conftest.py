@@ -27,9 +27,7 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     """Configure pytest with custom markers."""
-    config.addinivalue_line(
-        "markers", "requires_dataset: mark test as requiring dataset download"
-    )
+    config.addinivalue_line("markers", "requires_dataset: mark test as requiring dataset download")
     config.addinivalue_line("markers", "slow: mark test as slow running")
     config.addinivalue_line("markers", "unit: unit tests")
     config.addinivalue_line("markers", "integration: integration tests")

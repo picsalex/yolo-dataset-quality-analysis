@@ -5,9 +5,7 @@ import sys
 import warnings
 
 
-def setup_logger(
-    name: str = "yolo_analysis", level: int = logging.INFO
-) -> logging.Logger:
+def setup_logger(name: str = "yolo_analysis", level: int = logging.INFO) -> logging.Logger:
     """
     Configure and return a logger with consistent formatting.
 

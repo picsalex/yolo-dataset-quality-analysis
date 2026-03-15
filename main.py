@@ -41,9 +41,7 @@ def main():
     config_dict = asdict(config)
     # Convert enum to value for cleaner output
 
-    params_str = ", ".join(
-        f"{k}={v.value if hasattr(v, 'value') else v}" for k, v in config_dict.items()
-    )
+    params_str = ", ".join(f"{k}={v.value if hasattr(v, 'value') else v}" for k, v in config_dict.items())
     logger.info(f"configuration: {params_str}")
 
     # Step 0: Ensure required plugins are installed
@@ -62,9 +60,7 @@ def main():
 
     # Step 2: Compute embeddings
     if was_cached:
-        logger.info(
-            f"\n🧠 Step 2: Dataset '{config.dataset_name}' already loaded, skipping preparation"
-        )
+        logger.info(f"\n🧠 Step 2: Dataset '{config.dataset_name}' already loaded, skipping preparation")
     elif not config.skip_embeddings:
         logger.info("\n🧠 Step 2: Computing embeddings and visualizations")
         compute_embeddings(
@@ -94,9 +90,7 @@ def main():
 
     # Step 4: Generate thumbnails
     if config.thumbnail_width > 1:
-        thumbnail_dir = Path(
-            os.path.join(config.thumbnail_dir, config.dataset_name)
-        ).resolve()
+        thumbnail_dir = Path(os.path.join(config.thumbnail_dir, config.dataset_name)).resolve()
 
         if (
             "thumbnail_width" in dataset.info
@@ -130,9 +124,7 @@ def main():
             port=config.port,
         )
     else:
-        logger.info(
-            f"\n✅ Processing complete. Dataset saved as: {config.dataset_name}"
-        )
+        logger.info(f"\n✅ Processing complete. Dataset saved as: {config.dataset_name}")
         logger.info("To launch the app later, run:")
         logger.info(f"    fiftyone app launch {config.dataset_name}")
         logger.info("=" * 60)

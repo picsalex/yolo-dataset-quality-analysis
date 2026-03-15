@@ -29,9 +29,7 @@ def compute_iou_scores(labels: fo.Label, dataset_task: DatasetTask) -> None:
 
             _compute_bbox_ious(objects)
 
-        elif (
-            dataset_task == DatasetTask.SEGMENTATION or dataset_task == DatasetTask.OBB
-        ):
+        elif dataset_task == DatasetTask.SEGMENTATION or dataset_task == DatasetTask.OBB:
             objects = labels.get_field("polylines")
             if not objects:
                 return

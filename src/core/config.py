@@ -85,9 +85,7 @@ def _parse_arguments() -> argparse.Namespace:
     )
 
     # Configuration file (optional)
-    parser.add_argument(
-        "--config", type=str, default=None, help="Path to configuration YAML file"
-    )
+    parser.add_argument("--config", type=str, default=None, help="Path to configuration YAML file")
 
     # Dataset arguments (conditionally required)
     parser.add_argument(
@@ -153,9 +151,7 @@ def _parse_arguments() -> argparse.Namespace:
         help="Thumbnail width in pixels (height is scaled proportionally)",
     )
 
-    parser.add_argument(
-        "--thumbnail-dir", type=str, default=None, help="Base directory for thumbnails"
-    )
+    parser.add_argument("--thumbnail-dir", type=str, default=None, help="Base directory for thumbnails")
 
     parser.add_argument("--port", type=int, default=None, help="Port for FiftyOne app")
 
@@ -266,9 +262,7 @@ def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
 
     # Validate the dataset path
     if not config["dataset"].get("path"):
-        logger.error(
-            "Dataset path is required (use --dataset-path or specify in config file)"
-        )
+        logger.error("Dataset path is required (use --dataset-path or specify in config file)")
         sys.exit(1)
 
     elif not os.path.exists(config["dataset"]["path"]):
@@ -277,9 +271,7 @@ def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
 
     # Validate the dataset task
     if not config["dataset"].get("task"):
-        logger.error(
-            "Dataset task is required (use --dataset-task or specify in config file)"
-        )
+        logger.error("Dataset task is required (use --dataset-task or specify in config file)")
         sys.exit(1)
 
     elif not DatasetTask.is_valid_value(value=config["dataset"]["task"]):
@@ -289,19 +281,12 @@ def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
         sys.exit(1)
 
     # Auto-generate dataset name if not provided or if it's still set to "default"
-    if (
-        not config["dataset"].get("name")
-        or config["dataset"]["name"].strip() == "default"
-    ):
+    if not config["dataset"].get("name") or config["dataset"]["name"].strip() == "default":
         dataset_path = Path(config["dataset"]["path"])
-        config["dataset"]["name"] = (
-            dataset_path.parent.name if not dataset_path.is_dir() else dataset_path.name
-        )
+        config["dataset"]["name"] = dataset_path.parent.name if not dataset_path.is_dir() else dataset_path.name
 
     # Validate embeddings model
-    if not config["embeddings"].get("model") or not EmbeddingsModel.is_valid_value(
-        value=config["embeddings"]["model"]
-    ):
+    if not config["embeddings"].get("model") or not EmbeddingsModel.is_valid_value(value=config["embeddings"]["model"]):
         logger.warning(
             f"Embeddings model '{config['embeddings']['model']}' not supported, possible values are: {[e.value for e in EmbeddingsModel]}. Defaulting to 'openai_clip'.\n"
         )

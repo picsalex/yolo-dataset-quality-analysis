@@ -49,9 +49,7 @@ class TestImageEmbeddings:
 
             # Verify image embeddings brain key exists
             brain_keys = dataset.list_brain_runs()
-            assert IMAGE_EMBEDDINGS_KEY in brain_keys, (
-                f"Image embeddings key not found. Available keys: {brain_keys}"
-            )
+            assert IMAGE_EMBEDDINGS_KEY in brain_keys, f"Image embeddings key not found. Available keys: {brain_keys}"
 
             # Verify embeddings are stored
             brain_info = dataset.get_brain_info(IMAGE_EMBEDDINGS_KEY)
@@ -102,9 +100,7 @@ class TestImageEmbeddings:
 
                 # Verify image embeddings exist
                 brain_keys = dataset.list_brain_runs()
-                assert IMAGE_EMBEDDINGS_KEY in brain_keys, (
-                    f"Image embeddings missing for {task_name}"
-                )
+                assert IMAGE_EMBEDDINGS_KEY in brain_keys, f"Image embeddings missing for {task_name}"
 
             finally:
                 if dataset_name in fo.list_datasets():
@@ -180,9 +176,7 @@ class TestPatchEmbeddings:
 
             # Verify patch embeddings brain key exists
             brain_keys = dataset.list_brain_runs()
-            assert PATCH_EMBEDDINGS_KEY in brain_keys, (
-                f"Patch embeddings key not found. Available keys: {brain_keys}"
-            )
+            assert PATCH_EMBEDDINGS_KEY in brain_keys, f"Patch embeddings key not found. Available keys: {brain_keys}"
 
             # Verify patch embeddings use correct field
             brain_info = dataset.get_brain_info(PATCH_EMBEDDINGS_KEY)
@@ -191,9 +185,7 @@ class TestPatchEmbeddings:
         finally:
             fo.delete_dataset(dataset_name)
 
-    def test_patch_embeddings_use_correct_field_detection(
-        self, detect_dataset, tmp_path
-    ):
+    def test_patch_embeddings_use_correct_field_detection(self, detect_dataset, tmp_path):
         """Test that patch embeddings use bounding_boxes field for detection."""
         dataset_name = "test_patch_field_detect"
 
@@ -231,9 +223,7 @@ class TestPatchEmbeddings:
         finally:
             fo.delete_dataset(dataset_name)
 
-    def test_patch_embeddings_use_correct_field_segmentation(
-        self, segment_dataset, tmp_path
-    ):
+    def test_patch_embeddings_use_correct_field_segmentation(self, segment_dataset, tmp_path):
         """Test that patch embeddings use seg_polygons field for segmentation."""
         dataset_name = "test_patch_field_segment"
 
@@ -265,9 +255,7 @@ class TestPatchEmbeddings:
             # Should use seg_polygons field
             patches_field = config.patches_field
             expected_field = get_field_name(DatasetTask.SEGMENTATION)
-            assert patches_field == expected_field, (
-                f"Expected patches_field='{expected_field}', got '{patches_field}'"
-            )
+            assert patches_field == expected_field, f"Expected patches_field='{expected_field}', got '{patches_field}'"
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -342,9 +330,7 @@ class TestPatchEmbeddings:
             # Should use obb_bounding_boxes field
             patches_field = config.patches_field
             expected_field = get_field_name(DatasetTask.OBB)
-            assert patches_field == expected_field, (
-                f"Expected patches_field='{expected_field}', got '{patches_field}'"
-            )
+            assert patches_field == expected_field, f"Expected patches_field='{expected_field}', got '{patches_field}'"
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -376,12 +362,8 @@ class TestPatchEmbeddings:
 
             # Classification should only have image embeddings, not patch embeddings
             brain_keys = dataset.list_brain_runs()
-            assert IMAGE_EMBEDDINGS_KEY in brain_keys, (
-                "Image embeddings should exist for classification"
-            )
-            assert PATCH_EMBEDDINGS_KEY not in brain_keys, (
-                "Patch embeddings should NOT exist for classification"
-            )
+            assert IMAGE_EMBEDDINGS_KEY in brain_keys, "Image embeddings should exist for classification"
+            assert PATCH_EMBEDDINGS_KEY not in brain_keys, "Patch embeddings should NOT exist for classification"
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -444,12 +426,8 @@ class TestEmbeddingsFieldMapping:
 
                 # All non-classification tasks should have both embeddings
                 brain_keys = dataset.list_brain_runs()
-                assert IMAGE_EMBEDDINGS_KEY in brain_keys, (
-                    f"Missing image embeddings for {task_name}"
-                )
-                assert PATCH_EMBEDDINGS_KEY in brain_keys, (
-                    f"Missing patch embeddings for {task_name}"
-                )
+                assert IMAGE_EMBEDDINGS_KEY in brain_keys, f"Missing image embeddings for {task_name}"
+                assert PATCH_EMBEDDINGS_KEY in brain_keys, f"Missing patch embeddings for {task_name}"
 
             finally:
                 if dataset_name in fo.list_datasets():

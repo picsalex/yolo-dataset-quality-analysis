@@ -162,9 +162,6 @@ def _compute_patch_embeddings(
         mask = sample_id_per_crop_array == sample_id
         embeddings_dict[sample_id] = all_embeddings[mask]
 
-    logger.info(
-        f"Successfully computed embeddings for {len(all_crops)} patches "
-        f"across {len(embeddings_dict)} samples"
-    )
+    logger.info(f"Successfully computed embeddings for {len(all_crops)} patches across {len(embeddings_dict)} samples")
 
     return embeddings_dict

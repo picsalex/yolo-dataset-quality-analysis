@@ -12,9 +12,7 @@ import pytest
 # Configuration
 GITHUB_REPO = "picsalex/yolo-dataset-quality-analysis"
 RELEASE_TAG = "v1.0.0"
-DATASETS_URL = (
-    f"https://github.com/{GITHUB_REPO}/releases/download/{RELEASE_TAG}/datasets.zip"
-)
+DATASETS_URL = f"https://github.com/{GITHUB_REPO}/releases/download/{RELEASE_TAG}/datasets.zip"
 
 # SHA256 checksum for integrity verification
 EXPECTED_SHA256 = "a9a770918a03ab05f02b01c35bd80f3f4b650d471c5110a2f1f5215f0d880a96"
@@ -96,9 +94,7 @@ def download_and_extract_datasets(force: bool = False) -> Path:
 
         try:
             urlretrieve(DATASETS_URL, zip_path)
-            print(
-                f"✓ Downloaded datasets.zip ({zip_path.stat().st_size / 1024 / 1024:.1f} MB)"
-            )
+            print(f"✓ Downloaded datasets.zip ({zip_path.stat().st_size / 1024 / 1024:.1f} MB)")
         except Exception as e:
             raise RuntimeError(f"Failed to download datasets.zip: {e}")
 
@@ -159,9 +155,7 @@ def download_and_extract_datasets(force: bool = False) -> Path:
         print(f"✓ Extracted {len(extracted_datasets)} datasets to {DATASETS_DIR}")
 
         if len(extracted_datasets) != len(DATASET_PATHS):
-            raise RuntimeError(
-                f"Expected {len(DATASET_PATHS)} datasets but found {len(extracted_datasets)}"
-            )
+            raise RuntimeError(f"Expected {len(DATASET_PATHS)} datasets but found {len(extracted_datasets)}")
 
     except Exception as e:
         if DATASETS_DIR.exists():
@@ -186,10 +180,7 @@ def get_dataset_path(dataset_type: str) -> Path:
         RuntimeError: If dataset cannot be found after download
     """
     if dataset_type not in DATASET_PATHS:
-        raise ValueError(
-            f"Unknown dataset type: {dataset_type}. "
-            f"Available: {list(DATASET_PATHS.keys())}"
-        )
+        raise ValueError(f"Unknown dataset type: {dataset_type}. Available: {list(DATASET_PATHS.keys())}")
 
     # Ensure datasets are downloaded
     download_and_extract_datasets()
@@ -198,9 +189,7 @@ def get_dataset_path(dataset_type: str) -> Path:
     dataset_path = DATASETS_DIR / dataset_name
 
     if not dataset_path.exists():
-        raise RuntimeError(
-            f"Dataset {dataset_type} not found at {dataset_path} after download"
-        )
+        raise RuntimeError(f"Dataset {dataset_type} not found at {dataset_path} after download")
 
     return dataset_path
 
@@ -303,10 +292,7 @@ def obb_dataset() -> Path:
 def all_datasets() -> Dict[str, Path]:
     """Provide all datasets as a dictionary."""
     download_and_extract_datasets()
-    return {
-        dataset_type: get_dataset_path(dataset_type)
-        for dataset_type in DATASET_PATHS.keys()
-    }
+    return {dataset_type: get_dataset_path(dataset_type) for dataset_type in DATASET_PATHS.keys()}
 
 
 # ============================================================================

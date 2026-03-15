@@ -115,9 +115,7 @@ class TestYoloToFiftyOneConversion:
                     label = detection.label
 
                     # Label should either be in class_names or be "class_N" format
-                    assert label in class_names or label.startswith("class_"), (
-                        f"Invalid label: {label}"
-                    )
+                    assert label in class_names or label.startswith("class_"), f"Invalid label: {label}"
 
         finally:
             fo.delete_dataset(dataset_name)

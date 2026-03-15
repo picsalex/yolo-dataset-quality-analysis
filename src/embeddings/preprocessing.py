@@ -259,9 +259,7 @@ def process_sample_patches(
                     continue
 
                 polyline_points = patch.points[0]
-                crop = create_masked_crop_for_polyline(
-                    image, polyline_points, background_color, mask_background
-                )
+                crop = create_masked_crop_for_polyline(image, polyline_points, background_color, mask_background)
                 crops.append(crop)
 
         return sample_id, crops
@@ -302,22 +300,16 @@ def extract_all_patch_crops(
 
         # Get patches based on task type
         if dataset_task in [DatasetTask.DETECTION, DatasetTask.POSE]:
-            patches_list = (
-                patches_obj.detections if hasattr(patches_obj, "detections") else []
-            )
+            patches_list = patches_obj.detections if hasattr(patches_obj, "detections") else []
         elif dataset_task in [DatasetTask.SEGMENTATION, DatasetTask.OBB]:
-            patches_list = (
-                patches_obj.polylines if hasattr(patches_obj, "polylines") else []
-            )
+            patches_list = patches_obj.polylines if hasattr(patches_obj, "polylines") else []
         else:
             patches_list = []
 
         if not patches_list:
             continue
 
-        sample_data_list.append(
-            (sample.id, sample.filepath, patches_field, patches_list, dataset_task)
-        )
+        sample_data_list.append((sample.id, sample.filepath, patches_field, patches_list, dataset_task))
 
     if not sample_data_list:
         logger.warning("No patches found in dataset")

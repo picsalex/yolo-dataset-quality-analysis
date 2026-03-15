@@ -155,9 +155,7 @@ class TestParseRealAnnotations:
         errors = []
         for label_file in label_files:
             try:
-                annotations = parse_yolo_annotation(
-                    str(label_file), DatasetTask.DETECTION
-                )
+                annotations = parse_yolo_annotation(str(label_file), DatasetTask.DETECTION)
                 # Should either return list or None, not raise exception
                 assert annotations is None or isinstance(annotations, list)
             except Exception as e:
@@ -183,21 +181,15 @@ class TestAnnotationValidation:
                 for anno in annotations:
                     # Check all coordinates are in [0, 1]
                     if not (0 <= anno["x_center"] <= 1):
-                        out_of_range.append(
-                            (label_file.name, "x_center", anno["x_center"])
-                        )
+                        out_of_range.append((label_file.name, "x_center", anno["x_center"]))
                     if not (0 <= anno["y_center"] <= 1):
-                        out_of_range.append(
-                            (label_file.name, "y_center", anno["y_center"])
-                        )
+                        out_of_range.append((label_file.name, "y_center", anno["y_center"]))
                     if not (0 <= anno["width"] <= 1):
                         out_of_range.append((label_file.name, "width", anno["width"]))
                     if not (0 <= anno["height"] <= 1):
                         out_of_range.append((label_file.name, "height", anno["height"]))
 
-        assert len(out_of_range) == 0, (
-            f"Found {len(out_of_range)} out-of-range values: {out_of_range[:5]}"
-        )
+        assert len(out_of_range) == 0, f"Found {len(out_of_range)} out-of-range values: {out_of_range[:5]}"
 
     def test_class_ids_are_integers(self, detect_dataset):
         """Test that all class IDs are valid integers."""
@@ -214,9 +206,7 @@ class TestAnnotationValidation:
                     if anno["class_id"] < 0:
                         invalid_class_ids.append((label_file.name, anno["class_id"]))
 
-        assert len(invalid_class_ids) == 0, (
-            f"Found {len(invalid_class_ids)} invalid class IDs: {invalid_class_ids[:5]}"
-        )
+        assert len(invalid_class_ids) == 0, f"Found {len(invalid_class_ids)} invalid class IDs: {invalid_class_ids[:5]}"
 
     def test_polygon_has_sufficient_points(self, segment_dataset):
         """Test that all polygons have at least 3 points."""
@@ -225,17 +215,13 @@ class TestAnnotationValidation:
 
         invalid_polygons = []
         for label_file in label_files:
-            annotations = parse_yolo_annotation(
-                str(label_file), DatasetTask.SEGMENTATION
-            )
+            annotations = parse_yolo_annotation(str(label_file), DatasetTask.SEGMENTATION)
             if annotations:
                 for anno in annotations:
                     if len(anno["points"]) < 3:
                         invalid_polygons.append((label_file.name, len(anno["points"])))
 
-        assert len(invalid_polygons) == 0, (
-            f"Found {len(invalid_polygons)} invalid polygons: {invalid_polygons}"
-        )
+        assert len(invalid_polygons) == 0, f"Found {len(invalid_polygons)} invalid polygons: {invalid_polygons}"
 
     def test_obb_has_four_points(self, obb_dataset):
         """Test that all OBBs have exactly 4 points."""
@@ -250,9 +236,7 @@ class TestAnnotationValidation:
                     if len(anno["points"]) != 4:
                         invalid_obbs.append((label_file.name, len(anno["points"])))
 
-        assert len(invalid_obbs) == 0, (
-            f"Found {len(invalid_obbs)} invalid OBBs: {invalid_obbs}"
-        )
+        assert len(invalid_obbs) == 0, f"Found {len(invalid_obbs)} invalid OBBs: {invalid_obbs}"
 
 
 @pytest.mark.requires_dataset
@@ -265,9 +249,7 @@ class TestDatasetConsistency:
         images_dir = detect_dataset / "images" / "train"
         labels_dir = detect_dataset / "labels" / "train"
 
-        image_files = {f.stem for f in images_dir.glob("*.jpg")} | {
-            f.stem for f in images_dir.glob("*.png")
-        }
+        image_files = {f.stem for f in images_dir.glob("*.jpg")} | {f.stem for f in images_dir.glob("*.png")}
         label_files = {f.stem for f in labels_dir.glob("*.txt")}
 
         # Not all images need labels (some might have no objects)
@@ -277,21 +259,15 @@ class TestDatasetConsistency:
 
         # Most images should have labels (at least 50%)
         if len(label_files) > 0:
-            assert len(common) / len(image_files) > 0.3, (
-                f"Only {len(common)}/{len(image_files)} images have labels"
-            )
+            assert len(common) / len(image_files) > 0.3, f"Only {len(common)}/{len(image_files)} images have labels"
 
     def test_no_orphaned_labels(self, detect_dataset):
         """Test that there are no label files without corresponding images."""
         images_dir = detect_dataset / "images" / "train"
         labels_dir = detect_dataset / "labels" / "train"
 
-        image_files = {f.stem for f in images_dir.glob("*.jpg")} | {
-            f.stem for f in images_dir.glob("*.png")
-        }
+        image_files = {f.stem for f in images_dir.glob("*.jpg")} | {f.stem for f in images_dir.glob("*.png")}
         label_files = {f.stem for f in labels_dir.glob("*.txt")}
 
         orphaned = label_files - image_files
-        assert len(orphaned) == 0, (
-            f"Found {len(orphaned)} orphaned label files: {list(orphaned)[:5]}"
-        )
+        assert len(orphaned) == 0, f"Found {len(orphaned)} orphaned label files: {list(orphaned)[:5]}"

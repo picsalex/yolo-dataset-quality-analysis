@@ -10,9 +10,7 @@ import fiftyone.utils.image as foui
 from src.utils.logger import logger
 
 
-def generate_thumbnails(
-    dataset: fo.Dataset, thumbnail_dir_path: str, thumbnail_width: int
-) -> None:
+def generate_thumbnails(dataset: fo.Dataset, thumbnail_dir_path: str, thumbnail_width: int) -> None:
     """
     Generate optimized thumbnails using transform_images.
 
@@ -46,15 +44,11 @@ def generate_thumbnails(
         for size, view in [
             (
                 (thumbnail_width, -1),
-                dataset.match(
-                    fo.ViewField("metadata.width") >= fo.ViewField("metadata.height")
-                ),
+                dataset.match(fo.ViewField("metadata.width") >= fo.ViewField("metadata.height")),
             ),
             (
                 (-1, thumbnail_width),
-                dataset.match(
-                    fo.ViewField("metadata.height") > fo.ViewField("metadata.width")
-                ),
+                dataset.match(fo.ViewField("metadata.height") > fo.ViewField("metadata.width")),
             ),
         ]:
             if len(view) > 0:
@@ -88,6 +82,4 @@ def delete_thumbnails(dataset_name: str, thumbnail_dir: str) -> None:
             shutil.rmtree(thumbnail_path)
             logger.info(f"Deleted thumbnails directory: {thumbnail_path}")
         except Exception as e:
-            logger.warning(
-                f"Failed to delete thumbnails directory {thumbnail_path}: {e}"
-            )
+            logger.warning(f"Failed to delete thumbnails directory {thumbnail_path}: {e}")

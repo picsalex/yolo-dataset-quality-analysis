@@ -98,9 +98,7 @@ def get_color_palette(labels: List[str]) -> List[Dict[str, str]]:
             # Generate additional colors using a colormap
             cmap = plt.get_cmap("hsv")
             color = cmap(i / num_labels)
-            color_hex = "#{:02x}{:02x}{:02x}".format(
-                int(color[0] * 255), int(color[1] * 255), int(color[2] * 255)
-            )
+            color_hex = "#{:02x}{:02x}{:02x}".format(int(color[0] * 255), int(color[1] * 255), int(color[2] * 255))
         palette.append({"value": labels[i], "color": color_hex})
 
     return palette
