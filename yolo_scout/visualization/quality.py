@@ -8,10 +8,10 @@ import fiftyone as fo
 import numpy as np
 from tqdm import tqdm
 
-from src.core.constants import DETECTION_FIELD, get_field_name
-from src.core.enums import DatasetTask
-from src.embeddings.preprocessing import process_sample_patches
-from src.utils.logger import logger
+from yolo_scout.core.constants import DETECTION_FIELD, get_field_name
+from yolo_scout.core.enums import DatasetTask
+from yolo_scout.embeddings.preprocessing import process_sample_patches
+from yolo_scout.utils.logger import logger
 
 
 def _blurriness(gray: np.ndarray) -> float:

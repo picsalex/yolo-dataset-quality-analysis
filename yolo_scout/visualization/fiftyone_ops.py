@@ -2,9 +2,9 @@
 
 import fiftyone as fo
 
-from src.core.constants import DETECTION_FIELD, get_color_palette, get_field_name
-from src.core.enums import DatasetTask
-from src.utils.logger import logger
+from yolo_scout.core.constants import DETECTION_FIELD, get_color_palette, get_field_name
+from yolo_scout.core.enums import DatasetTask
+from yolo_scout.utils.logger import logger
 
 
 def launch_fiftyone_app(

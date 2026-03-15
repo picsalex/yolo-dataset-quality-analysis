@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from src.visualization.quality import _aspect_ratio, _blurriness, _brightness, _entropy
+from yolo_scout.visualization.quality import _aspect_ratio, _blurriness, _brightness, _entropy
 
 
 # ---------------------------------------------------------------------------

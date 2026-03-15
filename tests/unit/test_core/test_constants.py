@@ -1,6 +1,6 @@
 """Tests for src.core.constants module."""
 
-from src.core.constants import (
+from yolo_scout.core.constants import (
     DETECTION_FIELD,
     KEYPOINTS_FIELD,
     SEGMENTATION_FIELD,
@@ -9,7 +9,7 @@ from src.core.constants import (
     get_field_name,
     get_color_palette,
 )
-from src.core.enums import DatasetTask
+from yolo_scout.core.enums import DatasetTask
 
 
 class TestGetFieldName:

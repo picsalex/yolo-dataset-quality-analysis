@@ -6,7 +6,7 @@ from typing import Tuple
 import fiftyone as fo
 from PIL import Image
 
-from src.utils.logger import logger
+from yolo_scout.utils.logger import logger
 
 
 def extract_image_metadata(filepath: str) -> fo.ImageMetadata:

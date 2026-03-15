@@ -2,12 +2,12 @@
 
 import pytest
 from unittest.mock import Mock
-from src.visualization.iou import (
+from yolo_scout.visualization.iou import (
     compute_iou_scores,
     _compute_bbox_ious,
     _compute_polygon_ious,
 )
-from src.core.enums import DatasetTask
+from yolo_scout.core.enums import DatasetTask
 
 
 # Helper class to create dict-like objects that support both attribute and item access

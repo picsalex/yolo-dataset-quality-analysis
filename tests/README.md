@@ -30,7 +30,7 @@ tests/
 pytest tests/unit/ --skip-download -v
 
 # With coverage
-pytest tests/unit/ --skip-download --cov=src --cov-report=html
+pytest tests/unit/ --skip-download --cov=yolo_scout --cov-report=html
 ```
 
 ### Integration Tests (Downloads Datasets on First Run)
@@ -48,7 +48,7 @@ pytest -m "not slow" -v
 ### Full Test Suite
 ```bash
 # Run everything with coverage (~134 tests total)
-pytest --cov=src --cov-report=html --cov-report=term -v
+pytest --cov=yolo_scout --cov-report=html --cov-report=term -v
 ```
 
 ## 📦 Test Datasets
@@ -144,10 +144,10 @@ pytest --skip-download -v
 
 ### Unit Test Template
 ```python
-"""Tests for src.module.feature."""
+"""Tests for yolo_scout.module.feature."""
 
 import pytest
-from src.module.feature import function_to_test
+from yolo_scout.module.feature import function_to_test
 
 
 class TestFeature:
@@ -314,7 +314,7 @@ pytest tests/unit/test_visualization/test_iou.py -v
 **Total Tests**: 134
 **Unit Tests**: 59 (100% passing)
 **Integration Tests**: 75 (100% passing)
-**Coverage**: ~85% of src/ directory
+**Coverage**: ~85% of yolo_scout/ directory
 **Status**: ✅ All tests passing!
 
 The test suite provides comprehensive coverage of:

@@ -2,8 +2,8 @@
 
 import pytest
 
-from src.dataset.parser import parse_yolo_annotation
-from src.core.enums import DatasetTask
+from yolo_scout.dataset.parser import parse_yolo_annotation
+from yolo_scout.core.enums import DatasetTask
 
 
 @pytest.mark.requires_dataset

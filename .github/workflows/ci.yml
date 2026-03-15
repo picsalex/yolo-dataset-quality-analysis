@@ -22,13 +22,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
 
-      - run: uv sync --extra dev
+      - run: uv sync
 
       - name: Run unit tests
         run: |
           uv run pytest tests/unit/ \
             --skip-download \
-            --cov=src \
+            --cov=yolo_scout \
             --cov-report=xml \
             --cov-report=term
 
@@ -57,7 +57,7 @@ jobs:
           key: test-datasets-${{ hashFiles('tests/fixtures/dataset_manager.py') }}
           restore-keys: test-datasets-
 
-      - run: uv sync --extra dev
+      - run: uv sync
 
       - run: uv run python tests/fixtures/dataset_manager.py download
 
@@ -67,7 +67,7 @@ jobs:
         run: |
           uv run pytest tests/integration/ \
             -m "not slow" \
-            --cov=src \
+            --cov=yolo_scout \
             --cov-report=xml \
             --cov-report=term
 
@@ -91,14 +91,14 @@ jobs:
           python-version: "3.11"
           enable-cache: true
 
-      - run: uv sync --extra dev
+      - run: uv sync
 
       - run: uv run python tests/fixtures/dataset_manager.py download
 
       - name: Run slow integration tests
         run: |
           uv run pytest tests/integration/test_embeddings_pipeline.py \
-            --cov=src \
+            --cov=yolo_scout \
             --cov-report=xml \
             --cov-report=term
 
@@ -114,11 +114,11 @@ jobs:
           python-version: "3.11"
           enable-cache: true
 
-      - run: uv sync --extra dev
+      - run: uv sync
 
-      - run: uv run ruff check src/ tests/ --output-format=github
+      - run: uv run ruff check yolo_scout/ tests/ --output-format=github
 
-      - run: uv run ruff format --check src/ tests/
+      - run: uv run ruff format --check yolo_scout/ tests/
 
   test-summary:
     name: Test Summary

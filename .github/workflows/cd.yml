@@ -1,0 +1,74 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build package
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+
+      - run: uv build
+
+      - name: Verify universal wheel
+        shell: bash
+        run: |
+          ls dist/
+          ls dist/ | grep "py3-none-any.whl" || (echo "ERROR: expected a universal wheel (py3-none-any)" && exit 1)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  verify-install:
+    name: Verify (${{ matrix.os }}, py${{ matrix.python-version }})
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install wheel (no heavy deps)
+        shell: bash
+        run: uv pip install --system dist/*.whl --no-deps
+
+      - name: Smoke test
+        run: python -c "import yolo_scout; print('OK')"
+
+  publish:
+    name: Publish to PyPI
+    needs: verify-install
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # Required for OIDC trusted publishing
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1

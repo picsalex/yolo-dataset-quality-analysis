@@ -5,8 +5,8 @@ from typing import Dict, List, Optional
 import fiftyone as fo
 from shapely.geometry import Polygon
 
-from src.core.enums import DatasetTask
-from src.utils.path_utils import get_image_name
+from yolo_scout.core.enums import DatasetTask
+from yolo_scout.utils.path_utils import get_image_name
 
 
 def yolo_to_fiftyone(

@@ -3,10 +3,10 @@
 import pytest
 import fiftyone as fo
 
-from src.dataset.loader import load_yolo_dataset
-from src.embeddings.computer import compute_embeddings
-from src.core.enums import DatasetTask, EmbeddingsModel
-from src.core.constants import (
+from yolo_scout.dataset.loader import load_yolo_dataset
+from yolo_scout.embeddings.computer import compute_embeddings
+from yolo_scout.core.enums import DatasetTask, EmbeddingsModel
+from yolo_scout.core.constants import (
     IMAGE_EMBEDDINGS_KEY,
     PATCH_EMBEDDINGS_KEY,
     DETECTION_FIELD,

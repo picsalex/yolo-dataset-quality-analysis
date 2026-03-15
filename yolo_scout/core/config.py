@@ -9,8 +9,8 @@ from typing import Any, Dict
 
 import yaml
 
-from src.core.enums import DatasetTask, EmbeddingsModel
-from src.utils.logger import logger
+from yolo_scout.core.enums import DatasetTask, EmbeddingsModel
+from yolo_scout.utils.logger import logger
 
 
 @dataclass

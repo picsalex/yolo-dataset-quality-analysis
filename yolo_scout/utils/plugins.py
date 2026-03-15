@@ -6,7 +6,7 @@ from pathlib import Path
 import fiftyone as fo
 import yaml
 
-from src.utils.logger import logger
+from yolo_scout.utils.logger import logger
 
 _PLUGIN_SRC = Path(__file__).parents[2] / "plugins" / "image-adjuster"
 _PLUGIN_DST_NAME = "image-adjuster"

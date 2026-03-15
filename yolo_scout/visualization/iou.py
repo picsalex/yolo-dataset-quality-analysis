@@ -4,8 +4,8 @@ from shapely.geometry import Polygon, box
 
 import fiftyone as fo
 
-from src.core.enums import DatasetTask
-from src.utils.logger import logger
+from yolo_scout.core.enums import DatasetTask
+from yolo_scout.utils.logger import logger
 
 
 def compute_iou_scores(labels: fo.Label, dataset_task: DatasetTask) -> None:

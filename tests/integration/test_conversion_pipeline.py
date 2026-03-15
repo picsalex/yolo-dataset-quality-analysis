@@ -3,8 +3,8 @@
 import pytest
 import fiftyone as fo
 
-from src.dataset.loader import load_yolo_dataset
-from src.core.enums import DatasetTask
+from yolo_scout.dataset.loader import load_yolo_dataset
+from yolo_scout.core.enums import DatasetTask
 
 
 @pytest.mark.requires_dataset

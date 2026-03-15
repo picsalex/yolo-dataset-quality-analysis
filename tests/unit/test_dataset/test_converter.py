@@ -2,7 +2,7 @@
 
 import pytest
 from unittest.mock import Mock
-from src.dataset.converter import (
+from yolo_scout.dataset.converter import (
     _create_detection,
     _create_keypoint,
     _create_polygon,

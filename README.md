@@ -9,6 +9,7 @@
 
 **A comprehensive tool for analyzing and visualizing YOLO dataset quality using FiftyOne**
 
+[![PyPI](https://img.shields.io/pypi/v/yolo-scout.svg)](https://pypi.org/project/yolo-scout/)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
 [![FiftyOne](https://img.shields.io/badge/FiftyOne-Latest-orange.svg)](https://voxel51.com/fiftyone)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -25,36 +26,29 @@
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/picsalex/yolo-dataset-quality-analysis.git
-cd yolo-dataset-quality-analysis
-
-# Create and activate virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install requirements
-pip install -r requirements.txt
+pip install yolo-scout
 ```
 
 ### Basic Usage
 
 ```bash
 # Option 1: Command-line only (no config file)
-python main.py --dataset-path /path/to/dataset --dataset-task detect
+yolo scout --dataset-path /path/to/dataset --dataset-task detect
 
 # Option 2: Config file only (more details below)
-python main.py --config cfg/my_config.yaml
+yolo scout --config my_config.yaml
 
 # Option 3: Config file + overrides
-python main.py --config cfg/default.yaml --batch_size 8
+yolo scout --config default.yaml --batch_size 8
 
 # Option 4: Force reload of an existing dataset
-python main.py --dataset-path /path/to/dataset --dataset-task detect --reload
+yolo scout --dataset-path /path/to/dataset --dataset-task detect --reload
 ```
 
-If you want to use the configuration file option, you can either override the default config file located at
-`cfg/default.yaml` or create your own config file (e.g., `cfg/my_config.yaml`) with the following structure:
+> **Note**: installing `yolo-scout` registers its own `yolo` command that wraps ultralytics — all existing `yolo train`, `yolo detect`, etc. commands continue to work unchanged.
+
+If you want to use the configuration file option, you can either create a config file (e.g., `my_config.yaml`) with the
+following structure:
 
 ```yaml
 dataset:
@@ -137,8 +131,8 @@ All models use **224x224 input resolution**. This is a constraint imposed by Fif
 resolution variants (384, 512) cause preprocessing errors when computing embeddings). The 224x224 resolution provides
 excellent quality for most computer vision tasks while maintaining compatibility with FiftyOne's model zoo.
 
-| Model               | Description                                                                                                                                                                               | Training Dataset                                         |
-|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
+| Model               | Description                                                                                                                                                                                               | Training Dataset                                         |
+|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
 | **openai_clip**     | Original OpenAI CLIP model with ViT-B/32 architecture. Hosted on GitHub releases for offline usage. This is the default model and works without internet connection after first download. | [OpenAI CLIP](https://github.com/openai/CLIP)            |
 | **metaclip_400m**   | MetaCLIP model trained on curated 400M image-text pairs. Offers improved data quality and better embeddings compared to OpenAI CLIP while maintaining the same speed and architecture.    | [MetaCLIP](https://github.com/facebookresearch/MetaCLIP) |
 | **metaclip_fullcc** | MetaCLIP model trained on the full CommonCrawl dataset. Provides the highest quality embeddings among MetaCLIP variants with more diverse training data.                                  | [MetaCLIP](https://github.com/facebookresearch/MetaCLIP) |

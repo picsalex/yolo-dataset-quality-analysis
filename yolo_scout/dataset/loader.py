@@ -8,18 +8,18 @@ import fiftyone as fo
 import yaml
 from tqdm import tqdm
 
-from src.core.constants import DATASET_SPLITS, DETECTION_FIELD, get_field_name
-from src.core.enums import DatasetTask
-from src.dataset.converter import (
+from yolo_scout.core.constants import DATASET_SPLITS, DETECTION_FIELD, get_field_name
+from yolo_scout.core.enums import DatasetTask
+from yolo_scout.dataset.converter import (
     create_detection_from_keypoint,
     yolo_to_fiftyone,
 )
-from src.dataset.metadata import extract_image_metadata
-from src.utils.path_utils import get_image_name
-from src.dataset.parser import parse_yolo_annotation
-from src.utils.logger import logger
-from src.visualization.iou import compute_iou_scores
-from src.visualization.thumbnails import delete_thumbnails
+from yolo_scout.dataset.metadata import extract_image_metadata
+from yolo_scout.utils.path_utils import get_image_name
+from yolo_scout.dataset.parser import parse_yolo_annotation
+from yolo_scout.utils.logger import logger
+from yolo_scout.visualization.iou import compute_iou_scores
+from yolo_scout.visualization.thumbnails import delete_thumbnails
 
 
 @dataclass

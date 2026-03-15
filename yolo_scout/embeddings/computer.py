@@ -8,15 +8,15 @@ import fiftyone.zoo as foz
 import numpy as np
 from tqdm import tqdm
 
-from src.core.constants import (
+from yolo_scout.core.constants import (
     DETECTION_FIELD,
     IMAGE_EMBEDDINGS_KEY,
     PATCH_EMBEDDINGS_KEY,
     get_field_name,
 )
-from src.core.enums import DatasetTask
-from src.embeddings.preprocessing import extract_all_patch_crops
-from src.utils.logger import logger
+from yolo_scout.core.enums import DatasetTask
+from yolo_scout.embeddings.preprocessing import extract_all_patch_crops
+from yolo_scout.utils.logger import logger
 
 
 def compute_embeddings(

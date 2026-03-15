@@ -9,8 +9,8 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
-from src.core.enums import DatasetTask
-from src.utils.logger import logger
+from yolo_scout.core.enums import DatasetTask
+from yolo_scout.utils.logger import logger
 
 
 def create_mask_from_polyline(

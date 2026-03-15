@@ -3,8 +3,8 @@
 import os
 from typing import Dict, List, Optional
 
-from src.core.enums import DatasetTask
-from src.utils.logger import logger
+from yolo_scout.core.enums import DatasetTask
+from yolo_scout.utils.logger import logger
 
 
 def parse_yolo_annotation(

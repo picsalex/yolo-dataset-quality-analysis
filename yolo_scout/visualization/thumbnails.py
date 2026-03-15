@@ -7,7 +7,7 @@ from pathlib import Path
 import fiftyone as fo
 import fiftyone.utils.image as foui
 
-from src.utils.logger import logger
+from yolo_scout.utils.logger import logger
 
 
 def generate_thumbnails(dataset: fo.Dataset, thumbnail_dir_path: str, thumbnail_width: int) -> None:

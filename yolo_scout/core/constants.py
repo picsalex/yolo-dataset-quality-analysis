@@ -3,7 +3,7 @@
 from typing import Dict, List
 import matplotlib.pyplot as plt
 
-from src.core.enums import DatasetTask
+from yolo_scout.core.enums import DatasetTask
 
 # Field names for different annotation types
 DETECTION_FIELD = "bounding_boxes"
