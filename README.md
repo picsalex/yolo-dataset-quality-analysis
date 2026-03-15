@@ -1,7 +1,11 @@
-# 🎯 Ultralytics YOLO Dataset Quality Analysis tool
+# 🔍 YoloScout — YOLO Dataset quality analysis tool
 
 <div align="center">
-  <img src="https://github.com/ultralytics/assets/raw/main/logo/Ultralytics-logomark-color.png" width="120" alt="Ultralytics Logo">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/yolo-scout-white.png">
+    <source media="(prefers-color-scheme: light)" srcset="images/yolo-scout-black.png">
+    <img src="images/yolo-scout-black.png" alt="yolo-scout" width="500">
+  </picture>
 
 **A comprehensive tool for analyzing and visualizing YOLO dataset quality using FiftyOne**
 
