@@ -51,7 +51,7 @@ yolo-scout = "yolo_scout.cli:main"
 
 [dependency-groups]
 dev = [
-    "ruff",
+    "ruff==0.15.5",
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.12.0",
@@ -81,3 +81,6 @@ addopts = "--strict-markers --tb=short -v"
 
 [tool.ruff]
 line-length = 120
+exclude = [
+    "yolo_scout/_version.py",
+]

@@ -6910,7 +6910,7 @@ dev = [
     { name = "pytest", specifier = ">=7.4.0" },
     { name = "pytest-cov", specifier = ">=4.1.0" },
     { name = "pytest-mock", specifier = ">=3.12.0" },
-    { name = "ruff" },
+    { name = "ruff", specifier = "==0.15.5" },
 ]
 
 [[package]]
