@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 from dataclasses import dataclass
+from importlib.resources import files
 from pathlib import Path
 from typing import Any, Dict
 
@@ -190,12 +191,12 @@ def _build_config_dict(args: argparse.Namespace) -> Dict[str, Any]:
     2. User-specified values from --config YAML file (if provided)
     3. Command-line arguments (which override both defaults and config file)
     """
-    default_config_path = "cfg/default.yaml"
-    if not os.path.exists(default_config_path):
-        logger.error(f"Default configuration file not found: {default_config_path}")
+    try:
+        with files("yolo_scout").joinpath("cfg/default.yaml").open("r") as f:
+            config = yaml.safe_load(f)
+    except Exception as e:
+        logger.error(f"Default configuration file not found: {e}")
         sys.exit(1)
-
-    config = _load_yaml_config(default_config_path)
 
     # Load user-specified config file if provided
     if args.config:
