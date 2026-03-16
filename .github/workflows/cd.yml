@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Full history required for hatch-vcs to resolve the version from the tag
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7.5
         with:
           python-version: "3.11"
 
@@ -27,7 +27,7 @@ jobs:
           ls dist/
           ls dist/ | grep "py3-none-any.whl" || (echo "ERROR: expected a universal wheel (py3-none-any)" && exit 1)
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
@@ -44,31 +44,37 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7.5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install wheel (no heavy deps)
-        shell: bash
-        run: uv pip install --system dist/*.whl --no-deps
+      - name: Create isolated test venv
+        run: uv venv .test-venv --python ${{ matrix.python-version }}
 
-      - name: Smoke test — CLI entrypoint
+      - name: Install wheel + minimal deps needed for --help
         shell: bash
-        # yolo-scout --help must exit 0 and print usage.
-        run: yolo-scout --help
+        run: |
+          uv pip install --python .test-venv dist/*.whl --no-deps
+          uv pip install --python .test-venv PyYAML
+
+      - name: Smoke test — CLI entrypoint (unix)
+        if: runner.os != 'Windows'
+        run: .test-venv/bin/yolo-scout --help
+
+      - name: Smoke test — CLI entrypoint (windows)
+        if: runner.os == 'Windows'
+        run: .test-venv\Scripts\yolo-scout --help
 
   publish:
     name: Publish to PyPI
     needs: verify-install
     runs-on: ubuntu-latest
     environment: pypi
-    permissions:
-      id-token: write  # Required for OIDC trusted publishing
 
     steps:
       - uses: actions/download-artifact@v8
@@ -89,14 +95,14 @@ jobs:
     needs: publish
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Required to create a release
+      contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Full history so --generate-notes can diff against the previous tag
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
