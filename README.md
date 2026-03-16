@@ -33,19 +33,17 @@ pip install yolo-scout
 
 ```bash
 # Option 1: Command-line only (no config file)
-yolo scout --dataset-path /path/to/dataset --dataset-task detect
+yolo-scout --dataset-path /path/to/dataset --dataset-task detect
 
 # Option 2: Config file only (more details below)
-yolo scout --config my_config.yaml
+yolo-scout --config my_config.yaml
 
 # Option 3: Config file + overrides
-yolo scout --config default.yaml --batch_size 8
+yolo-scout --config default.yaml --batch-size 8
 
 # Option 4: Force reload of an existing dataset
-yolo scout --dataset-path /path/to/dataset --dataset-task detect --reload
+yolo-scout --dataset-path /path/to/dataset --dataset-task detect --reload
 ```
-
-> **Note**: installing `yolo-scout` registers its own `yolo` command that wraps ultralytics — all existing `yolo train`, `yolo detect`, etc. commands continue to work unchanged.
 
 If you want to use the configuration file option, you can either create a config file (e.g., `my_config.yaml`) with the
 following structure:

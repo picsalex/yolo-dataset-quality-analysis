@@ -46,7 +46,6 @@ Repository = "https://github.com/picsalex/yolo-dataset-quality-analysis"
 Issues = "https://github.com/picsalex/yolo-dataset-quality-analysis/issues"
 
 [project.scripts]
-yolo = "yolo_scout.yolo_entry:main"
 yolo-scout = "yolo_scout.cli:main"
 
 [dependency-groups]
