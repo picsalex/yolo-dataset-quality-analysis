@@ -191,6 +191,9 @@ cython_debug/
 # Ruff stuff:
 .ruff_cache/
 
+# hatch-vcs generated version file (written at build time, not part of source)
+yolo_scout/_version.py
+
 # PyPI configuration file
 .pypirc
 

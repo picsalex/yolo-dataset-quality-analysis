@@ -6855,7 +6855,6 @@ wheels = [
 
 [[package]]
 name = "yolo-scout"
-version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "fiftyone" },
