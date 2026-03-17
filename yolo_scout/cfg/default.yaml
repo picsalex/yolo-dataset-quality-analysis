@@ -1,71 +1,26 @@
-# YOLO Dataset Quality Analysis Configuration File
-# This file contains all default configuration parameters for the analysis
+# YOLO Scout 🔍 MIT License - https://github.com/HuggingFaceM4/yolo-scout
+# Default configuration for YOLO dataset quality analysis.
+# All parameters can be overridden on the CLI: yolo-scout key=value
 
-# ===========================
-# DATASET CONFIGURATION
-# ===========================
-dataset:
-  # Path to your YOLO dataset
-  # Can be overridden with --dataset-path argument
-  path: "/path/to/dataset"
+# Dataset settings
+data: # (str) path to YOLO dataset directory or YAML file
+task: detect # (str) dataset task: detect | classify | segment | pose | obb
+name: # (str, optional) FiftyOne dataset name; auto-generated from path if empty, also used for thumbnail directory
+reload: false # (bool) force reload dataset even if already cached in FiftyOne
 
-  # Name for the FiftyOne dataset
-  # This will be used for the dataset in FiftyOne and for thumbnail directories
-  # Can be overridden with --dataset-name argument
-  name: "default"
+# Embeddings settings
+skip_embeddings: false # (bool) skip CLIP embedding computation
+model: openai_clip # (str) embeddings model: openai_clip | metaclip_400m | metaclip_fullcc | siglip_base_224
+batch: 16 # (int) batch size for embedding computation
+mask_background: true # (bool) mask background in patch crops for segment/OBB tasks
 
-  # Dataset task type
-  # Options: classify, detect, segment, pose, obb
-  # Can be overridden with --dataset-task argument
-  task: "detect"
+# Thumbnail settings
+thumbnail_dir: yolo_scout/thumbnails # (str) directory to save thumbnails
+thumbnail_width: 800 # (int) thumbnail width in pixels; height is auto-scaled
 
-  # Force reload dataset even if it exists
-  # Set to true to reprocess everything from scratch
-  # Can be overridden with --reload argument
-  reload: false
+# Quality settings
+skip_quality: false # (bool) skip image quality metrics computation
 
-# ===========================
-# EMBEDDING CONFIGURATION
-# ===========================
-embeddings:
-  # Skip embedding computation (useful for quick visualization)
-  # Can be overridden with --skip-embeddings argument
-  skip: false
-
-  # Embedding model to use
-  # Available models are listed in src/core/enums.py
-  model: "openai_clip"
-
-  # Batch size for embedding computation
-  batch_size: 16
-
-  # Mask background in patch crops for segmentation/OBB tasks
-  # When enabled, the background is replaced with a gray color (114, 114, 114)
-  # Disable with --skip-mask-background if needed
-  mask_background: true
-
-# ===========================
-# THUMBNAIL CONFIGURATION
-# ===========================
-thumbnails:
-  # Directory to save thumbnails
-  # Will be created inside the FiftyOne dataset directory
-  dir: "thumbnails"
-
-  # Width of the thumbnails (in pixels), height is scaled proportionally
-  width: 800
-
-# ===========================
-# QUALITY CONFIGURATION
-# ===========================
-quality:
-  # Skip image quality metrics computation (blurriness, etc.)
-  # Can be overridden with --skip-quality argument
-  skip: false
-
-# ===========================
-# APP CONFIGURATION
-# ===========================
-# Port for the FiftyOne app
-# Can be overridden with --port argument
-port: 5151
+# App settings
+port: 5151 # (int) port for the FiftyOne app
+skip_launch: false # (bool) skip launching the FiftyOne app after processing

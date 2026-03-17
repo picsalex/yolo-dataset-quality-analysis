@@ -7,7 +7,7 @@
     <img src="images/yolo-scout-black.png" alt="yolo-scout" width="500">
   </picture>
 
-**A comprehensive tool for analyzing and visualizing YOLO dataset quality using FiftyOne**
+**A comprehensive tool for analyzing and visualizing YOLO dataset quality using a custom FiftyOne wrapper**
 
 [![PyPI](https://img.shields.io/pypi/v/yolo-scout.svg)](https://pypi.org/project/yolo-scout/)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
@@ -26,6 +26,7 @@
 ### Installation
 
 ```bash
+# Install the package from PyPI
 pip install yolo-scout
 ```
 
@@ -33,62 +34,59 @@ pip install yolo-scout
 
 ```bash
 # Option 1: Command-line only (no config file)
-yolo-scout --dataset-path /path/to/dataset --dataset-task detect
+yolo-scout data=/path/to/dataset task=detect
 
 # Option 2: Config file only (more details below)
-yolo-scout --config my_config.yaml
+yolo-scout config=my_config.yaml
 
 # Option 3: Config file + overrides
-yolo-scout --config default.yaml --batch-size 8
+yolo-scout config=default.yaml batch=8
 
 # Option 4: Force reload of an existing dataset
-yolo-scout --dataset-path /path/to/dataset --dataset-task detect --reload
+yolo-scout data=/path/to/dataset task=detect reload=True
 ```
 
-If you want to use the configuration file option, you can either create a config file (e.g., `my_config.yaml`) with the
-following structure:
+If you want to use the configuration file option, you can create a config file (e.g., `my_config.yaml`) with the
+following structure (all keys are optional and override the defaults):
 
 ```yaml
-dataset:
-  path: "/path/to/your/dataset"
-  name: "my_dataset"  # optional, auto-generated if not set
-  task: "detect"  # detect, segment, classify, pose, obb
-  reload: false
+data: "/path/to/your/dataset"
+task: "detect"  # detect, segment, classify, pose, obb
+name: "my_dataset"  # auto-generated from path if not set
+reload: false
 
-embeddings:
-  skip: false
-  model: "openai_clip"
-  batch_size: 16
-  mask_background: true  # Disable with --skip-mask-background if needed
+skip_embeddings: false
+model: "openai_clip"
+batch: 16
+mask_background: true
 
-thumbnails:
-  dir: "./thumbnails"
-  width: 800
+thumbnail_dir: "yolo_scout/thumbnails"
+thumbnail_width: 800
 
-quality:
-  skip: false
+skip_quality: false
 
 port: 5151
+skip_launch: false
 ```
 
 ### Command-Line Arguments
 
-| Argument                 | Type   | Default          | Description                                                                                                                                                              |
-|--------------------------|--------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--config`               | `str`  | `None`           | Path to config YAML file. Overrides default settings.                                                                                                                    |
-| `--dataset-path`         | `str`  | `None`           | Path to your dataset. Required unless provided in config file and must follow the [YOLO format](https://docs.ultralytics.com/datasets/).                                 |
-| `--dataset-task`         | `str`  | `'detect'`       | Task type: `classify`, `detect`, `segment`, `pose`, `obb`. Required unless in config. More info on the tasks [below](#-supported-tasks-and-image-metadata).              |
-| `--dataset-name`         | `str`  | `'default'`      | Name for the FiftyOne dataset. Auto-generated from path if not set.                                                                                                      |
-| `--reload`               | `bool` | `false`          | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                                |
-| `--skip-embeddings`      | `bool` | `false`          | Skip CLIP embedding computation (useful for quick visualization).                                                                                                        |
-| `--embeddings-model`     | `str`  | `'openai_clip'`  | Embeddings model to use. Possible values: `openai_clip`, `metaclip_400m`, `metaclip_fullcc`, `siglip_base_224`.                                                          |
-| `--batch-size`           | `int`  | `16`             | Batch size used during CLIP embedding computation.                                                                                                                       |
-| `--skip-mask-background` | `bool` | `false`          | Skip background masking for patch crops in segmentation/OBB tasks. Masking is enabled by default, replacing background with gray (114, 114, 114).                        |
-| `--thumbnail-width`      | `int`  | `800`            | Width (in pixels) of the generated image thumbnails in FiftyOne. The height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable thumbnail saving. |
-| `--thumbnail-dir`        | `str`  | `'./thumbnails'` | Path to the directory where the thumbnails are saved.                                                                                                                    |
-| `--port`                 | `int`  | `5151`           | Port to launch the FiftyOne app on.                                                                                                                                      |
-| `--skip-quality`         | `bool` | `false`          | Skip image quality metrics computation (blurriness, brightness, aspect_ratio, entropy).                                                                                  |
-| `--skip-launch`          | `bool` | `false`          | Skip launching the FiftyOne app after processing.                                                                                                                        |
+| Argument        | Type   | Default                   | Description                                                                                                                                                              |
+|-----------------|--------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `config`        | `str`  | `None`                    | Path to config YAML file. Overrides default settings.                                                                                                                    |
+| `data`          | `str`  | `None`                    | Path to your dataset. Required unless provided in config file and must follow the [YOLO format](https://docs.ultralytics.com/datasets/).                                 |
+| `task`          | `str`  | `'detect'`                | Task type: `classify`, `detect`, `segment`, `pose`, `obb`. Required unless in config. More info on the tasks [below](#-supported-tasks-and-image-metadata).              |
+| `name`          | `str`  | `None`                    | Name for the FiftyOne dataset. Auto-generated from path if not set.                                                                                                      |
+| `reload`        | `bool` | `False`                   | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                                |
+| `skip_embeddings` | `bool` | `False`                   | Skip CLIP embedding computation (useful for quick visualization).                                                                                                        |
+| `model`         | `str`  | `'openai_clip'`           | Embeddings model to use. Possible values: `openai_clip`, `metaclip_400m`, `metaclip_fullcc`, `siglip_base_224`.                                                          |
+| `batch`         | `int`  | `16`                      | Batch size used during CLIP embedding computation.                                                                                                                       |
+| `mask_background` | `bool` | `True`                    | Mask background in patch crops for segmentation/OBB tasks. When enabled, background is replaced with gray (114, 114, 114). Set to `False` to disable.                    |
+| `thumbnail_width` | `int`  | `800`                     | Width (in pixels) of the generated image thumbnails in FiftyOne. The height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable thumbnail saving. |
+| `thumbnail_dir` | `str`  | `'yolo_scout/thumbnails'` | Path to the directory where the thumbnails are saved.                                                                                                                    |
+| `port`          | `int`  | `5151`                    | Port to launch the FiftyOne app on.                                                                                                                                      |
+| `skip_quality`  | `bool` | `False`                   | Skip image quality metrics computation (blurriness, brightness, aspect_ratio, entropy).                                                                                  |
+| `skip_launch`   | `bool` | `False`                   | Skip launching the FiftyOne app after processing.                                                                                                                        |
 
 ## 📊 Supported tasks and image metadata
 
@@ -113,7 +111,7 @@ Also, for each image, the following metadata will be computed:
 | `metadata.mime_type`    | MIME type of the image (e.g., `image/jpeg`) |
 | `metadata.num_channels` | Number of color channels (e.g., 3 for RGB)  |
 
-The following quality metrics are computed unless `--skip-quality` is passed. All metrics operate on grayscale pixel
+The following quality metrics are computed unless `skip_quality` is passed. All metrics operate on grayscale pixel
 values and are available at both image and patch level.
 
 | Metric         | Description                                                                                                                                                                                            |

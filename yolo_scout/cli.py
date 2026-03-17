@@ -8,7 +8,6 @@ License: MIT
 """
 
 import os
-from dataclasses import asdict
 from pathlib import Path
 
 from yolo_scout.core.config import Config
@@ -21,7 +20,6 @@ def main():
     configure_external_loggers()
 
     config = Config.from_cli()
-    config.validate()
 
     from yolo_scout.dataset.loader import load_yolo_dataset
     from yolo_scout.embeddings.computer import compute_embeddings
@@ -31,16 +29,13 @@ def main():
     from yolo_scout.visualization.thumbnails import generate_thumbnails
 
     # Prepare embeddings model kwargs
-    model_kwargs = config.embeddings_model.get_model_kwargs()
+    model_kwargs = config.model.get_model_kwargs()
 
     logger.info("=" * 60)
     logger.info("🚀 FIFTYONE YOLO DATASET ANALYSIS")
     logger.info("=" * 60)
 
-    config_dict = asdict(config)
-    # Convert enum to value for cleaner output
-
-    params_str = ", ".join(f"{k}={v.value if hasattr(v, 'value') else v}" for k, v in config_dict.items())
+    params_str = ", ".join(f"{k}={v.value if hasattr(v, 'value') else v}" for k, v in vars(config).items())
     logger.info(f"configuration: {params_str}")
 
     # Step 0: Ensure required plugins are installed
@@ -49,24 +44,24 @@ def main():
     # Step 1: Load dataset
     logger.info("\n 📁 Step 1: Preparing dataset")
     was_cached, dataset = load_yolo_dataset(
-        dataset_path=config.dataset_path,
-        dataset_name=config.dataset_name,
-        dataset_task=config.dataset_task,
-        force_reload=config.force_reload,
+        dataset_path=config.data,
+        dataset_name=config.name,
+        dataset_task=config.task,
+        force_reload=config.reload,
         thumbnail_width=config.thumbnail_width,
         thumbnail_dir=config.thumbnail_dir,
     )
 
     # Step 2: Compute embeddings
     if was_cached:
-        logger.info(f"\n🧠 Step 2: Dataset '{config.dataset_name}' already loaded, skipping preparation")
+        logger.info(f"\n🧠 Step 2: Dataset '{config.name}' already loaded, skipping preparation")
     elif not config.skip_embeddings:
         logger.info("\n🧠 Step 2: Computing embeddings and visualizations")
         compute_embeddings(
             dataset=dataset,
-            dataset_task=config.dataset_task,
+            dataset_task=config.task,
             model_kwargs=model_kwargs,
-            batch_size=config.batch_size,
+            batch_size=config.batch,
             mask_background=config.mask_background,
         )
     else:
@@ -74,14 +69,12 @@ def main():
 
     # Step 3: Compute image quality metrics
     if was_cached:
-        logger.info(
-            f"\n📊 Step 3: Dataset '{config.dataset_name}' already loaded, skipping quality metrics computation"
-        )
+        logger.info(f"\n📊 Step 3: Dataset '{config.name}' already loaded, skipping quality metrics computation")
     elif not config.skip_quality:
         logger.info("\n📊 Step 3: Computing image quality metrics")
         compute_quality_metrics(
             dataset=dataset,
-            dataset_task=config.dataset_task,
+            dataset_task=config.task,
             mask_background=config.mask_background,
         )
     else:
@@ -89,7 +82,7 @@ def main():
 
     # Step 4: Generate thumbnails
     if config.thumbnail_width > 1:
-        thumbnail_dir = Path(os.path.join(config.thumbnail_dir, config.dataset_name)).resolve()
+        thumbnail_dir = Path(os.path.join(config.thumbnail_dir, config.name)).resolve()
 
         if (
             "thumbnail_width" in dataset.info
@@ -119,13 +112,13 @@ def main():
     if not config.skip_launch:
         launch_fiftyone_app(
             dataset=dataset,
-            dataset_task=config.dataset_task,
+            dataset_task=config.task,
             port=config.port,
         )
     else:
-        logger.info(f"\n✅ Processing complete. Dataset saved as: {config.dataset_name}")
+        logger.info(f"\n✅ Processing complete. Dataset saved as: {config.name}")
         logger.info("To launch the app later, run:")
-        logger.info(f"    fiftyone app launch {config.dataset_name}")
+        logger.info(f"    fiftyone app launch {config.name}")
         logger.info("=" * 60)
 
 
