@@ -36,9 +36,9 @@ def setup_logger(name: str = "yolo_analysis", level: int = logging.INFO) -> logg
             # Only modify messages from our logger, not external ones
             if record.name == name:
                 if record.levelno == logging.ERROR:
-                    record.msg = f"ERROR ❌ {record.msg}"
+                    record.msg = f"ERROR {record.msg}"
                 elif record.levelno == logging.WARNING:
-                    record.msg = f"WARNING ⚠️  {record.msg}"
+                    record.msg = f"WARNING {record.msg}"
             return super().format(record)
 
     formatter = CustomFormatter("%(message)s")

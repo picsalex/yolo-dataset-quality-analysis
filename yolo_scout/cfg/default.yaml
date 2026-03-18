@@ -1,4 +1,3 @@
-# YOLO Scout 🔍 MIT License - https://github.com/HuggingFaceM4/yolo-scout
 # Default configuration for YOLO dataset quality analysis.
 # All parameters can be overridden on the CLI: yolo-scout key=value
 

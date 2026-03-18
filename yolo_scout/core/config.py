@@ -69,7 +69,7 @@ class Config:
 
 def _load_defaults() -> Dict[str, Any]:
     try:
-        with files("yolo_scout").joinpath("cfg/default.yaml").open("r") as f:
+        with files("yolo_scout").joinpath("cfg/default.yaml").open("r", encoding="utf-8") as f:
             return yaml.safe_load(f)
     except Exception as e:
         logger.error(f"Default configuration file not found: {e}")
@@ -172,7 +172,7 @@ def _build_config_dict(args: Dict[str, Any]) -> Dict[str, Any]:
         if not os.path.exists(config_path):
             logger.error(f"Configuration file not found: {config_path}")
             sys.exit(1)
-        with open(config_path) as f:
+        with open(config_path, encoding="utf-8") as f:
             config.update(yaml.safe_load(f))  # Overwrite defaults with config file values (if any)
 
     config.update({k: v for k, v in args.items() if k != "config"})  # Overwrite using the CLI args (if any)
