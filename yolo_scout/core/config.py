@@ -109,12 +109,31 @@ _HELP_MSG = """yolo-scout commands use the following syntax:
         yolo-scout data=/path/to/dataset task=detect model=siglip_base_224 batch=32
         yolo-scout config=my_config.yaml batch=8
 
-    Docs: https://github.com/HuggingFaceM4/yolo-scout
+    Special commands:
+        yolo-scout help          Show this message
+        yolo-scout version       Print the installed version
+
+    GitHub:   https://github.com/Picsalex/yolo-scout
+    PyPI:     https://pypi.org/project/yolo-scout/
+    Issues:   https://github.com/Picsalex/yolo-scout/issues
 """
+
+
+_HELP_FLAGS = {"--help", "-h", "help"}
 
 
 def _parse_arguments() -> Dict[str, Any]:
     """Parse key=value style command-line arguments."""
+    if any(t in _HELP_FLAGS for t in sys.argv[1:]):
+        print(_HELP_MSG)
+        sys.exit(0)
+
+    if any(t == "version" for t in sys.argv[1:]):
+        from yolo_scout._version import __version__
+
+        print(f"yolo-scout {__version__}")
+        sys.exit(0)
+
     args = {}
     for token in sys.argv[1:]:
         if "=" in token:
