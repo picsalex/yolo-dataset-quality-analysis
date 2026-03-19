@@ -2,10 +2,11 @@
 # All parameters can be overridden on the CLI: yolo-scout key=value
 
 # Dataset settings
-data: # (str) path to YOLO dataset directory or YAML file
+data: # (str) path to YOLO dataset directory, data.yaml file, or ul://username/datasets/slug
 task: detect # (str) dataset task: detect | classify | segment | pose | obb
 name: # (str, optional) FiftyOne dataset name; auto-generated from path if empty, also used for thumbnail directory
 reload: false # (bool) force reload dataset even if already cached in FiftyOne
+dataset_dir: yolo_scout/datasets # (str) destination directory for datasets downloaded via URL (ul://, etc.)
 
 # Embeddings settings
 skip_embeddings: false # (bool) skip CLIP embedding computation

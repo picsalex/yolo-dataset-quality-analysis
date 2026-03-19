@@ -33,16 +33,22 @@ pip install yolo-scout
 ### Basic Usage
 
 ```bash
-# Option 1: Command-line only (no config file)
+# Option 1: Local directory
 yolo-scout data=/path/to/dataset task=detect
 
-# Option 2: Config file only (more details below)
+# Option 2: data.yaml file (resolves to parent directory automatically)
+yolo-scout data=/path/to/dataset/data.yaml task=detect
+
+# Option 3: Ultralytics Hub dataset
+ULTRALYTICS_API_KEY=<your_key> yolo-scout data=ul://username/datasets/my-dataset task=detect
+
+# Option 4: Config file only (more details below)
 yolo-scout config=my_config.yaml
 
-# Option 3: Config file + overrides
+# Option 5: Config file + overrides
 yolo-scout config=default.yaml batch=8
 
-# Option 4: Force reload of an existing dataset
+# Option 6: Force reload of an existing dataset
 yolo-scout data=/path/to/dataset task=detect reload=True
 ```
 
@@ -50,10 +56,11 @@ If you want to use the configuration file option, you can create a config file (
 following structure (all keys are optional and override the defaults):
 
 ```yaml
-data: "/path/to/your/dataset"
+data: "/path/to/your/dataset"  # directory, data.yaml, or ul://username/datasets/slug
 task: "detect"  # detect, segment, classify, pose, obb
 name: "my_dataset"  # auto-generated from path if not set
 reload: false
+dataset_dir: "yolo_scout/datasets"  # where URL-sourced datasets are downloaded
 
 skip_embeddings: false
 model: "openai_clip"
@@ -74,9 +81,10 @@ skip_launch: false
 | Argument        | Type   | Default                   | Description                                                                                                                                                              |
 |-----------------|--------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `config`        | `str`  | `None`                    | Path to config YAML file. Overrides default settings.                                                                                                                    |
-| `data`          | `str`  | `None`                    | Path to your dataset. Required unless provided in config file and must follow the [YOLO format](https://docs.ultralytics.com/datasets/).                                 |
+| `data`          | `str`  | `None`                    | Path to your dataset: local directory, `data.yaml` file, or `ul://username/datasets/slug` (Ultralytics Hub). Required unless provided in config file.                   |
 | `task`          | `str`  | `'detect'`                | Task type: `classify`, `detect`, `segment`, `pose`, `obb`. Required unless in config. More info on the tasks [below](#-supported-tasks-and-image-metadata).              |
 | `name`          | `str`  | `None`                    | Name for the FiftyOne dataset. Auto-generated from path if not set.                                                                                                      |
+| `dataset_dir`   | `str`  | `'yolo_scout/datasets'`   | Destination directory for datasets downloaded via URL (e.g. `ul://`). Only used when `data` is a URL.                                                                  |
 | `reload`        | `bool` | `False`                   | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                                |
 | `skip_embeddings` | `bool` | `False`                   | Skip CLIP embedding computation (useful for quick visualization).                                                                                                        |
 | `model`         | `str`  | `'openai_clip'`           | Embeddings model to use. Possible values: `openai_clip`, `metaclip_400m`, `metaclip_fullcc`, `siglip_base_224`.                                                          |
@@ -144,7 +152,22 @@ excellent quality for most computer vision tasks while maintaining compatibility
 All models have similar inference speed and produce 512-dimensional embeddings with full support for FiftyOne
 visualization and analysis features.
 
-## 🧩 Additional Installed Plugins
+## 🌐 Supported data sources
+
+| Format | Example                  | Notes |
+|---|--------------------------|---|
+| Local directory | `data=/path/to/dataset`  | Standard YOLO directory structure |
+| YAML file | `data=/path/to/data.yaml` | Resolves to the parent directory automatically |
+| URL | `data=<url>`             | See supported URL schemes below |
+
+The supported URL schemes for the `data` argument are:
+
+| Scheme | Example                           | Notes                                                                                    |
+|---|-----------------------------------|------------------------------------------------------------------------------------------|
+| `ul://` | `ul://<username>/datasets/<slug>` | [Ultralytics Platform](https://platform.ultralytics.com), requires `ULTRALYTICS_API_KEY` |
+
+
+## 🧩 Additional installed plugins
 
 This tool ships with a custom-built FiftyOne plugin that is automatically
 installed at startup. No manual setup required.

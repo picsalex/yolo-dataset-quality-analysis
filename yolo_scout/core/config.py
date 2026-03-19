@@ -10,6 +10,7 @@ from typing import Any, Dict
 import yaml
 
 from yolo_scout.core.enums import DatasetTask, EmbeddingsModel
+from yolo_scout.dataset.resolvers import resolve_data_path
 from yolo_scout.utils.logger import logger
 
 
@@ -22,6 +23,7 @@ class Config:
     name: str
     task: DatasetTask
     reload: bool
+    dataset_dir: str
 
     # Embeddings
     skip_embeddings: bool
@@ -55,6 +57,7 @@ class Config:
             name=cfg["name"],
             task=DatasetTask(cfg["task"]),
             reload=_to_bool(cfg["reload"]),
+            dataset_dir=cfg["dataset_dir"],
             skip_embeddings=_to_bool(cfg["skip_embeddings"]),
             model=EmbeddingsModel(cfg["model"]),
             batch=int(cfg["batch"]),
@@ -86,12 +89,14 @@ _HELP_MSG = """yolo-scout commands use the following syntax:
     Where ARGS are any number of 'arg=value' pairs or bare flags:
 
     Required:
-        data=<path>              Path to YOLO dataset directory or YAML file
+        data=<path>              Path to YOLO dataset directory, data.yaml file,
+                                   or ul://username/datasets/slug
         task=<task>              Dataset task: detect | classify | segment | pose | obb
 
     Optional:
         config=<path>            Path to YAML config file
         name=<str>               FiftyOne dataset name (default: auto from path)
+        dataset_dir=<path>        Directory for datasets downloaded via URL (default: yolo_scout/datasets)
         model=<str>              Embeddings model (default: openai_clip)
                                    options: openai_clip | metaclip_400m | metaclip_fullcc | siglip_base_224
         batch=<int>              Batch size for embeddings (default: 16)
@@ -106,6 +111,8 @@ _HELP_MSG = """yolo-scout commands use the following syntax:
 
     Examples:
         yolo-scout data=/path/to/dataset task=detect
+        yolo-scout data=/path/to/dataset/data.yaml task=detect
+        yolo-scout data=ul://username/datasets/my-dataset task=detect
         yolo-scout data=/path/to/dataset task=detect model=siglip_base_224 batch=32
         yolo-scout config=my_config.yaml batch=8
 
@@ -177,9 +184,17 @@ def _build_config_dict(args: Dict[str, Any]) -> Dict[str, Any]:
 
     config.update({k: v for k, v in args.items() if k != "config"})  # Overwrite using the CLI args (if any)
 
-    # Validate dataset path
+    # Validate and resolve dataset path
     if not config.get("data"):
         logger.error("Dataset path is required (use data=<path> or specify in config file)")
+        sys.exit(1)
+
+    try:
+        config["data"] = resolve_data_path(
+            config["data"], config["dataset_dir"], force=_to_bool(config.get("reload", False))
+        )
+    except Exception as e:
+        logger.error(str(e))
         sys.exit(1)
     if not os.path.exists(config["data"]):
         logger.error(f"Dataset path does not exist: {config['data']}")

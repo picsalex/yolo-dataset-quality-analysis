@@ -221,5 +221,6 @@ thumbnails/*
 # .DS_Store
 .DS_Store
 
-# Default thumbnail dir
-*/thumbnails/*
+# Default yolo_scout dirs
+yolo_scout/thumbnails/*
+yolo_scout/datasets/*
