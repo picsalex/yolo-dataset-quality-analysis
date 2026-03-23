@@ -9,7 +9,7 @@ import yaml
 from tqdm import tqdm
 from yolo_scout.core.config import Config
 
-from yolo_scout.core.constants import DATASET_SPLITS, DETECTION_FIELD, get_field_name
+from yolo_scout.core.constants import DATASET_SPLITS, DETECTION_FIELD, THUMBNAIL_PATH_KEY, get_field_name
 from yolo_scout.core.enums import DatasetTask
 from yolo_scout.dataset.converter import (
     create_detection_from_keypoint,
@@ -55,11 +55,6 @@ def load_yolo_dataset(config: Config) -> fo.Dataset:
     dataset = fo.Dataset(name=dataset_name, persistent=True)
 
     if dataset_task != DatasetTask.CLASSIFICATION:
-        # Add sample fields
-        dataset.add_sample_field(field_name="image_path", ftype=fo.StringField)
-        dataset.add_sample_field(field_name="label_path", ftype=fo.StringField)
-        dataset.add_sample_field(field_name="image_name", ftype=fo.StringField)
-
         # Discover splits
         splits = _discover_splits(dataset_path=dataset_path)
 
@@ -74,14 +69,13 @@ def load_yolo_dataset(config: Config) -> fo.Dataset:
         for split in splits:
             _process_split(dataset=dataset, split=split, class_names=class_names, task=dataset_task)
 
-        # Configure additional fields
-        _configure_dataset_fields(dataset=dataset, task=dataset_task)
-
     else:
         # Process classification dataset
         splits = _discover_classification_splits(dataset_path=dataset_path)
         for split in splits:
             _process_classification_split(dataset=dataset, split=split)
+
+    _configure_dataset_fields(dataset=dataset, task=dataset_task)
 
     # Configure app settings
     dataset.app_config.media_fields = ["filepath", "thumbnail_path"]
@@ -375,55 +369,40 @@ def _process_classification_split(
 
 def _configure_dataset_fields(dataset: fo.Dataset, task: DatasetTask) -> None:
     """Add additional fields to the dataset based on the task."""
-    if task == DatasetTask.CLASSIFICATION:
-        return
 
-    dataset.add_sample_field(field_name="object_count", ftype=fo.IntField)
+    dataset.add_sample_field(field_name="image_name", ftype=fo.StringField)
+    dataset.add_sample_field(field_name="image_path", ftype=fo.StringField)
+    dataset.add_sample_field(field_name="label_path", ftype=fo.StringField)
+
+    dataset.add_sample_field(field_name="aspect_ratio", ftype=fo.FloatField)
     dataset.add_sample_field(field_name="blurriness", ftype=fo.FloatField)
     dataset.add_sample_field(field_name="brightness", ftype=fo.FloatField)
-    dataset.add_sample_field(field_name="aspect_ratio", ftype=fo.FloatField)
     dataset.add_sample_field(field_name="entropy", ftype=fo.FloatField)
+    dataset.add_sample_field(field_name="object_count", ftype=fo.IntField)
 
-    try:
-        if task == DatasetTask.DETECTION or task == DatasetTask.POSE:
-            base_field = f"{DETECTION_FIELD}.detections"
-            dataset.add_sample_field(field_name=f"{base_field}.area", ftype=fo.IntField)
-            dataset.add_sample_field(field_name=f"{base_field}.width", ftype=fo.IntField)
-            dataset.add_sample_field(field_name=f"{base_field}.height", ftype=fo.IntField)
-            dataset.add_sample_field(field_name=f"{base_field}.iou_score", ftype=fo.FloatField)
-            dataset.add_sample_field(field_name=f"{base_field}.blurriness", ftype=fo.FloatField)
-            dataset.add_sample_field(field_name=f"{base_field}.brightness", ftype=fo.FloatField)
-            dataset.add_sample_field(field_name=f"{base_field}.aspect_ratio", ftype=fo.FloatField)
-            dataset.add_sample_field(field_name=f"{base_field}.entropy", ftype=fo.FloatField)
+    dataset.add_sample_field(field_name=THUMBNAIL_PATH_KEY, ftype=fo.StringField)
 
-            if task == DatasetTask.POSE:
-                dataset.add_sample_field(field_name=f"{base_field}.num_keypoints", ftype=fo.IntField)
+    if task == DatasetTask.CLASSIFICATION:
+        return
+    elif task in (DatasetTask.DETECTION, DatasetTask.POSE):
+        field_name = DETECTION_FIELD
+        base = f"{field_name}.detections"
+    else:
+        field_name = get_field_name(task=task)
+        base = f"{field_name}.polylines"
 
-        elif task == DatasetTask.SEGMENTATION:
-            field_name = get_field_name(task=task)
-            base_field = f"{field_name}.polylines"
-            dataset.add_sample_field(field_name=f"{base_field}.area", ftype=fo.IntField)
-            dataset.add_sample_field(field_name=f"{base_field}.num_keypoints", ftype=fo.IntField)
-            dataset.add_sample_field(field_name=f"{base_field}.width", ftype=fo.IntField)
-            dataset.add_sample_field(field_name=f"{base_field}.height", ftype=fo.IntField)
-            dataset.add_sample_field(field_name=f"{base_field}.iou_score", ftype=fo.FloatField)
-            dataset.add_sample_field(field_name=f"{base_field}.blurriness", ftype=fo.FloatField)
-            dataset.add_sample_field(field_name=f"{base_field}.brightness", ftype=fo.FloatField)
-            dataset.add_sample_field(field_name=f"{base_field}.aspect_ratio", ftype=fo.FloatField)
-            dataset.add_sample_field(field_name=f"{base_field}.entropy", ftype=fo.FloatField)
+    if field_name not in dataset.get_field_schema():
+        logger.warning(f"No '{field_name}' field found because no annotations were loaded, skipping field setup")
+        return
 
-        elif task == DatasetTask.OBB:
-            field_name = get_field_name(task=task)
-            base_field = f"{field_name}.polylines"
-            dataset.add_sample_field(field_name=f"{base_field}.area", ftype=fo.IntField)
-            dataset.add_sample_field(field_name=f"{base_field}.width", ftype=fo.IntField)
-            dataset.add_sample_field(field_name=f"{base_field}.height", ftype=fo.IntField)
-            dataset.add_sample_field(field_name=f"{base_field}.iou_score", ftype=fo.FloatField)
-            dataset.add_sample_field(field_name=f"{base_field}.blurriness", ftype=fo.FloatField)
-            dataset.add_sample_field(field_name=f"{base_field}.brightness", ftype=fo.FloatField)
-            dataset.add_sample_field(field_name=f"{base_field}.aspect_ratio", ftype=fo.FloatField)
-            dataset.add_sample_field(field_name=f"{base_field}.entropy", ftype=fo.FloatField)
+    dataset.add_sample_field(field_name=f"{base}.area", ftype=fo.IntField)
+    dataset.add_sample_field(field_name=f"{base}.width", ftype=fo.IntField)
+    dataset.add_sample_field(field_name=f"{base}.height", ftype=fo.IntField)
+    dataset.add_sample_field(field_name=f"{base}.aspect_ratio", ftype=fo.FloatField)
+    dataset.add_sample_field(field_name=f"{base}.blurriness", ftype=fo.FloatField)
+    dataset.add_sample_field(field_name=f"{base}.brightness", ftype=fo.FloatField)
+    dataset.add_sample_field(field_name=f"{base}.entropy", ftype=fo.FloatField)
+    dataset.add_sample_field(field_name=f"{base}.iou_score", ftype=fo.FloatField)
 
-    except ValueError as e:
-        logger.error(f"Failed• to add external field. Dataset task '{str(task)}' may be incorrect: {e}")
-        raise
+    if task in (DatasetTask.POSE, DatasetTask.SEGMENTATION):
+        dataset.add_sample_field(field_name=f"{base}.num_keypoints", ftype=fo.IntField)

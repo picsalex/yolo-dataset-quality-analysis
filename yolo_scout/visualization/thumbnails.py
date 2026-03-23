@@ -7,6 +7,7 @@ from pathlib import Path
 import fiftyone as fo
 import fiftyone.utils.image as foui
 
+from yolo_scout.core.constants import THUMBNAIL_PATH_KEY
 from yolo_scout.utils.logger import logger
 
 
@@ -57,7 +58,7 @@ def generate_thumbnails(dataset: fo.Dataset, thumbnail_dir_path: str, thumbnail_
                     size=size,
                     output_dir=thumbnail_dir_path,
                     rel_dir=common_base,
-                    output_field="thumbnail_path",
+                    output_field=THUMBNAIL_PATH_KEY,
                 )
 
         dataset.info["thumbnail_width"] = thumbnail_width

@@ -15,6 +15,7 @@ OBB_FIELD = "obb_bounding_boxes"
 # Brain keys for embeddings
 IMAGE_EMBEDDINGS_KEY = "images_embeddings"
 PATCH_EMBEDDINGS_KEY = "patches_embeddings"
+THUMBNAIL_PATH_KEY = "thumbnail_path"
 
 # Ultralytics color palette
 ULTRALYTICS_COLORS = [

@@ -160,6 +160,7 @@ visualization and analysis features.
 |---|--------------------------|---|
 | Local directory | `data=/path/to/dataset`  | Standard YOLO directory structure |
 | YAML file | `data=/path/to/data.yaml` | Resolves to the parent directory automatically |
+| NDJSON file | `data=/path/to/file.ndjson` | Pre-downloaded Ultralytics Platform export; images are downloaded and converted to YOLO layout |
 | URL | `data=<url>`             | See supported URL schemes below |
 
 The supported URL schemes for the `data` argument are:
