@@ -41,6 +41,7 @@ class Config:
     # App
     port: int
     skip_launch: bool
+    verbose: bool
 
     @classmethod
     def from_cli(cls) -> "Config":
@@ -67,6 +68,7 @@ class Config:
             skip_quality=_to_bool(cfg["skip_quality"]),
             port=int(cfg["port"]),
             skip_launch=_to_bool(cfg["skip_launch"]),
+            verbose=_to_bool(cfg["verbose"]),
         )
 
 

@@ -50,19 +50,31 @@ class UltralyticsResolver(DatasetResolver):
         return uri.startswith("ul://")
 
     def resolve(self, uri: str, dataset_dir: str, force: bool = False) -> str:
+        from yolo_scout.utils.logger import logger
+
         parts = uri[len("ul://") :].split("/")
         if len(parts) != 3 or parts[1] != "datasets":
-            raise ValueError(f"Invalid ul:// URI '{uri}'. Expected: ul://username/datasets/slug")
+            raise ValueError(
+                f"The provided path '{uri}' is invalid:\n"
+                f"  Expected : ul://<username>/datasets/<slug>\n"
+                f"  Example  : ul://john/datasets/my-dataset"
+            )
         username, _, slug = parts
 
         api_key = os.environ.get("ULTRALYTICS_API_KEY")
         if not api_key:
-            raise ValueError("ULTRALYTICS_API_KEY environment variable is required for ul:// URIs")
+            raise ValueError(
+                f"The provided path '{uri}' requires to set ULTRALYTICS_API_KEY:\n"
+                "  1. Get your key at https://platform.ultralytics.com/settings\n"
+                "  2. Export it: export ULTRALYTICS_API_KEY=<your_key>"
+            )
 
         dest = Path(dataset_dir) / slug
         if force and dest.exists():
+            logger.info(f"Reloading dataset '{slug}', current dataset version has been removed")
             shutil.rmtree(dest)
         elif (dest / "data.yaml").exists():
+            logger.info(f"Using dataset '{slug}' at '{dest}'. Set reload=True to redownload and recompute everything")
             return str(dest)
 
         dest.mkdir(parents=True, exist_ok=True)
@@ -72,13 +84,18 @@ class UltralyticsResolver(DatasetResolver):
             headers={"Authorization": f"Bearer {api_key}"},
         )
         try:
+            logger.info(f"Requesting export for dataset '{slug}' from the Ultralytics Platform")
             with urllib.request.urlopen(req, timeout=3600) as resp:
                 ndjson_url = resp.geturl()
+
         except urllib.error.HTTPError as e:
             _handle_http_error(e, uri)
 
+        from yolo_scout.utils.logger import logger
+
         ndjson_path = dest / f"{slug}.ndjson"
         urllib.request.urlretrieve(ndjson_url, ndjson_path)  # noqa: S310
+        logger.info(f"Retrieved '{slug}.ndjson', processing and downloading images")
         _ndjson_to_yolo(ndjson_path, dest)
         ndjson_path.unlink()
 

@@ -7,116 +7,43 @@ Author: Alexis Béduneau
 License: MIT
 """
 
-import os
-from pathlib import Path
-
-from yolo_scout.core.config import Config
+from yolo_scout.utils.decorators import pipeline
 from yolo_scout.utils.logger import configure_external_loggers, logger
+from yolo_scout.pipeline.steps import (
+    validate,
+    prepare_run,
+    prepare_plugins,
+    run_load_dataset,
+    run_embeddings,
+    run_quality_metrics,
+    run_thumbnails,
+)
 
 
+@pipeline
 def main():
-    """Main entry point for the application."""
-    # Configure logging for external libraries
     configure_external_loggers()
 
-    config = Config.from_cli()
+    logger.info("=" * 60)
+    logger.info("FIFTYONE YOLO DATASET ANALYSIS")
+    logger.info("=" * 60)
 
-    from yolo_scout.dataset.loader import load_yolo_dataset
-    from yolo_scout.embeddings.computer import compute_embeddings
-    from yolo_scout.utils.plugins import ensure_plugins
+    config = validate(verbose=True)
+    recompute = prepare_run(config=config)
+
+    prepare_plugins()
+
+    dataset = run_load_dataset(config=config)
+    run_embeddings(dataset=dataset, config=config, recompute=recompute)
+    run_quality_metrics(dataset=dataset, config=config, recompute=recompute)
+    run_thumbnails(dataset=dataset, config=config, recompute=recompute)
+
     from yolo_scout.visualization.fiftyone_ops import launch_fiftyone_app
-    from yolo_scout.visualization.quality import compute_quality_metrics
-    from yolo_scout.visualization.thumbnails import generate_thumbnails
 
-    # Prepare embeddings model kwargs
-    model_kwargs = config.model.get_model_kwargs()
-
-    logger.info("=" * 60)
-    logger.info("🚀 FIFTYONE YOLO DATASET ANALYSIS")
-    logger.info("=" * 60)
-
-    params_str = ", ".join(f"{k}={v.value if hasattr(v, 'value') else v}" for k, v in vars(config).items())
-    logger.info(f"configuration: {params_str}")
-
-    # Step 0: Ensure required plugins are installed
-    ensure_plugins()
-
-    # Step 1: Load dataset
-    logger.info("\n 📁 Step 1: Preparing dataset")
-    was_cached, dataset = load_yolo_dataset(
-        dataset_path=config.data,
-        dataset_name=config.name,
-        dataset_task=config.task,
-        force_reload=config.reload,
-        thumbnail_width=config.thumbnail_width,
-        thumbnail_dir=config.thumbnail_dir,
-    )
-
-    # Step 2: Compute embeddings
-    if was_cached:
-        logger.info(f"\n🧠 Step 2: Dataset '{config.name}' already loaded, skipping preparation")
-    elif not config.skip_embeddings:
-        logger.info("\n🧠 Step 2: Computing embeddings and visualizations")
-        compute_embeddings(
-            dataset=dataset,
-            dataset_task=config.task,
-            model_kwargs=model_kwargs,
-            batch_size=config.batch,
-            mask_background=config.mask_background,
-        )
-    else:
-        logger.info("\n🧠 Step 2: Skipping embeddings computation (user requested)")
-
-    # Step 3: Compute image quality metrics
-    if was_cached:
-        logger.info(f"\n📊 Step 3: Dataset '{config.name}' already loaded, skipping quality metrics computation")
-    elif not config.skip_quality:
-        logger.info("\n📊 Step 3: Computing image quality metrics")
-        compute_quality_metrics(
-            dataset=dataset,
-            dataset_task=config.task,
-            mask_background=config.mask_background,
-        )
-    else:
-        logger.info("\n📊 Step 3: Skipping image quality metrics (user requested)")
-
-    # Step 4: Generate thumbnails
-    if config.thumbnail_width > 1:
-        thumbnail_dir = Path(os.path.join(config.thumbnail_dir, config.name)).resolve()
-
-        if (
-            "thumbnail_width" in dataset.info
-            and dataset.info["thumbnail_width"] == config.thumbnail_width
-            and was_cached
-            and os.path.exists(thumbnail_dir)
-        ):
-            logger.info(
-                f"\n🖼️ Step 4: Thumbnails of size ({config.thumbnail_width}, -1) already exist, skipping generation"
-            )
-        else:
-            logger.info(
-                f"\n🖼️ Step 4: Generating thumbnails ({config.thumbnail_width}, -1) for optimized FiftyOne dashboard"
-            )
-
-            generate_thumbnails(
-                dataset=dataset,
-                thumbnail_dir_path=str(thumbnail_dir),
-                thumbnail_width=config.thumbnail_width,
-            )
-    else:
-        logger.info(
-            f"\n🖼️ Step 4: Skipping thumbnail generation (the provided width is {config.thumbnail_width} but must be > 1)"
-        )
-
-    # Step 5: Launch FiftyOne app
     if not config.skip_launch:
-        launch_fiftyone_app(
-            dataset=dataset,
-            dataset_task=config.task,
-            port=config.port,
-        )
+        launch_fiftyone_app(dataset=dataset, dataset_task=config.task, port=config.port)
     else:
-        logger.info(f"\n✅ Processing complete. Dataset saved as: {config.name}")
+        logger.info(f"\nProcessing complete. Dataset saved as: {config.name}")
         logger.info("To launch the app later, run:")
         logger.info(f"    fiftyone app launch {config.name}")
         logger.info("=" * 60)

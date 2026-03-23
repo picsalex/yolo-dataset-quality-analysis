@@ -74,6 +74,7 @@ skip_quality: false
 
 port: 5151
 skip_launch: false
+verbose: false
 ```
 
 ### Command-Line Arguments
@@ -95,6 +96,7 @@ skip_launch: false
 | `port`          | `int`  | `5151`                    | Port to launch the FiftyOne app on.                                                                                                                                      |
 | `skip_quality`  | `bool` | `False`                   | Skip image quality metrics computation (blurriness, brightness, aspect_ratio, entropy).                                                                                  |
 | `skip_launch`   | `bool` | `False`                   | Skip launching the FiftyOne app after processing.                                                                                                                        |
+| `verbose`       | `bool` | `False`                   | Enable debug logging.                                                                                                                                                    |
 
 ## 📊 Supported tasks and image metadata
 

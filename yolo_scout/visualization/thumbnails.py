@@ -60,6 +60,8 @@ def generate_thumbnails(dataset: fo.Dataset, thumbnail_dir_path: str, thumbnail_
                     output_field="thumbnail_path",
                 )
 
+        dataset.info["thumbnail_width"] = thumbnail_width
+        dataset.save()
         logger.info("Thumbnails generated successfully")
 
     except Exception as e:

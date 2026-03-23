@@ -2,11 +2,12 @@
 
 import os
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import fiftyone as fo
 import yaml
 from tqdm import tqdm
+from yolo_scout.core.config import Config
 
 from yolo_scout.core.constants import DATASET_SPLITS, DETECTION_FIELD, get_field_name
 from yolo_scout.core.enums import DatasetTask
@@ -19,7 +20,6 @@ from yolo_scout.utils.path_utils import get_image_name
 from yolo_scout.dataset.parser import parse_yolo_annotation
 from yolo_scout.utils.logger import logger
 from yolo_scout.visualization.iou import compute_iou_scores
-from yolo_scout.visualization.thumbnails import delete_thumbnails
 
 
 @dataclass
@@ -31,54 +31,21 @@ class SplitInfo:
     labels_dir: Optional[str]
 
 
-def load_yolo_dataset(
-    dataset_path: str,
-    dataset_name: str,
-    dataset_task: DatasetTask,
-    force_reload: bool,
-    thumbnail_width: int,
-    thumbnail_dir: str,
-) -> Tuple[bool, fo.Dataset]:
-    """
-    Load a YOLO dataset into FiftyOne.
+def load_yolo_dataset(config: Config) -> fo.Dataset:
+    """Load a YOLO dataset into FiftyOne, returning a cached one if it exists."""
+    dataset_path = config.data
+    dataset_name = config.name
+    dataset_task = config.task
 
-    Args:
-        dataset_path: Path to YOLO dataset
-        dataset_name: Name for the FiftyOne dataset
-        dataset_task: Dataset task type
-        force_reload: Force reload even if dataset exists
-        thumbnail_width: Width for thumbnail generation
-        thumbnail_dir: Base directory for thumbnails
-
-    Returns:
-        Tuple of (was_cached, dataset)
-    """
-    # Check if dataset already exists
     if dataset_name in fo.list_datasets():
-        if not force_reload:
-            logger.info("Loading existing dataset...")
-            dataset = fo.load_dataset(name=dataset_name)
-            if len(dataset) == 0:
-                logger.warning(
-                    f"Cached dataset '{dataset_name}' is empty, likely due to a previously interrupted run. "
-                    "Reloading from scratch..."
-                )
-                fo.delete_dataset(name=dataset_name)
-                delete_thumbnails(dataset_name=dataset_name, thumbnail_dir=thumbnail_dir)
-            else:
-                return True, dataset
-        else:
-            logger.info("Force reload enabled, deleting existing dataset...")
-            fo.delete_dataset(name=dataset_name)
+        logger.info(f"Loading existing dataset '{dataset_name}'")
+        return fo.load_dataset(name=dataset_name)
 
-            # Also delete associated thumbnails
-            delete_thumbnails(dataset_name=dataset_name, thumbnail_dir=thumbnail_dir)
-
-    logger.info(f"Creating new dataset '{dataset_name}'...")
+    logger.info(f"Creating new dataset '{dataset_name}' from path: {dataset_path} with task: {dataset_task.name}")
 
     # Validate dataset path
     if not os.path.isdir(dataset_path):
-        raise NotADirectoryError(f"Dataset path '{dataset_path}' does not exist or is not a directory.")
+        raise NotADirectoryError(f"Dataset path '{dataset_path}' does not exist or is not a directory")
 
     # Load class names
     class_names = _load_class_names(dataset_path=dataset_path, dataset_task=dataset_task)
@@ -120,17 +87,12 @@ def load_yolo_dataset(
     dataset.app_config.media_fields = ["filepath", "thumbnail_path"]
     dataset.app_config.grid_media_field = "thumbnail_path"
 
-    # Store metadata
-    dataset.info = {
-        "class_names": class_names,
-        "thumbnail_width": thumbnail_width,
-    }
-
+    dataset.info = {"class_names": class_names}
     dataset.save()
 
     logger.info(f"Dataset created with {len(dataset)} total samples")
 
-    return False, dataset
+    return dataset
 
 
 def _load_class_names(dataset_path: str, dataset_task: DatasetTask) -> List[str]:

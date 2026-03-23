@@ -24,3 +24,4 @@ skip_quality: false # (bool) skip image quality metrics computation
 # App settings
 port: 5151 # (int) port for the FiftyOne app
 skip_launch: false # (bool) skip launching the FiftyOne app after processing
+verbose: false # (bool) enable debug logging

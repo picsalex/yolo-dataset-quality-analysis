@@ -1,11 +1,14 @@
 """Logging configuration for YOLO Dataset Quality Analysis Tool."""
 
 import logging
-import sys
 import warnings
 
 
 def setup_logger(name: str = "yolo_analysis", level: int = logging.INFO) -> logging.Logger:
+    import sys
+
+    if any(arg in ("verbose", "verbose=true", "verbose=True", "verbose=1") for arg in sys.argv[1:]):
+        level = logging.DEBUG
     """
     Configure and return a logger with consistent formatting.
 
