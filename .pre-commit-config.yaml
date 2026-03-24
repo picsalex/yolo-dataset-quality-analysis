@@ -8,17 +8,17 @@ repos:
       - id: check-yaml
       - id: end-of-file-fixer
       - id: trailing-whitespace
+      - id: check-executables-have-shebangs
+      - id: check-case-conflict
+      - id: check-added-large-files
+      - id: detect-private-key
+      - id: pretty-format-json
+      - id: mixed-line-ending
 
-  - repo: local
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.7
     hooks:
-      - id: ruff-format
-        name: ruff format
-        language: system
-        entry: uv run ruff format
-        types: [ python ]
-
       - id: ruff
-        name: ruff lint
-        language: system
-        entry: uv run ruff check --fix
-        types: [ python ]
+        args: [--fix]
+      - id: ruff-format
+        types_or: [python, pyi, jupyter]
