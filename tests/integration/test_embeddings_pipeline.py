@@ -3,15 +3,31 @@
 import pytest
 import fiftyone as fo
 
+from yolo_scout.core.config import Config
+from yolo_scout.core.enums import DatasetTask, EmbeddingsModel
+from yolo_scout.core.constants import IMAGE_EMBEDDINGS_KEY, PATCH_EMBEDDINGS_KEY, DETECTION_FIELD, get_field_name
 from yolo_scout.dataset.loader import load_yolo_dataset
 from yolo_scout.embeddings.computer import compute_embeddings
-from yolo_scout.core.enums import DatasetTask, EmbeddingsModel
-from yolo_scout.core.constants import (
-    IMAGE_EMBEDDINGS_KEY,
-    PATCH_EMBEDDINGS_KEY,
-    DETECTION_FIELD,
-    get_field_name,
-)
+
+
+def _make_config(data: str, task: DatasetTask, name: str, tmp_path) -> Config:
+    return Config(
+        data=data,
+        task=task,
+        name=name,
+        reload=False,
+        dataset_dir=str(tmp_path / "datasets"),
+        skip_embeddings=True,
+        model=EmbeddingsModel.OPENAI_CLIP,
+        batch=16,
+        mask_background=True,
+        thumbnail_dir=str(tmp_path / "thumbnails"),
+        thumbnail_width=100,
+        skip_quality=True,
+        port=5151,
+        skip_launch=True,
+        verbose=False,
+    )
 
 
 @pytest.mark.requires_dataset
@@ -27,31 +43,19 @@ class TestImageEmbeddings:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        # Load dataset
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path))
 
         try:
-            # Compute embeddings with small batch for speed
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
             compute_embeddings(
                 dataset=dataset,
                 dataset_task=DatasetTask.DETECTION,
-                model_kwargs=model_kwargs,
+                model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                 batch_size=4,
             )
 
-            # Verify image embeddings brain key exists
             brain_keys = dataset.list_brain_runs()
             assert IMAGE_EMBEDDINGS_KEY in brain_keys, f"Image embeddings key not found. Available keys: {brain_keys}"
 
-            # Verify embeddings are stored
             brain_info = dataset.get_brain_info(IMAGE_EMBEDDINGS_KEY)
             assert brain_info is not None
             assert hasattr(brain_info, "config")
@@ -62,6 +66,13 @@ class TestImageEmbeddings:
     def test_image_embeddings_for_all_tasks(self, all_datasets, tmp_path):
         """Test that image embeddings work for all dataset tasks."""
         model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
+        task_map = {
+            "detect": DatasetTask.DETECTION,
+            "classify": DatasetTask.CLASSIFICATION,
+            "segment": DatasetTask.SEGMENTATION,
+            "pose": DatasetTask.POSE,
+            "obb": DatasetTask.OBB,
+        }
 
         for task_name, dataset_path in all_datasets.items():
             dataset_name = f"test_img_emb_{task_name}"
@@ -69,36 +80,12 @@ class TestImageEmbeddings:
             if dataset_name in fo.list_datasets():
                 fo.delete_dataset(dataset_name)
 
-            # Map task_name to DatasetTask enum
-            task_map = {
-                "detect": DatasetTask.DETECTION,
-                "classify": DatasetTask.CLASSIFICATION,
-                "segment": DatasetTask.SEGMENTATION,
-                "pose": DatasetTask.POSE,
-                "obb": DatasetTask.OBB,
-            }
             task = task_map[task_name]
 
             try:
-                # Load dataset
-                _, dataset = load_yolo_dataset(
-                    dataset_path=str(dataset_path),
-                    dataset_name=dataset_name,
-                    dataset_task=task,
-                    force_reload=True,
-                    thumbnail_width=100,
-                    thumbnail_dir=str(tmp_path / "thumbnails"),
-                )
+                dataset = load_yolo_dataset(_make_config(str(dataset_path), task, dataset_name, tmp_path))
+                compute_embeddings(dataset=dataset, dataset_task=task, model_kwargs=model_kwargs, batch_size=4)
 
-                # Compute embeddings
-                compute_embeddings(
-                    dataset=dataset,
-                    dataset_task=task,
-                    model_kwargs=model_kwargs,
-                    batch_size=4,
-                )
-
-                # Verify image embeddings exist
                 brain_keys = dataset.list_brain_runs()
                 assert IMAGE_EMBEDDINGS_KEY in brain_keys, f"Image embeddings missing for {task_name}"
 
@@ -113,29 +100,19 @@ class TestImageEmbeddings:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path))
 
         try:
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
             compute_embeddings(
                 dataset=dataset,
                 dataset_task=DatasetTask.DETECTION,
-                model_kwargs=model_kwargs,
+                model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                 batch_size=4,
             )
 
-            # Check that brain run has visualization
             brain_info = dataset.get_brain_info(IMAGE_EMBEDDINGS_KEY)
             assert brain_info is not None
 
-            # Verify config contains visualization method
             config = brain_info.config
             assert hasattr(config, "method") or hasattr(config, "embeddings_field")
 
@@ -156,31 +133,19 @@ class TestPatchEmbeddings:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path))
 
         try:
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
             compute_embeddings(
                 dataset=dataset,
                 dataset_task=DatasetTask.DETECTION,
-                model_kwargs=model_kwargs,
+                model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                 batch_size=4,
             )
 
-            # Verify patch embeddings brain key exists
             brain_keys = dataset.list_brain_runs()
             assert PATCH_EMBEDDINGS_KEY in brain_keys, f"Patch embeddings key not found. Available keys: {brain_keys}"
-
-            # Verify patch embeddings use correct field
-            brain_info = dataset.get_brain_info(PATCH_EMBEDDINGS_KEY)
-            assert brain_info is not None
+            assert dataset.get_brain_info(PATCH_EMBEDDINGS_KEY) is not None
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -192,33 +157,18 @@ class TestPatchEmbeddings:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path))
 
         try:
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
             compute_embeddings(
                 dataset=dataset,
                 dataset_task=DatasetTask.DETECTION,
-                model_kwargs=model_kwargs,
+                model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                 batch_size=4,
             )
 
-            # Get brain info
-            brain_info = dataset.get_brain_info(PATCH_EMBEDDINGS_KEY)
-            config = brain_info.config
-
-            # Should use bounding_boxes field
-            patches_field = config.patches_field
-            assert patches_field == DETECTION_FIELD, (
-                f"Expected patches_field='{DETECTION_FIELD}', got '{patches_field}'"
-            )
+            patches_field = dataset.get_brain_info(PATCH_EMBEDDINGS_KEY).config.patches_field
+            assert patches_field == DETECTION_FIELD, f"Expected '{DETECTION_FIELD}', got '{patches_field}'"
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -230,32 +180,21 @@ class TestPatchEmbeddings:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(segment_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.SEGMENTATION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
+        dataset = load_yolo_dataset(
+            _make_config(str(segment_dataset), DatasetTask.SEGMENTATION, dataset_name, tmp_path)
         )
 
         try:
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
             compute_embeddings(
                 dataset=dataset,
                 dataset_task=DatasetTask.SEGMENTATION,
-                model_kwargs=model_kwargs,
+                model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                 batch_size=4,
             )
 
-            # Get brain info
-            brain_info = dataset.get_brain_info(PATCH_EMBEDDINGS_KEY)
-            config = brain_info.config
-
-            # Should use seg_polygons field
-            patches_field = config.patches_field
-            expected_field = get_field_name(DatasetTask.SEGMENTATION)
-            assert patches_field == expected_field, f"Expected patches_field='{expected_field}', got '{patches_field}'"
+            patches_field = dataset.get_brain_info(PATCH_EMBEDDINGS_KEY).config.patches_field
+            expected = get_field_name(DatasetTask.SEGMENTATION)
+            assert patches_field == expected, f"Expected '{expected}', got '{patches_field}'"
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -267,33 +206,18 @@ class TestPatchEmbeddings:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(pose_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.POSE,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(pose_dataset), DatasetTask.POSE, dataset_name, tmp_path))
 
         try:
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
             compute_embeddings(
                 dataset=dataset,
                 dataset_task=DatasetTask.POSE,
-                model_kwargs=model_kwargs,
+                model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                 batch_size=4,
             )
 
-            # Get brain info
-            brain_info = dataset.get_brain_info(PATCH_EMBEDDINGS_KEY)
-            config = brain_info.config
-
-            # Pose should use bounding_boxes, NOT pose_keypoints
-            patches_field = config.patches_field
-            assert patches_field == DETECTION_FIELD, (
-                f"Expected patches_field='{DETECTION_FIELD}' for pose, got '{patches_field}'"
-            )
+            patches_field = dataset.get_brain_info(PATCH_EMBEDDINGS_KEY).config.patches_field
+            assert patches_field == DETECTION_FIELD, f"Expected '{DETECTION_FIELD}' for pose, got '{patches_field}'"
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -305,32 +229,19 @@ class TestPatchEmbeddings:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(obb_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.OBB,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(obb_dataset), DatasetTask.OBB, dataset_name, tmp_path))
 
         try:
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
             compute_embeddings(
                 dataset=dataset,
                 dataset_task=DatasetTask.OBB,
-                model_kwargs=model_kwargs,
+                model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                 batch_size=4,
             )
 
-            # Get brain info
-            brain_info = dataset.get_brain_info(PATCH_EMBEDDINGS_KEY)
-            config = brain_info.config
-
-            # Should use obb_bounding_boxes field
-            patches_field = config.patches_field
-            expected_field = get_field_name(DatasetTask.OBB)
-            assert patches_field == expected_field, f"Expected patches_field='{expected_field}', got '{patches_field}'"
+            patches_field = dataset.get_brain_info(PATCH_EMBEDDINGS_KEY).config.patches_field
+            expected = get_field_name(DatasetTask.OBB)
+            assert patches_field == expected, f"Expected '{expected}', got '{patches_field}'"
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -342,25 +253,18 @@ class TestPatchEmbeddings:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(classify_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.CLASSIFICATION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
+        dataset = load_yolo_dataset(
+            _make_config(str(classify_dataset), DatasetTask.CLASSIFICATION, dataset_name, tmp_path)
         )
 
         try:
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
             compute_embeddings(
                 dataset=dataset,
                 dataset_task=DatasetTask.CLASSIFICATION,
-                model_kwargs=model_kwargs,
+                model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                 batch_size=4,
             )
 
-            # Classification should only have image embeddings, not patch embeddings
             brain_keys = dataset.list_brain_runs()
             assert IMAGE_EMBEDDINGS_KEY in brain_keys, "Image embeddings should exist for classification"
             assert PATCH_EMBEDDINGS_KEY not in brain_keys, "Patch embeddings should NOT exist for classification"
@@ -377,22 +281,14 @@ class TestEmbeddingsFieldMapping:
 
     def test_field_mapping_consistency(self):
         """Test that field mapping is consistent across tasks."""
-        # Detection uses bounding_boxes
         assert get_field_name(DatasetTask.DETECTION) == DETECTION_FIELD
-
-        # Segmentation uses seg_polygons
         assert get_field_name(DatasetTask.SEGMENTATION) != DETECTION_FIELD
-
-        # OBB uses obb_bounding_boxes
         assert get_field_name(DatasetTask.OBB) != DETECTION_FIELD
-
-        # Pose uses pose_keypoints for labels, but bounding_boxes for patches
         assert get_field_name(DatasetTask.POSE) != DETECTION_FIELD
 
     def test_all_non_classification_tasks_have_patches(self, all_datasets, tmp_path):
         """Test that all non-classification tasks compute patch embeddings."""
         model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
-
         task_map = {
             "detect": DatasetTask.DETECTION,
             "segment": DatasetTask.SEGMENTATION,
@@ -408,23 +304,9 @@ class TestEmbeddingsFieldMapping:
                 fo.delete_dataset(dataset_name)
 
             try:
-                _, dataset = load_yolo_dataset(
-                    dataset_path=str(dataset_path),
-                    dataset_name=dataset_name,
-                    dataset_task=task,
-                    force_reload=True,
-                    thumbnail_width=100,
-                    thumbnail_dir=str(tmp_path / "thumbnails"),
-                )
+                dataset = load_yolo_dataset(_make_config(str(dataset_path), task, dataset_name, tmp_path))
+                compute_embeddings(dataset=dataset, dataset_task=task, model_kwargs=model_kwargs, batch_size=4)
 
-                compute_embeddings(
-                    dataset=dataset,
-                    dataset_task=task,
-                    model_kwargs=model_kwargs,
-                    batch_size=4,
-                )
-
-                # All non-classification tasks should have both embeddings
                 brain_keys = dataset.list_brain_runs()
                 assert IMAGE_EMBEDDINGS_KEY in brain_keys, f"Missing image embeddings for {task_name}"
                 assert PATCH_EMBEDDINGS_KEY in brain_keys, f"Missing patch embeddings for {task_name}"
@@ -447,29 +329,20 @@ class TestBackgroundMasking:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(segment_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.SEGMENTATION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
+        dataset = load_yolo_dataset(
+            _make_config(str(segment_dataset), DatasetTask.SEGMENTATION, dataset_name, tmp_path)
         )
 
         try:
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
-            # Test with default (mask_background=True)
             compute_embeddings(
                 dataset=dataset,
                 dataset_task=DatasetTask.SEGMENTATION,
-                model_kwargs=model_kwargs,
+                model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                 batch_size=4,
                 mask_background=True,
             )
 
-            # Should successfully compute embeddings
-            brain_keys = dataset.list_brain_runs()
-            assert PATCH_EMBEDDINGS_KEY in brain_keys
+            assert PATCH_EMBEDDINGS_KEY in dataset.list_brain_runs()
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -481,29 +354,20 @@ class TestBackgroundMasking:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(segment_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.SEGMENTATION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
+        dataset = load_yolo_dataset(
+            _make_config(str(segment_dataset), DatasetTask.SEGMENTATION, dataset_name, tmp_path)
         )
 
         try:
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
-            # Test with mask_background=False
             compute_embeddings(
                 dataset=dataset,
                 dataset_task=DatasetTask.SEGMENTATION,
-                model_kwargs=model_kwargs,
+                model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                 batch_size=4,
                 mask_background=False,
             )
 
-            # Should successfully compute embeddings without masking
-            brain_keys = dataset.list_brain_runs()
-            assert PATCH_EMBEDDINGS_KEY in brain_keys
+            assert PATCH_EMBEDDINGS_KEY in dataset.list_brain_runs()
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -515,29 +379,18 @@ class TestBackgroundMasking:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(obb_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.OBB,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(obb_dataset), DatasetTask.OBB, dataset_name, tmp_path))
 
         try:
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
-            # Test both enabled and disabled
             for mask_bg in [True, False]:
                 compute_embeddings(
                     dataset=dataset,
                     dataset_task=DatasetTask.OBB,
-                    model_kwargs=model_kwargs,
+                    model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                     batch_size=4,
                     mask_background=mask_bg,
                 )
-
-                brain_keys = dataset.list_brain_runs()
-                assert PATCH_EMBEDDINGS_KEY in brain_keys
+                assert PATCH_EMBEDDINGS_KEY in dataset.list_brain_runs()
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -549,28 +402,18 @@ class TestBackgroundMasking:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path))
 
         try:
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
-            # For detection, mask_background shouldn't matter
             compute_embeddings(
                 dataset=dataset,
                 dataset_task=DatasetTask.DETECTION,
-                model_kwargs=model_kwargs,
+                model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                 batch_size=4,
-                mask_background=False,  # Should have no effect
+                mask_background=False,
             )
 
-            brain_keys = dataset.list_brain_runs()
-            assert PATCH_EMBEDDINGS_KEY in brain_keys
+            assert PATCH_EMBEDDINGS_KEY in dataset.list_brain_runs()
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -589,26 +432,16 @@ class TestEmbeddingsBehavior:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path))
 
         try:
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
-            # Use batch_size=1 for edge case
             compute_embeddings(
                 dataset=dataset,
                 dataset_task=DatasetTask.DETECTION,
-                model_kwargs=model_kwargs,
+                model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                 batch_size=1,
             )
 
-            # Should still work
             brain_keys = dataset.list_brain_runs()
             assert IMAGE_EMBEDDINGS_KEY in brain_keys
             assert PATCH_EMBEDDINGS_KEY in brain_keys
@@ -623,31 +456,18 @@ class TestEmbeddingsBehavior:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path))
 
         try:
-            # Should be able to compute embeddings regardless
-            model_kwargs = EmbeddingsModel.OPENAI_CLIP.get_model_kwargs()
             compute_embeddings(
                 dataset=dataset,
                 dataset_task=DatasetTask.DETECTION,
-                model_kwargs=model_kwargs,
+                model_kwargs=EmbeddingsModel.OPENAI_CLIP.get_model_kwargs(),
                 batch_size=4,
             )
 
-            # Image embeddings should work for all samples
             brain_keys = dataset.list_brain_runs()
             assert IMAGE_EMBEDDINGS_KEY in brain_keys
-
-            # Patch embeddings might have fewer entries (only for samples with objects)
-            # But brain run should still exist
             assert PATCH_EMBEDDINGS_KEY in brain_keys
 
         finally:

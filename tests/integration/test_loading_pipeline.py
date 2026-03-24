@@ -3,8 +3,29 @@
 import pytest
 import fiftyone as fo
 
+from yolo_scout.core.config import Config
+from yolo_scout.core.enums import DatasetTask, EmbeddingsModel
 from yolo_scout.dataset.loader import load_yolo_dataset
-from yolo_scout.core.enums import DatasetTask
+
+
+def _make_config(data: str, task: DatasetTask, name: str, tmp_path) -> Config:
+    return Config(
+        data=data,
+        task=task,
+        name=name,
+        reload=False,
+        dataset_dir=str(tmp_path / "datasets"),
+        skip_embeddings=True,
+        model=EmbeddingsModel.OPENAI_CLIP,
+        batch=16,
+        mask_background=True,
+        thumbnail_dir=str(tmp_path / "thumbnails"),
+        thumbnail_width=100,
+        skip_quality=True,
+        port=5151,
+        skip_launch=True,
+        verbose=False,
+    )
 
 
 @pytest.mark.requires_dataset
@@ -16,39 +37,26 @@ class TestDatasetLoading:
         """Test loading a real detection dataset."""
         dataset_name = "test_detect_integration"
 
-        # Clean up if exists
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        was_cached, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path))
 
         try:
-            # Verify dataset was created
-            assert not was_cached
             assert dataset is not None
             assert dataset.name == dataset_name
             assert len(dataset) > 0
 
-            # Verify samples have expected fields
             sample = dataset.first()
             assert sample is not None
             assert "bounding_boxes" in sample
             assert "image_path" in sample
             assert "object_count" in sample
 
-            # Verify class names in metadata
             assert "class_names" in dataset.info
             assert len(dataset.info["class_names"]) > 0
 
         finally:
-            # Cleanup
             fo.delete_dataset(dataset_name)
 
     def test_load_classification_dataset(self, classify_dataset, tmp_path):
@@ -58,21 +66,14 @@ class TestDatasetLoading:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        was_cached, dataset = load_yolo_dataset(
-            dataset_path=str(classify_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.CLASSIFICATION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
+        dataset = load_yolo_dataset(
+            _make_config(str(classify_dataset), DatasetTask.CLASSIFICATION, dataset_name, tmp_path)
         )
 
         try:
-            assert not was_cached
             assert dataset is not None
             assert len(dataset) > 0
 
-            # Verify samples have classification labels
             sample = dataset.first()
             assert sample is not None
             assert "cls_label" in sample
@@ -88,21 +89,14 @@ class TestDatasetLoading:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        was_cached, dataset = load_yolo_dataset(
-            dataset_path=str(segment_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.SEGMENTATION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
+        dataset = load_yolo_dataset(
+            _make_config(str(segment_dataset), DatasetTask.SEGMENTATION, dataset_name, tmp_path)
         )
 
         try:
-            assert not was_cached
             assert dataset is not None
             assert len(dataset) > 0
 
-            # Verify samples have segmentation polygons
             sample = dataset.first()
             assert sample is not None
             assert "seg_polygons" in sample
@@ -117,25 +111,16 @@ class TestDatasetLoading:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        was_cached, dataset = load_yolo_dataset(
-            dataset_path=str(pose_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.POSE,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(pose_dataset), DatasetTask.POSE, dataset_name, tmp_path))
 
         try:
-            assert not was_cached
             assert dataset is not None
             assert len(dataset) > 0
 
-            # Verify samples have pose keypoints and detections
             sample = dataset.first()
             assert sample is not None
             assert "pose_keypoints" in sample
-            assert "bounding_boxes" in sample  # Pose also creates detections
+            assert "bounding_boxes" in sample
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -147,21 +132,12 @@ class TestDatasetLoading:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        was_cached, dataset = load_yolo_dataset(
-            dataset_path=str(obb_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.OBB,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(obb_dataset), DatasetTask.OBB, dataset_name, tmp_path))
 
         try:
-            assert not was_cached
             assert dataset is not None
             assert len(dataset) > 0
 
-            # Verify samples have OBB polygons
             sample = dataset.first()
             assert sample is not None
             assert "obb_bounding_boxes" in sample
@@ -176,63 +152,34 @@ class TestDatasetLoading:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        # First load - should create new
-        was_cached1, dataset1 = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=False,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        config = _make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path)
 
-        # Second load - should use cache
-        was_cached2, dataset2 = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=False,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset1 = load_yolo_dataset(config)
+        dataset2 = load_yolo_dataset(config)
 
         try:
-            assert not was_cached1  # First load creates new
-            assert was_cached2  # Second load uses cache
             assert dataset1.name == dataset2.name
+            assert len(dataset1) == len(dataset2)
 
         finally:
             fo.delete_dataset(dataset_name)
 
     def test_force_reload(self, detect_dataset, tmp_path):
-        """Test that force_reload recreates the dataset."""
+        """Test that deleting and reloading recreates the dataset."""
         dataset_name = "test_detect_force_reload"
 
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        # First load
-        load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=False,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        config = _make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path)
+        load_yolo_dataset(config)
 
-        # Force reload
-        was_cached, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        fo.delete_dataset(dataset_name)
+        dataset = load_yolo_dataset(config)
 
         try:
-            assert not was_cached  # Force reload should recreate
+            assert dataset is not None
+            assert len(dataset) > 0
 
         finally:
             fo.delete_dataset(dataset_name)
@@ -250,17 +197,9 @@ class TestDatasetStructure:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path))
 
         try:
-            # Get a sample with detections
             samples_with_detections = [s for s in dataset if s["object_count"] > 0]
             assert len(samples_with_detections) > 0
 
@@ -269,8 +208,6 @@ class TestDatasetStructure:
 
             if detections and len(detections.detections) > 0:
                 detection = detections.detections[0]
-
-                # Check detection has expected fields
                 assert hasattr(detection, "label")
                 assert hasattr(detection, "bounding_box")
                 assert "area" in detection
@@ -289,17 +226,11 @@ class TestDatasetStructure:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(segment_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.SEGMENTATION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
+        dataset = load_yolo_dataset(
+            _make_config(str(segment_dataset), DatasetTask.SEGMENTATION, dataset_name, tmp_path)
         )
 
         try:
-            # Get a sample with polygons
             samples_with_polygons = [s for s in dataset if s["object_count"] > 0]
             assert len(samples_with_polygons) > 0
 
@@ -308,8 +239,6 @@ class TestDatasetStructure:
 
             if polygons and len(polygons.polylines) > 0:
                 polygon = polygons.polylines[0]
-
-                # Check polygon has expected fields
                 assert hasattr(polygon, "label")
                 assert hasattr(polygon, "points")
                 assert "area" in polygon
@@ -328,22 +257,13 @@ class TestDatasetStructure:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path))
 
         try:
-            # Check that samples have split tags
             all_tags = set()
             for sample in dataset:
                 all_tags.update(sample.tags)
 
-            # Should have at least 'train' tag (datasets should have train split)
             assert len(all_tags) > 0
             assert any(tag in all_tags for tag in ["train", "val", "test"])
 
@@ -363,17 +283,9 @@ class TestDatasetMetadata:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path))
 
         try:
-            # Check class names in metadata
             assert "class_names" in dataset.info
             class_names = dataset.info["class_names"]
             assert isinstance(class_names, list)
@@ -389,19 +301,10 @@ class TestDatasetMetadata:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path))
 
         try:
             sample = dataset.first()
-
-            # Check metadata exists
             assert sample.metadata is not None
             assert hasattr(sample.metadata, "width")
             assert hasattr(sample.metadata, "height")
@@ -418,14 +321,7 @@ class TestDatasetMetadata:
         if dataset_name in fo.list_datasets():
             fo.delete_dataset(dataset_name)
 
-        _, dataset = load_yolo_dataset(
-            dataset_path=str(detect_dataset),
-            dataset_name=dataset_name,
-            dataset_task=DatasetTask.DETECTION,
-            force_reload=True,
-            thumbnail_width=100,
-            thumbnail_dir=str(tmp_path / "thumbnails"),
-        )
+        dataset = load_yolo_dataset(_make_config(str(detect_dataset), DatasetTask.DETECTION, dataset_name, tmp_path))
 
         try:
             for sample in dataset:
@@ -433,7 +329,6 @@ class TestDatasetMetadata:
                 assert isinstance(sample["object_count"], int)
                 assert sample["object_count"] >= 0
 
-                # Verify count matches actual detections
                 if sample["bounding_boxes"]:
                     actual_count = len(sample["bounding_boxes"].detections)
                     assert sample["object_count"] == actual_count
