@@ -75,6 +75,8 @@ jobs:
     needs: verify-install
     runs-on: ubuntu-latest
     environment: pypi
+    permissions:
+      id-token: write  # Required for OIDC trusted publisher
 
     steps:
       - uses: actions/download-artifact@v8
@@ -88,7 +90,6 @@ jobs:
           verbose: true
           print-hash: true
           skip-existing: true
-          password: ${{ secrets.PYPI_API_TOKEN }}
 
   release:
     name: Create GitHub Release
