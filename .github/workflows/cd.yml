@@ -56,11 +56,9 @@ jobs:
       - name: Create isolated test venv
         run: uv venv .test-venv --python ${{ matrix.python-version }}
 
-      - name: Install wheel + minimal deps needed for --help
+      - name: Install wheel
         shell: bash
-        run: |
-          uv pip install --python .test-venv dist/*.whl --no-deps
-          uv pip install --python .test-venv PyYAML
+        run: uv pip install --python .test-venv dist/*.whl
 
       - name: Smoke test — CLI entrypoint (unix)
         if: runner.os != 'Windows'
