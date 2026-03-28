@@ -3,6 +3,8 @@ name: Docs
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -45,6 +47,7 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
+    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
     environment:
