@@ -16,6 +16,9 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+env:
+  UV_TORCH_BACKEND: cpu
+
 jobs:
   build:
     name: Build docs
