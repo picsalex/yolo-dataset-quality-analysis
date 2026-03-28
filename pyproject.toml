@@ -9,7 +9,7 @@ description = "YOLO Dataset Quality Analysis Tool powered by FiftyOne"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
-authors = [{ name = "Picsalex" }]
+authors = [{ name = "Alexis Schutzger" }]
 keywords = ["yolo", "dataset", "quality", "fiftyone", "computer-vision"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -20,6 +20,8 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Image Recognition",
 ]
@@ -49,11 +51,17 @@ yolo-scout = "yolo_scout.cli:main"
 
 [dependency-groups]
 dev = [
-    "ruff==0.15.7",
+    "ruff",
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.12.0",
 ]
+docs = [
+    "zensical",
+    "mkdocstrings[python]",
+    "pymdown-extensions",
+]
+
 
 [tool.hatch.version]
 source = "vcs"

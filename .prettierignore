@@ -1,0 +1,11 @@
+*.py
+*.toml
+*.lock
+*.typed
+__pycache__/
+dist/
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+site/

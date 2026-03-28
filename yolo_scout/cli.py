@@ -3,8 +3,6 @@
 YoloScout — YOLO Dataset Quality Analysis Tool
 CLI entry point
 
-Author: Alexis Béduneau
-License: MIT
 """
 
 from yolo_scout.utils.decorators import pipeline

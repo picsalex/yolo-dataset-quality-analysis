@@ -25,6 +25,7 @@ tests/
 ## 🚀 Running Tests
 
 ### Quick Unit Tests (No Dataset Download)
+
 ```bash
 # Run fast unit tests only (~59 tests, <5 seconds)
 pytest tests/unit/ --skip-download -v
@@ -34,6 +35,7 @@ pytest tests/unit/ --skip-download --cov=yolo_scout --cov-report=html
 ```
 
 ### Integration Tests (Downloads Datasets on First Run)
+
 ```bash
 # Run integration tests (~75 tests, downloads ~30MB on first run)
 pytest tests/integration/ -v
@@ -46,6 +48,7 @@ pytest -m "not slow" -v
 ```
 
 ### Full Test Suite
+
 ```bash
 # Run everything with coverage (~134 tests total)
 pytest --cov=yolo_scout --cov-report=html --cov-report=term -v
@@ -56,6 +59,7 @@ pytest --cov=yolo_scout --cov-report=html --cov-report=term -v
 Test datasets are automatically downloaded from GitHub releases on first test run.
 
 ### Manual Dataset Management
+
 ```bash
 # Download datasets manually
 python tests/fixtures/dataset_manager.py download
@@ -71,12 +75,14 @@ python tests/fixtures/dataset_manager.py checksum
 ```
 
 ### Dataset Details
+
 - **Source**: https://github.com/picsalex/yolo-dataset-quality-analysis/releases/download/v1.0.0/datasets.zip
 - **Size**: ~30MB
 - **Cache Location**: `tests/fixtures/.cache/`
 - **Extract Location**: `tests/fixtures/datasets/`
 
 Available datasets:
+
 - `detect_dataset` - Object detection (YOLO format)
 - `classify_dataset` - Image classification
 - `segment_dataset` - Instance segmentation
@@ -87,23 +93,23 @@ Available datasets:
 
 ### Unit Tests (59 tests)
 
-| Module | Tests | What's Tested |
-|--------|-------|---------------|
-| **core/enums.py** | 11 | Enum validation, model configs |
-| **core/constants.py** | 10 | Field mapping, color palettes |
-| **dataset/parser.py** | 18 | YOLO format parsing (all tasks) |
-| **dataset/converter.py** | 10 | FiftyOne conversion, bbox clamping |
-| **visualization/iou.py** | 10 | IoU computation for boxes & polygons |
+| Module                   | Tests | What's Tested                        |
+| ------------------------ | ----- | ------------------------------------ |
+| **core/enums.py**        | 11    | Enum validation, model configs       |
+| **core/constants.py**    | 10    | Field mapping, color palettes        |
+| **dataset/parser.py**    | 18    | YOLO format parsing (all tasks)      |
+| **dataset/converter.py** | 10    | FiftyOne conversion, bbox clamping   |
+| **visualization/iou.py** | 10    | IoU computation for boxes & polygons |
 
 ### Integration Tests (55 tests)
 
-| Test Suite | Tests | What's Tested |
-|------------|-------|---------------|
-| **test_dataset_fixtures** | 10 | Dataset download & structure validation |
-| **test_loading_pipeline** | 16 | Full dataset loading, caching, metadata |
-| **test_parser_integration** | 14 | Real YOLO file parsing, validation |
-| **test_conversion_pipeline** | 15 | YOLO→FiftyOne conversion, IoU scores |
-| **test_embeddings_pipeline** | 20 | Embeddings computation, field mapping |
+| Test Suite                   | Tests | What's Tested                           |
+| ---------------------------- | ----- | --------------------------------------- |
+| **test_dataset_fixtures**    | 10    | Dataset download & structure validation |
+| **test_loading_pipeline**    | 16    | Full dataset loading, caching, metadata |
+| **test_parser_integration**  | 14    | Real YOLO file parsing, validation      |
+| **test_conversion_pipeline** | 15    | YOLO→FiftyOne conversion, IoU scores    |
+| **test_embeddings_pipeline** | 20    | Embeddings computation, field mapping   |
 
 **Total: 134 comprehensive tests** ✅
 
@@ -132,17 +138,18 @@ pytest --skip-download -v
 
 ## 📊 Coverage Goals
 
-| Module | Target | Current Status |
-|--------|--------|----------------|
-| core/* | 95% | ✅ Comprehensive |
-| dataset/parser.py | 90% | ✅ Comprehensive |
-| dataset/converter.py | 90% | ✅ Comprehensive |
-| dataset/loader.py | 80% | ✅ Integration tests |
-| visualization/iou.py | 85% | ✅ Comprehensive |
+| Module               | Target | Current Status       |
+| -------------------- | ------ | -------------------- |
+| core/\*              | 95%    | ✅ Comprehensive     |
+| dataset/parser.py    | 90%    | ✅ Comprehensive     |
+| dataset/converter.py | 90%    | ✅ Comprehensive     |
+| dataset/loader.py    | 80%    | ✅ Integration tests |
+| visualization/iou.py | 85%    | ✅ Comprehensive     |
 
 ## 🔧 Adding New Tests
 
 ### Unit Test Template
+
 ```python
 """Tests for yolo_scout.module.feature."""
 
@@ -165,6 +172,7 @@ class TestFeature:
 ```
 
 ### Integration Test Template
+
 ```python
 """Integration tests for module."""
 
@@ -218,6 +226,7 @@ pytest --lf
 ## 💡 What's Being Tested
 
 ### Unit Tests Focus On:
+
 ✅ **Pure logic** - No external dependencies
 ✅ **Edge cases** - Empty inputs, boundaries, None values
 ✅ **Error handling** - Invalid inputs, malformed data
@@ -225,6 +234,7 @@ pytest --lf
 ✅ **Transformations** - Parsing, conversions, calculations
 
 ### Integration Tests Focus On:
+
 ✅ **Real data** - Actual YOLO files from datasets
 ✅ **FiftyOne integration** - Dataset creation, sample loading
 ✅ **End-to-end workflows** - Parse → Convert → Validate
@@ -234,6 +244,7 @@ pytest --lf
 ## 🔄 Continuous Integration
 
 Tests run automatically on GitHub Actions:
+
 - **Unit Tests**: On every push (fast, no dataset download)
 - **Integration Tests**: On every push (cached datasets)
 
@@ -253,6 +264,7 @@ See `.github/workflows/test.yml` for CI configuration.
 ## 🎓 Key Testing Patterns Used
 
 ### Dict-Like Objects for Mocking
+
 ```python
 class DictLikeObject(dict):
     """Supports both obj['key'] and obj.attribute syntax."""
@@ -265,6 +277,7 @@ obj["iou_score"] = 0.5  # Works!
 ```
 
 ### FiftyOne Dataset Cleanup
+
 ```python
 @pytest.mark.requires_dataset
 def test_something(detect_dataset, tmp_path):
@@ -283,6 +296,7 @@ def test_something(detect_dataset, tmp_path):
 ```
 
 ### Session-Scoped Dataset Fixtures
+
 ```python
 @pytest.fixture(scope="session")
 def detect_dataset() -> Path:
@@ -318,6 +332,7 @@ pytest tests/unit/test_visualization/test_iou.py -v
 **Status**: ✅ All tests passing!
 
 The test suite provides comprehensive coverage of:
+
 - ✅ Core functionality (enums, constants)
 - ✅ YOLO annotation parsing (all 5 tasks)
 - ✅ FiftyOne conversion (all formats)
