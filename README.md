@@ -9,8 +9,11 @@
 
 **A comprehensive tool for analyzing and visualizing YOLO dataset quality using a custom FiftyOne wrapper**
 
-[![PyPI](https://img.shields.io/pypi/v/yolo-scout.svg)](https://pypi.org/project/yolo-scout/)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+
+[![PyPI version](https://img.shields.io/pypi/v/yolo-scout.svg)](https://pypi.org/project/yolo-scout/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/yolo-scout.svg)](https://pypistats.org/packages/yolo-scout)
+[![Python versions](https://img.shields.io/pypi/pyversions/yolo-scout.svg)](https://pypi.org/project/yolo-scout/)
+
 [![FiftyOne](https://img.shields.io/badge/FiftyOne-Latest-orange.svg)](https://voxel51.com/fiftyone)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 </div>
