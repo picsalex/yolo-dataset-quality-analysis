@@ -33,23 +33,20 @@ pip install yolo-scout
 ### Basic Usage
 
 ```bash
-# Option 1: Local directory
+# Object detection dataset
 yolo-scout data=/path/to/dataset task=detect
 
-# Option 2: data.yaml file (resolves to parent directory automatically)
-yolo-scout data=/path/to/dataset/data.yaml task=detect
+# Segmentation with MetaCLIP embeddings
+yolo-scout data=/path/to/data.yaml task=segment model=metaclip_400m
 
-# Option 3: Ultralytics Hub dataset
+# Ultralytics Platform dataset
 ULTRALYTICS_API_KEY=<your_key> yolo-scout data=ul://username/datasets/my-dataset task=detect
 
-# Option 4: Config file only (more details below)
-yolo-scout config=my_config.yaml
+# Config file with CLI overrides
+yolo-scout config=my_config.yaml batch=8
 
-# Option 5: Config file + overrides
-yolo-scout config=default.yaml batch=8
-
-# Option 6: Force reload of an existing dataset
-yolo-scout data=/path/to/dataset task=detect reload=True
+# Force reload of an existing dataset
+yolo-scout data=/path/to/dataset task=detect reload=true
 ```
 
 If you want to use the configuration file option, you can create a config file (e.g., `my_config.yaml`) with the
