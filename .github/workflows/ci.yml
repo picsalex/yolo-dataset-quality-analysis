@@ -112,7 +112,7 @@ jobs:
       - name: Check test results
         run: |
           if [ "${{ needs.unit-tests.result }}" == "success" ] && \
-             [ "${{ needs.integration-tests.result }}" == "success" ] && \
+             [ "${{ needs.integration-tests.result }}" == "success" ]; then
             echo "All tests passed!"
             exit 0
           else
