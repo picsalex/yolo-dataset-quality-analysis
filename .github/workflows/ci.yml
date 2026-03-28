@@ -22,8 +22,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
 
-      - run: uv sync --no-install-package torch --no-install-package torchvision
-      - run: uv pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Install dependencies (CPU-only PyTorch)
+        env:
+          UV_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
+          UV_INDEX_STRATEGY: unsafe-best-match
+        run: uv sync
 
       - name: Run unit tests
         run: |
@@ -58,8 +61,11 @@ jobs:
           key: test-datasets-${{ hashFiles('tests/fixtures/dataset_manager.py') }}
           restore-keys: test-datasets-
 
-      - run: uv sync --no-install-package torch --no-install-package torchvision
-      - run: uv pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Install dependencies (CPU-only PyTorch)
+        env:
+          UV_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
+          UV_INDEX_STRATEGY: unsafe-best-match
+        run: uv sync
 
       - run: uv run python tests/fixtures/dataset_manager.py download
 
@@ -93,8 +99,11 @@ jobs:
           python-version: "3.11"
           enable-cache: true
 
-      - run: uv sync --no-install-package torch --no-install-package torchvision
-      - run: uv pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Install dependencies (CPU-only PyTorch)
+        env:
+          UV_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
+          UV_INDEX_STRATEGY: unsafe-best-match
+        run: uv sync
 
       - run: uv run python tests/fixtures/dataset_manager.py download
 

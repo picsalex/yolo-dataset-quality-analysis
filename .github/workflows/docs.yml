@@ -35,9 +35,10 @@ jobs:
         run: uv tool install zensical --with mkdocstrings-python
 
       - name: Install project (for mkdocstrings)
-        run: |
-          uv sync --no-install-package torch --no-install-package torchvision
-          uv pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
+        env:
+          UV_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
+          UV_INDEX_STRATEGY: unsafe-best-match
+        run: uv sync
 
       - name: Build docs
         run: zensical build --strict
