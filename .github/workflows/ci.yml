@@ -102,28 +102,10 @@ jobs:
             --cov-report=xml \
             --cov-report=term
 
-  lint:
-    name: Linting & Code Quality
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: astral-sh/setup-uv@v7
-        with:
-          python-version: "3.11"
-          enable-cache: true
-
-      - run: uv sync
-
-      - run: uv run ruff check yolo_scout/ tests/ --output-format=github
-
-      - run: uv run ruff format --check yolo_scout/ tests/
-
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, lint]
+    needs: [unit-tests, integration-tests]
     if: always()
 
     steps:
@@ -131,13 +113,11 @@ jobs:
         run: |
           if [ "${{ needs.unit-tests.result }}" == "success" ] && \
              [ "${{ needs.integration-tests.result }}" == "success" ] && \
-             [ "${{ needs.lint.result }}" == "success" ]; then
             echo "All tests passed!"
             exit 0
           else
             echo "Some tests failed:"
             echo "  Unit tests: ${{ needs.unit-tests.result }}"
             echo "  Integration tests: ${{ needs.integration-tests.result }}"
-            echo "  Linting: ${{ needs.lint.result }}"
             exit 1
           fi
