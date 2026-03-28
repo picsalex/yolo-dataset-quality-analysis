@@ -1,0 +1,139 @@
+[project]
+site_name = "YoloScout"
+site_url = "https://picsalex.github.io/yolo-scout/"
+repo_url = "https://github.com/picsalex/yolo-scout"
+site_description = "YOLO Dataset Quality Analysis Tool powered by FiftyOne"
+site_author = "Alexis Schutzger"
+copyright = """
+  Copyright &copy; 2026 Alexis Schutzger Licensed under MIT. –
+  <a href="#__consent">Change cookie settings</a>
+"""
+
+docs_dir = "docs"
+site_dir = "site"
+
+nav = [
+  "index.md",
+  "installation.md",
+  "architecture.md",
+  "usage.md",
+  "tasks.md",
+  "embeddings.md",
+  "configuration.md",
+  "reference.md",
+  "contributing.md",
+]
+
+[project.extra]
+generator = true
+
+[project.extra.consent]
+title = "Cookie consent"
+description = """
+    We use cookies to recognize your repeated visits and preferences, as well
+    as to measure the effectiveness of our documentation and whether users
+    find what they're searching for. With your consent, you're helping us to
+    make our documentation better.
+"""
+actions = [
+    "accept",
+    "manage"
+]
+
+[[project.theme.palette]]
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to light mode"
+
+
+[project.theme]
+variant = "modern"
+logo = "https://raw.githubusercontent.com/picsalex/yolo-scout/main/images/yolo-scout-black.png"
+features = [
+    "navigation.footer"
+]
+
+[project.extra.tags]
+Guide = "guide"
+Reference = "reference"
+CLI = "cli"
+Setup = "setup"
+Development = "dev"
+Architecture = "arch"
+Embeddings = "embeddings"
+Tasks = "tasks"
+
+[project.theme.icon.tag]
+default = "lucide/hash"
+guide = "lucide/book-open"
+reference = "lucide/list"
+cli = "lucide/terminal"
+setup = "lucide/settings"
+dev = "lucide/code"
+arch = "lucide/blocks"
+embeddings = "lucide/brain"
+tasks = "lucide/layers"
+
+# --- Python Markdown extensions ---
+
+[project.markdown_extensions.abbr]
+[project.markdown_extensions.admonition]
+[project.markdown_extensions.attr_list]
+[project.markdown_extensions.def_list]
+[project.markdown_extensions.footnotes]
+[project.markdown_extensions.md_in_html]
+[project.markdown_extensions.tables]
+
+[project.markdown_extensions.toc]
+permalink = true
+
+# --- PyMdown extensions ---
+
+[project.markdown_extensions.pymdownx.highlight]
+pygments_lang_class = true
+anchor_linenums = true
+line_spans = "__span"
+
+[project.markdown_extensions.pymdownx.inlinehilite]
+[project.markdown_extensions.pymdownx.superfences]
+[project.markdown_extensions.pymdownx.details]
+[project.markdown_extensions.pymdownx.keys]
+[project.markdown_extensions.pymdownx.smartsymbols]
+[project.markdown_extensions.pymdownx.caret]
+[project.markdown_extensions.pymdownx.mark]
+[project.markdown_extensions.pymdownx.tilde]
+
+[project.markdown_extensions.pymdownx.tabbed]
+alternate_style = true
+
+[project.markdown_extensions.pymdownx.tasklist]
+custom_checkbox = true
+
+[project.markdown_extensions.pymdownx.emoji]
+emoji_index = "zensical.extensions.emoji.twemoji"
+emoji_generator = "zensical.extensions.emoji.to_svg"
+
+# --- Plugins ---
+
+[project.plugins.mkdocstrings.handlers.python]
+paths = ["yolo_scout"]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "google"
+show_source = true
+show_root_heading = true
+show_symbol_type_heading = true
+show_symbol_type_toc = true
+show_submodules = true
+members_order = "source"
+
+# --- Social links ---
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/picsalex/yolo-scout"
