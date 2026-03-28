@@ -16,9 +16,6 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
-env:
-  UV_TORCH_BACKEND: cpu
-
 jobs:
   build:
     name: Build docs
@@ -38,7 +35,9 @@ jobs:
         run: uv tool install zensical --with mkdocstrings-python
 
       - name: Install project (for mkdocstrings)
-        run: uv sync
+        run: |
+          uv sync --no-install-package torch --no-install-package torchvision
+          uv pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Build docs
         run: zensical build --strict

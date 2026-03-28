@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  UV_TORCH_BACKEND: cpu
-
 jobs:
   unit-tests:
     name: Unit Tests
@@ -25,7 +22,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
 
-      - run: uv sync
+      - run: uv sync --no-install-package torch --no-install-package torchvision
+      - run: uv pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Run unit tests
         run: |
@@ -60,7 +58,8 @@ jobs:
           key: test-datasets-${{ hashFiles('tests/fixtures/dataset_manager.py') }}
           restore-keys: test-datasets-
 
-      - run: uv sync
+      - run: uv sync --no-install-package torch --no-install-package torchvision
+      - run: uv pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
 
       - run: uv run python tests/fixtures/dataset_manager.py download
 
@@ -94,7 +93,8 @@ jobs:
           python-version: "3.11"
           enable-cache: true
 
-      - run: uv sync
+      - run: uv sync --no-install-package torch --no-install-package torchvision
+      - run: uv pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
 
       - run: uv run python tests/fixtures/dataset_manager.py download
 
