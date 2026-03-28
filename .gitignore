@@ -224,3 +224,6 @@ thumbnails/*
 # Default yolo_scout dirs
 yolo_scout/thumbnails/*
 yolo_scout/datasets/*
+
+# Claude
+.claude/
