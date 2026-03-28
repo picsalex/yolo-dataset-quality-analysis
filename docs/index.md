@@ -128,8 +128,8 @@ data=/path task=detect ──────▶ Validate config
 YoloScout ships with a custom FiftyOne plugin that is automatically installed
 at startup — no manual setup required.
 
-| Plugin | Description | How to use |
-| ------ | ----------- | ---------- |
+| Plugin                        | Description                                                  | How to use                                                          |
+| ----------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------- |
 | `@ultralytics/image-adjuster` | Adjust image brightness, contrast, and label overlay opacity | Open a sample, then click the slider icon in the bottom-left corner |
 
 ## Acknowledgments

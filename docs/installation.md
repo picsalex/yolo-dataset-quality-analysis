@@ -37,15 +37,15 @@ tags:
 
 YoloScout depends on several heavyweight libraries that are installed automatically:
 
-| Package              | Purpose                            |
-| -------------------- | ---------------------------------- |
-| `torch`              | Deep learning framework            |
-| `fiftyone`           | Dataset visualization platform     |
-| `open_clip_torch`    | CLIP embedding models              |
-| `transformers`       | HuggingFace model loading          |
-| `umap-learn`         | Dimensionality reduction           |
-| `shapely`            | Polygon IoU computation            |
-| `opencv-python-headless` | Image processing              |
+| Package                  | Purpose                        |
+| ------------------------ | ------------------------------ |
+| `torch`                  | Deep learning framework        |
+| `fiftyone`               | Dataset visualization platform |
+| `open_clip_torch`        | CLIP embedding models          |
+| `transformers`           | HuggingFace model loading      |
+| `umap-learn`             | Dimensionality reduction       |
+| `shapely`                | Polygon IoU computation        |
+| `opencv-python-headless` | Image processing               |
 
 !!! note "First run"
 

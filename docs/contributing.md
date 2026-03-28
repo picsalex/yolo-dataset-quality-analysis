@@ -91,16 +91,16 @@ uv run pre-commit run --all-files
 
 ## Project structure
 
-| Directory                  | Purpose                              |
-| -------------------------- | ------------------------------------ |
-| `yolo_scout/core/`         | Configuration, constants, enums      |
-| `yolo_scout/dataset/`      | Dataset loading, parsing, conversion |
-| `yolo_scout/embeddings/`   | CLIP model integration               |
-| `yolo_scout/visualization/`| Quality metrics, IoU, FiftyOne UI    |
-| `yolo_scout/pipeline/`     | Pipeline step orchestration          |
-| `yolo_scout/utils/`        | Decorators, logging, plugins         |
-| `tests/unit/`              | Unit tests (59 tests, fast)          |
-| `tests/integration/`       | Integration tests (75 tests)         |
+| Directory                   | Purpose                              |
+| --------------------------- | ------------------------------------ |
+| `yolo_scout/core/`          | Configuration, constants, enums      |
+| `yolo_scout/dataset/`       | Dataset loading, parsing, conversion |
+| `yolo_scout/embeddings/`    | CLIP model integration               |
+| `yolo_scout/visualization/` | Quality metrics, IoU, FiftyOne UI    |
+| `yolo_scout/pipeline/`      | Pipeline step orchestration          |
+| `yolo_scout/utils/`         | Decorators, logging, plugins         |
+| `tests/unit/`               | Unit tests (59 tests, fast)          |
+| `tests/integration/`        | Integration tests (75 tests)         |
 
 ## Pull requests
 

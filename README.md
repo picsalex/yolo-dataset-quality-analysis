@@ -9,13 +9,13 @@
 
 **A comprehensive tool for analyzing and visualizing YOLO dataset quality using a custom FiftyOne wrapper**
 
-
 [![PyPI version](https://img.shields.io/pypi/v/yolo-scout.svg)](https://pypi.org/project/yolo-scout/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/yolo-scout.svg)](https://pypistats.org/packages/yolo-scout)
 [![Python versions](https://img.shields.io/pypi/pyversions/yolo-scout.svg)](https://pypi.org/project/yolo-scout/)
 
 [![FiftyOne](https://img.shields.io/badge/FiftyOne-Latest-orange.svg)](https://voxel51.com/fiftyone)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 </div>
 
 ---
@@ -56,11 +56,11 @@ If you want to use the configuration file option, you can create a config file (
 following structure (all keys are optional and override the defaults):
 
 ```yaml
-data: "/path/to/your/dataset"  # directory, data.yaml, or ul://username/datasets/slug
-task: "detect"  # detect, segment, classify, pose, obb
-name: "my_dataset"  # auto-generated from path if not set
+data: "/path/to/your/dataset" # directory, data.yaml, or ul://username/datasets/slug
+task: "detect" # detect, segment, classify, pose, obb
+name: "my_dataset" # auto-generated from path if not set
 reload: false
-dataset_dir: "yolo_scout/datasets"  # where URL-sourced datasets are downloaded
+dataset_dir: "yolo_scout/datasets" # where URL-sourced datasets are downloaded
 
 skip_embeddings: false
 model: "openai_clip"
@@ -79,31 +79,31 @@ verbose: false
 
 ### Command-Line Arguments
 
-| Argument        | Type   | Default                   | Description                                                                                                                                                              |
-|-----------------|--------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `config`        | `str`  | `None`                    | Path to config YAML file. Overrides default settings.                                                                                                                    |
-| `data`          | `str`  | `None`                    | Path to your dataset. Required unless provided in config file. See [Supported data sources](#-supported-data-sources) for all accepted formats.                          |
-| `task`          | `str`  | `'detect'`                | Task type: `classify`, `detect`, `segment`, `pose`, `obb`. Required unless in config. More info on the tasks [below](#-supported-tasks-and-image-metadata).              |
-| `name`          | `str`  | `None`                    | Name for the FiftyOne dataset. Auto-generated from path if not set.                                                                                                      |
-| `dataset_dir`   | `str`  | `'yolo_scout/datasets'`   | Destination directory for datasets downloaded from a URL. Only used when `data` is a URL.                                                                               |
-| `reload`        | `bool` | `False`                   | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                                |
+| Argument          | Type   | Default                   | Description                                                                                                                                                              |
+| ----------------- | ------ | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config`          | `str`  | `None`                    | Path to config YAML file. Overrides default settings.                                                                                                                    |
+| `data`            | `str`  | `None`                    | Path to your dataset. Required unless provided in config file. See [Supported data sources](#-supported-data-sources) for all accepted formats.                          |
+| `task`            | `str`  | `'detect'`                | Task type: `classify`, `detect`, `segment`, `pose`, `obb`. Required unless in config. More info on the tasks [below](#-supported-tasks-and-image-metadata).              |
+| `name`            | `str`  | `None`                    | Name for the FiftyOne dataset. Auto-generated from path if not set.                                                                                                      |
+| `dataset_dir`     | `str`  | `'yolo_scout/datasets'`   | Destination directory for datasets downloaded from a URL. Only used when `data` is a URL.                                                                                |
+| `reload`          | `bool` | `False`                   | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.                                                                |
 | `skip_embeddings` | `bool` | `False`                   | Skip CLIP embedding computation (useful for quick visualization).                                                                                                        |
-| `model`         | `str`  | `'openai_clip'`           | Embeddings model to use. See [Supported Models](#-supported-models) for available options and a selection guide.                                                          |
-| `batch`         | `int`  | `16`                      | Batch size used during CLIP embedding computation.                                                                                                                       |
+| `model`           | `str`  | `'openai_clip'`           | Embeddings model to use. See [Supported Models](#-supported-models) for available options and a selection guide.                                                         |
+| `batch`           | `int`  | `16`                      | Batch size used during CLIP embedding computation.                                                                                                                       |
 | `mask_background` | `bool` | `True`                    | Mask background in patch crops for segmentation/OBB tasks. When enabled, background is replaced with gray (114, 114, 114). Set to `False` to disable.                    |
 | `thumbnail_width` | `int`  | `800`                     | Width (in pixels) of the generated image thumbnails in FiftyOne. The height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable thumbnail saving. |
-| `thumbnail_dir` | `str`  | `'yolo_scout/thumbnails'` | Path to the directory where the thumbnails are saved.                                                                                                                    |
-| `port`          | `int`  | `5151`                    | Port to launch the FiftyOne app on.                                                                                                                                      |
-| `skip_quality`  | `bool` | `False`                   | Skip image quality metrics computation (blurriness, brightness, aspect_ratio, entropy).                                                                                  |
-| `skip_launch`   | `bool` | `False`                   | Skip launching the FiftyOne app after processing.                                                                                                                        |
-| `verbose`       | `bool` | `False`                   | Enable debug logging.                                                                                                                                                    |
+| `thumbnail_dir`   | `str`  | `'yolo_scout/thumbnails'` | Path to the directory where the thumbnails are saved.                                                                                                                    |
+| `port`            | `int`  | `5151`                    | Port to launch the FiftyOne app on.                                                                                                                                      |
+| `skip_quality`    | `bool` | `False`                   | Skip image quality metrics computation (blurriness, brightness, aspect_ratio, entropy).                                                                                  |
+| `skip_launch`     | `bool` | `False`                   | Skip launching the FiftyOne app after processing.                                                                                                                        |
+| `verbose`         | `bool` | `False`                   | Enable debug logging.                                                                                                                                                    |
 
 ## 📊 Supported tasks and image metadata
 
 For each expected task format, the following metadata will be computed and available in FiftyOne for each annotation:
 
 | Task                                                       | Available parameters when using the UI                  |
-|------------------------------------------------------------|---------------------------------------------------------|
+| ---------------------------------------------------------- | ------------------------------------------------------- |
 | [`classify`](https://docs.ultralytics.com/tasks/classify/) | `cls_label.label`                                       |
 | [`detect`](https://docs.ultralytics.com/tasks/detect/)     | `area`, `width`, `height`, `iou_score`                  |
 | [`segment`](https://docs.ultralytics.com/tasks/segment/)   | `area`, `num_keypoints`, `width`, `height`, `iou_score` |
@@ -113,7 +113,7 @@ For each expected task format, the following metadata will be computed and avail
 Also, for each image, the following metadata will be computed:
 
 | Image Metadata          | Description                                 |
-|-------------------------|---------------------------------------------|
+| ----------------------- | ------------------------------------------- |
 | `object_count`          | Number of objects in the image              |
 | `metadata.size_bytes`   | Size of the image file in bytes             |
 | `metadata.width`        | Width of the image in pixels                |
@@ -125,7 +125,7 @@ The following quality metrics are computed unless `skip_quality` is passed. All 
 values and are available at both image and patch level.
 
 | Metric         | Description                                                                                                                                                                                            |
-|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `blurriness`   | Inverse of the [Laplacian variance](https://pyimagesearch.com/2015/09/07/blur-detection-with-opencv/). A score close to `1` indicates a blurry image, while a score close to `0` indicates a sharp one |
 | `brightness`   | Mean pixel intensity normalized between `0` and `1`. A score of `0` is fully dark and a score of `1` is fully bright                                                                                   |
 | `aspect_ratio` | Width-to-height ratio of the image or patch crop. Values greater than `1` are wider than tall, values less than `1` are taller than wide                                                               |
@@ -137,8 +137,8 @@ All models use **224x224 input resolution**. This is a constraint imposed by Fif
 resolution variants (384, 512) cause preprocessing errors when computing embeddings). The 224x224 resolution provides
 excellent quality for most computer vision tasks while maintaining compatibility with FiftyOne's model zoo.
 
-| Model               | Description                                                                                                                                                                                               | Training Dataset                                         |
-|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
+| Model               | Description                                                                                                                                                                               | Training Dataset                                         |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | **openai_clip**     | Original OpenAI CLIP model with ViT-B/32 architecture. Hosted on GitHub releases for offline usage. This is the default model and works without internet connection after first download. | [OpenAI CLIP](https://github.com/openai/CLIP)            |
 | **metaclip_400m**   | MetaCLIP model trained on curated 400M image-text pairs. Offers improved data quality and better embeddings compared to OpenAI CLIP while maintaining the same speed and architecture.    | [MetaCLIP](https://github.com/facebookresearch/MetaCLIP) |
 | **metaclip_fullcc** | MetaCLIP model trained on the full CommonCrawl dataset. Provides the highest quality embeddings among MetaCLIP variants with more diverse training data.                                  | [MetaCLIP](https://github.com/facebookresearch/MetaCLIP) |
@@ -156,19 +156,18 @@ visualization and analysis features.
 
 ## 🌐 Supported data sources
 
-| Format | Example                  | Notes |
-|---|--------------------------|---|
-| Local directory | `data=/path/to/dataset`  | Standard YOLO directory structure |
-| YAML file | `data=/path/to/data.yaml` | Resolves to the parent directory automatically |
-| NDJSON file | `data=/path/to/file.ndjson` | Pre-downloaded Ultralytics Platform export; images are downloaded and converted to YOLO layout |
-| URL | `data=<url>`             | See supported URL schemes below |
+| Format          | Example                     | Notes                                                                                          |
+| --------------- | --------------------------- | ---------------------------------------------------------------------------------------------- |
+| Local directory | `data=/path/to/dataset`     | Standard YOLO directory structure                                                              |
+| YAML file       | `data=/path/to/data.yaml`   | Resolves to the parent directory automatically                                                 |
+| NDJSON file     | `data=/path/to/file.ndjson` | Pre-downloaded Ultralytics Platform export; images are downloaded and converted to YOLO layout |
+| URL             | `data=<url>`                | See supported URL schemes below                                                                |
 
 The supported URL schemes for the `data` argument are:
 
-| Scheme | Example                           | Notes                                                                                    |
-|---|-----------------------------------|------------------------------------------------------------------------------------------|
+| Scheme  | Example                           | Notes                                                                                    |
+| ------- | --------------------------------- | ---------------------------------------------------------------------------------------- |
 | `ul://` | `ul://<username>/datasets/<slug>` | [Ultralytics Platform](https://platform.ultralytics.com), requires `ULTRALYTICS_API_KEY` |
-
 
 ## 🧩 Additional installed plugins
 
@@ -176,7 +175,7 @@ This tool ships with a custom-built FiftyOne plugin that is automatically
 installed at startup. No manual setup required.
 
 | Plugin                        | Description                                                                    | Icon                                                                   | How to use?                                                          |
-|-------------------------------|--------------------------------------------------------------------------------|------------------------------------------------------------------------|----------------------------------------------------------------------|
+| ----------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | `@ultralytics/image-adjuster` | Custom plugin to adjust image brightness, contrast, and label overlay opacity. | <img src="images/icons/image-adjuster.avif" alt="Image Adjuster icon"> | Open a sample, then click the slider icon in the bottom-left corner. |
 
 ## ⚒️ Dataset Structure

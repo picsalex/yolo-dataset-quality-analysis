@@ -30,17 +30,17 @@ The full default configuration:
 
 ```yaml
 # Dataset settings
-data:                              # (required) path, data.yaml, or ul:// URL
-task: detect                       # detect | classify | segment | pose | obb
-name:                              # auto-generated from path if empty
-reload: false                      # force reload cached dataset
-dataset_dir: yolo_scout/datasets   # download directory for URL sources
+data: # (required) path, data.yaml, or ul:// URL
+task: detect # detect | classify | segment | pose | obb
+name: # auto-generated from path if empty
+reload: false # force reload cached dataset
+dataset_dir: yolo_scout/datasets # download directory for URL sources
 
 # Embeddings settings
 skip_embeddings: false
-model: openai_clip                 # openai_clip | metaclip_400m | metaclip_fullcc | siglip_base_224
+model: openai_clip # openai_clip | metaclip_400m | metaclip_fullcc | siglip_base_224
 batch: 16
-mask_background: true              # mask background in segment/OBB patches
+mask_background: true # mask background in segment/OBB patches
 
 # Thumbnail settings
 thumbnail_dir: yolo_scout/thumbnails
@@ -62,9 +62,9 @@ override the defaults):
 
 ```yaml
 # my-config.yaml
-data: "/path/to/your/dataset"   # directory, data.yaml, or ul://username/datasets/slug
-task: "detect"                  # detect, segment, classify, pose, obb
-name: "my_dataset"              # auto-generated from path if not set
+data: "/path/to/your/dataset" # directory, data.yaml, or ul://username/datasets/slug
+task: "detect" # detect, segment, classify, pose, obb
+name: "my_dataset" # auto-generated from path if not set
 model: "metaclip_400m"
 batch: 32
 port: 8080
@@ -76,10 +76,10 @@ yolo-scout config=my-config.yaml
 
 ## Auto-generated values
 
-| Value          | Generated from                                  |
-| -------------- | ----------------------------------------------- |
-| `name`         | Directory name of the dataset path              |
-| `thumbnail_dir`| Based on dataset name if not specified           |
+| Value           | Generated from                         |
+| --------------- | -------------------------------------- |
+| `name`          | Directory name of the dataset path     |
+| `thumbnail_dir` | Based on dataset name if not specified |
 
 ## FiftyOne integration
 

@@ -14,13 +14,13 @@ For complete details on each YOLO format, see the
 
 ## Task summary
 
-| Task                                                          | Computed annotation metadata                            |
-| ------------------------------------------------------------- | ------------------------------------------------------- |
-| [`classify`](https://docs.ultralytics.com/tasks/classify/)    | `cls_label.label`                                       |
-| [`detect`](https://docs.ultralytics.com/tasks/detect/)        | `area`, `width`, `height`, `iou_score`                  |
-| [`segment`](https://docs.ultralytics.com/tasks/segment/)      | `area`, `num_keypoints`, `width`, `height`, `iou_score` |
-| [`obb`](https://docs.ultralytics.com/tasks/obb/)              | `area`, `width`, `height`, `iou_score`                  |
-| [`pose`](https://docs.ultralytics.com/tasks/pose/)            | `area`, `num_keypoints`, `width`, `height`, `iou_score` |
+| Task                                                       | Computed annotation metadata                            |
+| ---------------------------------------------------------- | ------------------------------------------------------- |
+| [`classify`](https://docs.ultralytics.com/tasks/classify/) | `cls_label.label`                                       |
+| [`detect`](https://docs.ultralytics.com/tasks/detect/)     | `area`, `width`, `height`, `iou_score`                  |
+| [`segment`](https://docs.ultralytics.com/tasks/segment/)   | `area`, `num_keypoints`, `width`, `height`, `iou_score` |
+| [`obb`](https://docs.ultralytics.com/tasks/obb/)           | `area`, `width`, `height`, `iou_score`                  |
+| [`pose`](https://docs.ultralytics.com/tasks/pose/)         | `area`, `num_keypoints`, `width`, `height`, `iou_score` |
 
 ---
 
@@ -159,14 +159,14 @@ Oriented bounding boxes (rotated rectangles).
 For every image in the dataset, the following metadata is automatically
 computed:
 
-| Metadata                | Description                                  |
-| ----------------------- | -------------------------------------------- |
-| `object_count`          | Number of annotations in the image           |
-| `metadata.size_bytes`   | Size of the image file in bytes              |
-| `metadata.width`        | Width of the image in pixels                 |
-| `metadata.height`       | Height of the image in pixels                |
-| `metadata.mime_type`    | MIME type of the image (e.g., `image/jpeg`)  |
-| `metadata.num_channels` | Number of color channels (e.g., 3 for RGB)   |
+| Metadata                | Description                                 |
+| ----------------------- | ------------------------------------------- |
+| `object_count`          | Number of annotations in the image          |
+| `metadata.size_bytes`   | Size of the image file in bytes             |
+| `metadata.width`        | Width of the image in pixels                |
+| `metadata.height`       | Height of the image in pixels               |
+| `metadata.mime_type`    | MIME type of the image (e.g., `image/jpeg`) |
+| `metadata.num_channels` | Number of color channels (e.g., 3 for RGB)  |
 
 ## Quality metrics
 
@@ -174,9 +174,9 @@ The following quality metrics are computed unless `skip_quality=true`. All
 metrics operate on grayscale pixel values and are available at both image and
 patch level.
 
-| Metric         | Description                                                                                                                                                   | Range  |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `blurriness`   | Inverse of the [Laplacian variance](https://pyimagesearch.com/2015/09/07/blur-detection-with-opencv/). A score close to `1` = blurry, close to `0` = sharp    | 0 - 1  |
-| `brightness`   | Mean pixel intensity normalized between `0` and `1`. `0` = fully dark, `1` = fully bright                                                                    | 0 - 1  |
-| `aspect_ratio` | Width-to-height ratio. Values > 1 are wider than tall, values < 1 are taller than wide                                                                       | > 0    |
-| `entropy`      | Shannon entropy of the pixel intensity histogram. Low score = flat/repetitive image                                                                           | 0 - 8+ |
+| Metric         | Description                                                                                                                                                | Range  |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `blurriness`   | Inverse of the [Laplacian variance](https://pyimagesearch.com/2015/09/07/blur-detection-with-opencv/). A score close to `1` = blurry, close to `0` = sharp | 0 - 1  |
+| `brightness`   | Mean pixel intensity normalized between `0` and `1`. `0` = fully dark, `1` = fully bright                                                                  | 0 - 1  |
+| `aspect_ratio` | Width-to-height ratio. Values > 1 are wider than tall, values < 1 are taller than wide                                                                     | > 0    |
+| `entropy`      | Shannon entropy of the pixel intensity histogram. Low score = flat/repetitive image                                                                        | 0 - 8+ |

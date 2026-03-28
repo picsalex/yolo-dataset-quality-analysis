@@ -3,7 +3,7 @@ name: CD
 on:
   push:
     tags:
-      - "v*"  # Triggered only by version tags: v0.1.0, v1.2.3, etc.
+      - "v*" # Triggered only by version tags: v0.1.0, v1.2.3, etc.
 
 jobs:
   build:
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 0  # Full history required for hatch-vcs to resolve the version from the tag
+          fetch-depth: 0 # Full history required for hatch-vcs to resolve the version from the tag
 
       - uses: astral-sh/setup-uv@v7
         with:
@@ -38,8 +38,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ "3.10", "3.11", "3.12" ]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
 
     runs-on: ${{ matrix.os }}
 
@@ -76,7 +76,7 @@ jobs:
       name: pypi
       url: https://pypi.org/project/yolo-scout/
     permissions:
-      id-token: write  # Required for OIDC trusted publisher
+      id-token: write # Required for OIDC trusted publisher
 
     steps:
       - uses: actions/download-artifact@v8
@@ -101,7 +101,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 0  # Full history so --generate-notes can diff against the previous tag
+          fetch-depth: 0 # Full history so --generate-notes can diff against the previous tag
 
       - uses: actions/download-artifact@v8
         with:

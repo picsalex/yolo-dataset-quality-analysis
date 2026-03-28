@@ -59,49 +59,49 @@ All options are passed as `key=value` pairs. Required arguments are `data` and
 
 ### Dataset
 
-| Option        | Type   | Default                 | Description                                                                                                        |
-| ------------- | ------ | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `data`        | `str`  | *(required)*            | Path to your dataset. See [Data sources](#data-sources) for all accepted formats.                                  |
-| `task`        | `str`  | `detect`                | Task type: `detect`, `classify`, `segment`, `pose`, `obb`. See [Supported tasks](tasks.md) for details.            |
-| `name`        | `str`  | *(auto from path)*      | Name for the FiftyOne dataset. Auto-generated from the directory name if not set.                                  |
-| `reload`      | `bool` | `false`                 | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated.           |
-| `dataset_dir` | `str`  | `yolo_scout/datasets`   | Destination directory for datasets downloaded from a URL. Only used when `data` is a URL.                          |
+| Option        | Type   | Default               | Description                                                                                               |
+| ------------- | ------ | --------------------- | --------------------------------------------------------------------------------------------------------- |
+| `data`        | `str`  | _(required)_          | Path to your dataset. See [Data sources](#data-sources) for all accepted formats.                         |
+| `task`        | `str`  | `detect`              | Task type: `detect`, `classify`, `segment`, `pose`, `obb`. See [Supported tasks](tasks.md) for details.   |
+| `name`        | `str`  | _(auto from path)_    | Name for the FiftyOne dataset. Auto-generated from the directory name if not set.                         |
+| `reload`      | `bool` | `false`               | Force reload of the dataset even if it already exists. The current dataset will be deleted and recreated. |
+| `dataset_dir` | `str`  | `yolo_scout/datasets` | Destination directory for datasets downloaded from a URL. Only used when `data` is a URL.                 |
 
 ### Embeddings
 
-| Option            | Type   | Default       | Description                                                                                                                   |
-| ----------------- | ------ | ------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `skip_embeddings` | `bool` | `false`       | Skip CLIP embedding computation (useful for quick visualization).                                                             |
-| `model`           | `str`  | `openai_clip` | Embeddings model to use. See [Embeddings](embeddings.md) for options and a selection guide.                                   |
-| `batch`           | `int`  | `16`          | Batch size used during CLIP embedding computation.                                                                            |
-| `mask_background` | `bool` | `true`        | Mask background in patch crops for segmentation/OBB tasks. When enabled, background is replaced with gray `(114, 114, 114)`.  |
+| Option            | Type   | Default       | Description                                                                                                                  |
+| ----------------- | ------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `skip_embeddings` | `bool` | `false`       | Skip CLIP embedding computation (useful for quick visualization).                                                            |
+| `model`           | `str`  | `openai_clip` | Embeddings model to use. See [Embeddings](embeddings.md) for options and a selection guide.                                  |
+| `batch`           | `int`  | `16`          | Batch size used during CLIP embedding computation.                                                                           |
+| `mask_background` | `bool` | `true`        | Mask background in patch crops for segmentation/OBB tasks. When enabled, background is replaced with gray `(114, 114, 114)`. |
 
 ### Quality
 
-| Option         | Type   | Default | Description                                                                                        |
-| -------------- | ------ | ------- | -------------------------------------------------------------------------------------------------- |
-| `skip_quality` | `bool` | `false` | Skip image quality metrics computation (blurriness, brightness, aspect_ratio, entropy).            |
+| Option         | Type   | Default | Description                                                                             |
+| -------------- | ------ | ------- | --------------------------------------------------------------------------------------- |
+| `skip_quality` | `bool` | `false` | Skip image quality metrics computation (blurriness, brightness, aspect_ratio, entropy). |
 
 ### Thumbnails
 
-| Option            | Type   | Default                  | Description                                                                                                       |
-| ----------------- | ------ | ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `thumbnail_dir`   | `str`  | `yolo_scout/thumbnails`  | Path to the directory where thumbnails are saved.                                                                 |
-| `thumbnail_width` | `int`  | `800`                    | Width (in pixels) of generated thumbnails. Height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable. |
+| Option            | Type  | Default                 | Description                                                                                                                   |
+| ----------------- | ----- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `thumbnail_dir`   | `str` | `yolo_scout/thumbnails` | Path to the directory where thumbnails are saved.                                                                             |
+| `thumbnail_width` | `int` | `800`                   | Width (in pixels) of generated thumbnails. Height is adjusted automatically to maintain aspect ratio. Set to `-1` to disable. |
 
 ### App
 
-| Option        | Type   | Default | Description                              |
-| ------------- | ------ | ------- | ---------------------------------------- |
-| `port`        | `int`  | `5151`  | Port to launch the FiftyOne app on.      |
-| `skip_launch` | `bool` | `false` | Skip launching FiftyOne after processing.|
-| `verbose`     | `bool` | `false` | Enable debug logging.                    |
+| Option        | Type   | Default | Description                               |
+| ------------- | ------ | ------- | ----------------------------------------- |
+| `port`        | `int`  | `5151`  | Port to launch the FiftyOne app on.       |
+| `skip_launch` | `bool` | `false` | Skip launching FiftyOne after processing. |
+| `verbose`     | `bool` | `false` | Enable debug logging.                     |
 
 ### Config file
 
-| Option   | Type  | Default  | Description                                                        |
-| -------- | ----- | -------- | ------------------------------------------------------------------ |
-| `config` | `str` | *(none)* | Path to config YAML file. Overrides default settings.              |
+| Option   | Type  | Default  | Description                                           |
+| -------- | ----- | -------- | ----------------------------------------------------- |
+| `config` | `str` | _(none)_ | Path to config YAML file. Overrides default settings. |
 
 ## Using a config file
 
@@ -110,9 +110,9 @@ file with any subset of options (all keys are optional and override the defaults
 
 ```yaml
 # my_config.yaml
-data: "/path/to/your/dataset"   # directory, data.yaml, or ul://username/datasets/slug
-task: "detect"                  # detect, segment, classify, pose, obb
-name: "my_dataset"              # auto-generated from path if not set
+data: "/path/to/your/dataset" # directory, data.yaml, or ul://username/datasets/slug
+task: "detect" # detect, segment, classify, pose, obb
+name: "my_dataset" # auto-generated from path if not set
 reload: false
 dataset_dir: "yolo_scout/datasets"
 
@@ -145,18 +145,18 @@ yolo-scout config=my_config.yaml
 
 ## Data sources
 
-| Format          | Example                              | Notes                                                                              |
-| --------------- | ------------------------------------ | ---------------------------------------------------------------------------------- |
-| Local directory | `data=/path/to/dataset`              | Standard YOLO directory structure                                                  |
-| YAML file       | `data=/path/to/data.yaml`            | Resolves to the parent directory automatically                                     |
-| NDJSON file     | `data=/path/to/file.ndjson`          | Pre-downloaded Ultralytics Platform export; images are downloaded and converted to YOLO layout |
-| URL             | `data=ul://user/datasets/slug`       | See URL schemes below                                                              |
+| Format          | Example                        | Notes                                                                                          |
+| --------------- | ------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Local directory | `data=/path/to/dataset`        | Standard YOLO directory structure                                                              |
+| YAML file       | `data=/path/to/data.yaml`      | Resolves to the parent directory automatically                                                 |
+| NDJSON file     | `data=/path/to/file.ndjson`    | Pre-downloaded Ultralytics Platform export; images are downloaded and converted to YOLO layout |
+| URL             | `data=ul://user/datasets/slug` | See URL schemes below                                                                          |
 
 ### URL schemes
 
-| Scheme  | Example                               | Notes                                                                                    |
-| ------- | ------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `ul://` | `ul://<username>/datasets/<slug>`     | [Ultralytics Platform](https://platform.ultralytics.com), requires `ULTRALYTICS_API_KEY` |
+| Scheme  | Example                           | Notes                                                                                    |
+| ------- | --------------------------------- | ---------------------------------------------------------------------------------------- |
+| `ul://` | `ul://<username>/datasets/<slug>` | [Ultralytics Platform](https://platform.ultralytics.com), requires `ULTRALYTICS_API_KEY` |
 
 ## Dataset directory layouts
 

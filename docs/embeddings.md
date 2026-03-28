@@ -12,12 +12,12 @@ for interactive exploration in the FiftyOne app.
 
 ## Supported models
 
-| Model               | CLI value          | Architecture | Training dataset                                         | Description                                                                                     |
-| ------------------- | ------------------ | ------------ | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **OpenAI CLIP**     | `openai_clip`      | ViT-B/32     | [OpenAI CLIP](https://github.com/openai/CLIP)            | Original CLIP model. Hosted on GitHub releases for offline use. Default model.                   |
-| **MetaCLIP 400M**   | `metaclip_400m`    | ViT-B/32     | [MetaCLIP](https://github.com/facebookresearch/MetaCLIP) | Trained on curated 400M image-text pairs. Better data quality and embeddings than OpenAI CLIP.   |
-| **MetaCLIP FullCC** | `metaclip_fullcc`  | ViT-B/32     | [MetaCLIP](https://github.com/facebookresearch/MetaCLIP) | Trained on the full CommonCrawl dataset. Highest quality MetaCLIP variant.                       |
-| **SigLIP Base**     | `siglip_base_224`  | ViT-B/16     | [SigLIP](https://github.com/google-research/big_vision)  | Uses improved sigmoid loss for better performance with smaller batch sizes.                      |
+| Model               | CLI value         | Architecture | Training dataset                                         | Description                                                                                    |
+| ------------------- | ----------------- | ------------ | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **OpenAI CLIP**     | `openai_clip`     | ViT-B/32     | [OpenAI CLIP](https://github.com/openai/CLIP)            | Original CLIP model. Hosted on GitHub releases for offline use. Default model.                 |
+| **MetaCLIP 400M**   | `metaclip_400m`   | ViT-B/32     | [MetaCLIP](https://github.com/facebookresearch/MetaCLIP) | Trained on curated 400M image-text pairs. Better data quality and embeddings than OpenAI CLIP. |
+| **MetaCLIP FullCC** | `metaclip_fullcc` | ViT-B/32     | [MetaCLIP](https://github.com/facebookresearch/MetaCLIP) | Trained on the full CommonCrawl dataset. Highest quality MetaCLIP variant.                     |
+| **SigLIP Base**     | `siglip_base_224` | ViT-B/16     | [SigLIP](https://github.com/google-research/big_vision)  | Uses improved sigmoid loss for better performance with smaller batch sizes.                    |
 
 All models use **224x224 input resolution** and produce **512-dimensional
 embeddings**. This is a constraint imposed by FiftyOne's OpenCLIP integration —
