@@ -5,6 +5,7 @@ from functools import partial
 from multiprocessing import Pool, cpu_count
 
 import cv2
+import fiftyone as fo
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
@@ -270,7 +271,7 @@ def process_sample_patches(
 
 
 def extract_all_patch_crops(
-    dataset,
+    dataset: fo.Dataset,
     patches_field: str,
     dataset_task: DatasetTask,
     background_color: Tuple[int, int, int] = (114, 114, 114),
