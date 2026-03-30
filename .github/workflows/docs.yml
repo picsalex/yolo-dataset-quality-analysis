@@ -31,17 +31,14 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install zensical and mkdocstrings
-        run: uv tool install zensical --with mkdocstrings-python
-
-      - name: Install project (for mkdocstrings)
+      - name: Install project with docs dependencies
         env:
           UV_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
           UV_INDEX_STRATEGY: unsafe-best-match
-        run: uv sync
+        run: uv sync --group docs
 
       - name: Build docs
-        run: zensical build --strict
+        run: uv run zensical build --strict
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v4
