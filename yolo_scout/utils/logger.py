@@ -88,13 +88,13 @@ def disable_warnings() -> None:
         "ignore",
         message=r"invalid escape sequence.*",
         category=SyntaxWarning,
-        module="glob2.fnmatch",
+        module=r"glob2\.fnmatch",
     )
     warnings.filterwarnings(
         "ignore",
         message="QuickGELU mismatch.*",
         category=UserWarning,
-        module="open_clip.factory",
+        module=r"open_clip\.factory",
     )
 
 
