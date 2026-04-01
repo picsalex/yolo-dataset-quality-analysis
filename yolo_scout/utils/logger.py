@@ -4,10 +4,6 @@ import logging
 
 
 def setup_logger(name: str = "yolo_analysis", level: int = logging.INFO) -> logging.Logger:
-    import sys
-
-    if any(arg in ("verbose", "verbose=true", "verbose=True", "verbose=1") for arg in sys.argv[1:]):
-        level = logging.DEBUG
     """
     Configure and return a logger with consistent formatting.
 
@@ -18,6 +14,10 @@ def setup_logger(name: str = "yolo_analysis", level: int = logging.INFO) -> logg
     Returns:
         Configured logger instance
     """
+    import sys
+
+    if any(arg in ("verbose", "verbose=true", "verbose=True", "verbose=1") for arg in sys.argv[1:]):
+        level = logging.DEBUG
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
@@ -52,32 +52,10 @@ def setup_logger(name: str = "yolo_analysis", level: int = logging.INFO) -> logg
 
 
 def configure_external_loggers(level: int = logging.WARNING) -> None:
-    """
-    Configure logging levels for external libraries to reduce noise.
-
-    Args:
-        level: Logging level for external libraries (default: WARNING)
-    """
-    # Suppress verbose output from external libraries
-    logging.getLogger("fiftyone").setLevel(level)
-    logging.getLogger("PIL").setLevel(level)
-    logging.getLogger("matplotlib").setLevel(level)
-    logging.getLogger("urllib3").setLevel(level)
-    logging.getLogger("requests").setLevel(level)
-    logging.getLogger("eta").setLevel(level)
-    logging.getLogger("eta.core.utils").setLevel(level)
-
-    # Prevent propagation from external loggers
-    for logger_name in [
-        "fiftyone",
-        "PIL",
-        "matplotlib",
-        "urllib3",
-        "requests",
-        "eta",
-        "eta.core.utils",
-    ]:
-        ext_logger = logging.getLogger(logger_name)
+    """Configure logging levels for external libraries to reduce noise."""
+    for name in ["fiftyone", "PIL", "matplotlib", "urllib3", "requests", "eta", "eta.core.utils"]:
+        ext_logger = logging.getLogger(name)
+        ext_logger.setLevel(level)
         ext_logger.propagate = False
 
 
