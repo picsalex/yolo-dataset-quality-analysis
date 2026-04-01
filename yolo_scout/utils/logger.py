@@ -81,23 +81,5 @@ def configure_external_loggers(level: int = logging.WARNING) -> None:
         ext_logger.propagate = False
 
 
-def disable_warnings() -> None:
-    import warnings
-
-    warnings.filterwarnings(
-        "ignore",
-        message=r"invalid escape sequence.*",
-        category=SyntaxWarning,
-        module=r"glob2\.fnmatch",
-    )
-    warnings.filterwarnings(
-        "ignore",
-        message="QuickGELU mismatch.*",
-        category=UserWarning,
-        module=r"open_clip\.factory",
-    )
-
-
 # Global logger instance
-disable_warnings()
 logger = setup_logger()
