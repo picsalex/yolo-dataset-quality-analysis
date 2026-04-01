@@ -20,8 +20,6 @@ def launch_fiftyone_app(
         dataset_task: Dataset task type
         port: Port to launch the app on
     """
-    logger.info("\n🌐 Step 5: Launching FiftyOne app")
-
     if "class_names" not in dataset.info:
         logger.error(
             "Dataset class names not found. Cannot launch app with color scheme. Please force reload the dataset"

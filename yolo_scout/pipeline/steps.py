@@ -107,6 +107,22 @@ def run_quality_metrics(dataset: fo.Dataset, config: Config, recompute: bool) ->
     )
 
 
+@step(name="launch")
+def run_launch(dataset: fo.Dataset, config: Config) -> None:
+    if not config.skip_launch:
+        from yolo_scout.visualization.fiftyone_ops import launch_fiftyone_app
+
+        launch_fiftyone_app(dataset=dataset, dataset_task=config.task, port=config.port)
+
+    else:
+        from yolo_scout.utils.logger import logger
+
+        logger.info(f"\nProcessing complete. Dataset saved as: {config.name}")
+        logger.info("To launch the app later, run:")
+        logger.info(f"    fiftyone app launch {config.name}")
+        logger.info("=" * 60)
+
+
 @step(name="thumbnails")
 def run_thumbnails(dataset: fo.Dataset, config: Config, recompute: bool) -> None:
     from yolo_scout.utils.logger import logger

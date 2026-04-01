@@ -1,7 +1,6 @@
 """Logging configuration for YOLO Dataset Quality Analysis Tool."""
 
 import logging
-import warnings
 
 
 def setup_logger(name: str = "yolo_analysis", level: int = logging.INFO) -> logging.Logger:
@@ -81,7 +80,16 @@ def configure_external_loggers(level: int = logging.WARNING) -> None:
         ext_logger = logging.getLogger(logger_name)
         ext_logger.propagate = False
 
-    # Suppress the QuickGELU mismatch warning from open_clip
+
+def disable_warnings() -> None:
+    import warnings
+
+    warnings.filterwarnings(
+        "ignore",
+        message=r"invalid escape sequence.*",
+        category=SyntaxWarning,
+        module="glob2.fnmatch",
+    )
     warnings.filterwarnings(
         "ignore",
         message="QuickGELU mismatch.*",
@@ -91,4 +99,5 @@ def configure_external_loggers(level: int = logging.WARNING) -> None:
 
 
 # Global logger instance
+disable_warnings()
 logger = setup_logger()
