@@ -15,6 +15,7 @@ from yolo_scout.pipeline.steps import (
     run_embeddings,
     run_quality_metrics,
     run_thumbnails,
+    run_launch,
 )
 
 
@@ -35,16 +36,7 @@ def main():
     run_embeddings(dataset=dataset, config=config, recompute=recompute)
     run_quality_metrics(dataset=dataset, config=config, recompute=recompute)
     run_thumbnails(dataset=dataset, config=config, recompute=recompute)
-
-    from yolo_scout.visualization.fiftyone_ops import launch_fiftyone_app
-
-    if not config.skip_launch:
-        launch_fiftyone_app(dataset=dataset, dataset_task=config.task, port=config.port)
-    else:
-        logger.info(f"\nProcessing complete. Dataset saved as: {config.name}")
-        logger.info("To launch the app later, run:")
-        logger.info(f"    fiftyone app launch {config.name}")
-        logger.info("=" * 60)
+    run_launch(dataset=dataset, config=config)
 
 
 if __name__ == "__main__":
