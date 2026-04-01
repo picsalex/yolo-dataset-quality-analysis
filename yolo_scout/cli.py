@@ -5,23 +5,26 @@ CLI entry point
 
 """
 
+from yolo_scout.core.config import handle_special_commands
 from yolo_scout.utils.decorators import pipeline
 from yolo_scout.utils.logger import configure_external_loggers, logger
-from yolo_scout.pipeline.steps import (
-    validate,
-    prepare_run,
-    prepare_plugins,
-    run_load_dataset,
-    run_embeddings,
-    run_quality_metrics,
-    run_thumbnails,
-    run_launch,
-)
 
 
 @pipeline
 def main():
+    handle_special_commands()
     configure_external_loggers()
+
+    from yolo_scout.pipeline.steps import (
+        validate,
+        prepare_run,
+        prepare_plugins,
+        run_load_dataset,
+        run_embeddings,
+        run_quality_metrics,
+        run_thumbnails,
+        run_launch,
+    )
 
     logger.info("=" * 60)
     logger.info("FIFTYONE YOLO DATASET ANALYSIS")

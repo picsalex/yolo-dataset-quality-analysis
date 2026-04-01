@@ -53,6 +53,8 @@ DATASET_SPLITS = [
     "test2017",
 ]
 
+SUPPORTED_IMAGE_FORMATS = (".jpg", ".jpeg", ".png", ".tiff")
+
 
 def get_field_name(task: DatasetTask) -> str:
     """

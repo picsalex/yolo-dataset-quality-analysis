@@ -28,6 +28,8 @@ def step(fn=None, *, name=None, level=logging.INFO):
             if not logger.isEnabledFor(level):
                 return f(*args, **kwargs)
             _counter[0] += 1
+            if _counter[0] == 1:
+                _total[0] = sum(1 for _, lvl in _registry if logger.isEnabledFor(lvl))
             index = f"{_LIGHT_GRAY}({_counter[0]}/{_total[0]}){_RESET}"
             logger.log(level, f"\n{_BLUE}Step{_RESET} {_BOLD_WHITE}{label}{_RESET} {index} {_BLUE}has started.{_RESET}")
             t0 = time.perf_counter()
@@ -51,7 +53,6 @@ def pipeline(fn):
 
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
-        _total[0] = sum(1 for _, lvl in _registry if logger.isEnabledFor(lvl))
         _counter[0] = 0
         return fn(*args, **kwargs)
 

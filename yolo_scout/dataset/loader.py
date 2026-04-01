@@ -9,7 +9,13 @@ import yaml
 from tqdm import tqdm
 from yolo_scout.core.config import Config
 
-from yolo_scout.core.constants import DATASET_SPLITS, DETECTION_FIELD, THUMBNAIL_PATH_KEY, get_field_name
+from yolo_scout.core.constants import (
+    DATASET_SPLITS,
+    DETECTION_FIELD,
+    SUPPORTED_IMAGE_FORMATS,
+    THUMBNAIL_PATH_KEY,
+    get_field_name,
+)
 from yolo_scout.core.enums import DatasetTask
 from yolo_scout.dataset.converter import (
     create_detection_from_keypoint,
@@ -189,7 +195,7 @@ def _process_split(
     logger.info(f"\nProcessing {split.name} split:")
 
     # Get all image files
-    image_files = sorted([f for f in os.listdir(split.images_dir) if f.lower().endswith((".jpg", ".jpeg", ".png"))])
+    image_files = sorted([f for f in os.listdir(split.images_dir) if f.lower().endswith(SUPPORTED_IMAGE_FORMATS)])
 
     samples = []
 
@@ -337,7 +343,7 @@ def _process_classification_split(
         class_dir = os.path.join(split.images_dir, class_name)
 
         # Get all image files
-        image_files = sorted([f for f in os.listdir(class_dir) if f.lower().endswith((".jpg", ".jpeg", ".png"))])
+        image_files = sorted([f for f in os.listdir(class_dir) if f.lower().endswith(SUPPORTED_IMAGE_FORMATS)])
 
         for img_file in tqdm(image_files, desc=f"Loading {split.name}/{class_name} images"):
             image_path = os.path.join(class_dir, img_file)

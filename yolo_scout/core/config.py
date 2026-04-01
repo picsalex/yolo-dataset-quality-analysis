@@ -131,8 +131,8 @@ _HELP_MSG = """yolo-scout commands use the following syntax:
 _HELP_FLAGS = {"--help", "-h", "help"}
 
 
-def _parse_arguments() -> Dict[str, Any]:
-    """Parse key=value style command-line arguments."""
+def handle_special_commands() -> None:
+    """Print help or version and exit if a special command is found in sys.argv."""
     if any(t in _HELP_FLAGS for t in sys.argv[1:]):
         print(_HELP_MSG)
         sys.exit(0)
@@ -143,6 +143,9 @@ def _parse_arguments() -> Dict[str, Any]:
         print(f"yolo-scout {__version__}")
         sys.exit(0)
 
+
+def _parse_arguments() -> Dict[str, Any]:
+    """Parse key=value style command-line arguments."""
     args = {}
     for token in sys.argv[1:]:
         if "=" in token:
