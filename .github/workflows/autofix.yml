@@ -10,6 +10,6 @@ jobs:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
       - run: bunx prettier . --write
-      - uses: autofix-ci/action@v1.3.3
+      - uses: autofix-ci/action@v1.3.4
         with:
           commit-message: "style: 🎨 apply Prettier formatting"
